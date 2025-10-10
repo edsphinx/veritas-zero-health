@@ -4411,7 +4411,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react-dom@npm:19.2.1":
+"@types/react-dom@npm:19.2.1, @types/react-dom@npm:^19.2.1":
   version: 19.2.1
   resolution: "@types/react-dom@npm:19.2.1"
   peerDependencies:
@@ -4420,7 +4420,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:19.2.2, @types/react@npm:~19.2.2":
+"@types/react@npm:19.2.2, @types/react@npm:^19.2.2, @types/react@npm:~19.2.2":
   version: 19.2.2
   resolution: "@types/react@npm:19.2.2"
   dependencies:
@@ -5077,6 +5077,8 @@ __metadata:
     "@nillion/secretvaults": latest
     "@types/chrome": ^0.0.268
     "@types/node": ^24.7.0
+    "@types/react": ^19.2.2
+    "@types/react-dom": ^19.2.1
     "@types/uuid": ^9.0.8
     "@types/webextension-polyfill": ^0.12.0
     "@vitejs/plugin-react": ^4.3.4
