@@ -201,7 +201,7 @@ function processAllDeployments(broadcastPath) {
   return allContracts;
 }
 
-function main() {
+async function main() {
   const current_path_to_broadcast = join(__dirname, "..", "broadcast");
   const current_path_to_deployments = join(__dirname, "..", "deployments");
 
@@ -272,7 +272,7 @@ function main() {
 
   writeFileSync(
     `${NEXTJS_TARGET_DIR}deployedContracts.ts`,
-    format(fileTemplate("~~/utils/scaffold-eth/contract"), {
+    await format(fileTemplate("~~/utils/scaffold-eth/contract"), {
       parser: "typescript",
     })
   );
