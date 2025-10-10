@@ -1,0 +1,43 @@
+{
+  "name": "@veritas/browser-extension",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Veritas Zero Health - Private Data Manager Browser Extension",
+  "type": "module",
+  "scripts": {
+    "dev": "vite build --watch --mode development",
+    "build": "tsc && vite build",
+    "build:firefox": "cross-env BROWSER=firefox vite build",
+    "build:chrome": "cross-env BROWSER=chrome vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@nillion/nuc": "latest",
+    "@nillion/secretvaults": "latest",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "tweetnacl": "^1.0.3",
+    "tweetnacl-util": "^0.15.1",
+    "uuid": "^9.0.1",
+    "webextension-polyfill": "^0.12.0",
+    "zustand": "^5.0.8"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.268",
+    "@types/node": "^24.7.0",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.1",
+    "@types/uuid": "^9.0.8",
+    "@types/webextension-polyfill": "^0.12.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.21",
+    "cross-env": "^7.0.3",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.14",
+    "typescript": "^5.9.3",
+    "vite": "^6.0.11",
+    "vite-plugin-web-extension": "^4.1.6"
+  }
+}
