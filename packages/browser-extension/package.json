@@ -6,9 +6,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite build --watch --mode development",
-    "build": "tsc && vite build",
-    "build:firefox": "cross-env BROWSER=firefox vite build",
-    "build:chrome": "cross-env BROWSER=chrome vite build",
+    "build": "tsc && vite build && cp src/content/injected-script.js dist/src/content/",
+    "build:firefox": "cross-env BROWSER=firefox vite build && cp src/content/injected-script.js dist/src/content/",
+    "build:chrome": "cross-env BROWSER=chrome vite build && cp src/content/injected-script.js dist/src/content/",
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "type-check": "tsc --noEmit"
