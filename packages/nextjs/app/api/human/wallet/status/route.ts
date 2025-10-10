@@ -11,18 +11,14 @@ import { createHumanProtocolClient } from '@/infrastructure/human/HumanProtocolC
 
 export async function GET(req: NextRequest) {
   try {
-    const humanClient = createHumanProtocolClient({
-      network: 'testnet',
-    });
-
-    const status = await humanClient.getWalletStatus();
-
+    // TODO: Implement Human Wallet status check
+    // Human Wallet SDK is not yet integrated
     return NextResponse.json({
       success: true,
       data: {
-        connected: status !== null,
-        address: status?.address,
-        method: status?.method,
+        connected: false,
+        address: null,
+        method: null,
       },
       timestamp: Date.now(),
     });

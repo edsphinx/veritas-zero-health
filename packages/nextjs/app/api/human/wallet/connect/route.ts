@@ -33,33 +33,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Initialize Human Protocol client
-    const humanClient = createHumanProtocolClient({
-      network: 'testnet',
-      wallet: {
-        enableWeb2Login: true,
-        supportedAuthProviders: ['email', 'google', 'twitter'],
+    // TODO: Implement Human Wallet connection
+    // Human Wallet SDK is not yet integrated
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Human Wallet connection not yet implemented',
       },
-    });
-
-    // Connect wallet
-    const result = await humanClient.connectWallet(method, identifier);
-
-    if (!result.success) {
-      return NextResponse.json(
-        { success: false, error: result.error || 'Connection failed' },
-        { status: 400 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        address: result.address,
-        method: result.method,
-      },
-      timestamp: Date.now(),
-    });
+      { status: 501 }
+    );
   } catch (error) {
     console.error('[API] Human Wallet connection error:', error);
     return NextResponse.json(
