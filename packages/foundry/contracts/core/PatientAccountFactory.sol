@@ -1,16 +1,21 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import "./VZHSmartAccount.sol";
+import "./PatientSmartAccount.sol";
 
 /**
- * @title VZHAccountFactory
- * @author Veritas Zero Health
- * @notice Factory para crear VZH Smart Accounts usando CREATE2
- * @dev Permite crear smart accounts con la MISMA dirección en todas las chains
- *      siempre que el factory esté en la misma dirección en cada chain
+ * @title PatientAccountFactory
+ * @author edsphinx
+ * @notice Factory for creating DASHI Patient Smart Accounts using CREATE2
+ * @dev Allows creating smart accounts with the SAME address across all chains,
+ *      as long as the factory is deployed at the same address on each chain.
+ *
+ * Multi-chain Strategy:
+ * - Deploy factory to same address on all EVM chains (via CREATE2 or deterministic deployer)
+ * - Use same salt to generate same patient address everywhere
+ * - Patient can use their health identity on any supported chain
  */
-contract VZHAccountFactory {
+contract PatientAccountFactory {
 
     // --- Events ---
 
@@ -47,10 +52,10 @@ contract VZHAccountFactory {
         address owner,
         uint256 salt
     ) external returns (address account) {
-        require(owner != address(0), "VZHAccountFactory: owner cannot be zero address");
+        require(owner != address(0), "PatientAccountFactory: owner cannot be zero address");
 
         // Construir el bytecode del contrato
-        bytes memory bytecode = type(VZHSmartAccount).creationCode;
+        bytes memory bytecode = type(PatientSmartAccount).creationCode;
         bytes memory deployCode = abi.encodePacked(
             bytecode,
             abi.encode(owner)
@@ -70,7 +75,7 @@ contract VZHAccountFactory {
             )
         }
 
-        require(account != address(0), "VZHAccountFactory: deploy failed");
+        require(account != address(0), "PatientAccountFactory: deploy failed");
 
         // Registrar la cuenta
         _accountsByOwner[owner].push(account);
@@ -110,7 +115,7 @@ contract VZHAccountFactory {
         uint256 salt
     ) public view returns (address predicted) {
         // Construir el bytecode
-        bytes memory bytecode = type(VZHSmartAccount).creationCode;
+        bytes memory bytecode = type(PatientSmartAccount).creationCode;
         bytes memory deployCode = abi.encodePacked(
             bytecode,
             abi.encode(owner)
@@ -193,7 +198,7 @@ contract VZHAccountFactory {
         address[] calldata owners,
         uint256[] calldata salts
     ) external returns (address[] memory accounts) {
-        require(owners.length == salts.length, "VZHAccountFactory: array length mismatch");
+        require(owners.length == salts.length, "PatientAccountFactory: array length mismatch");
 
         accounts = new address[](owners.length);
 
@@ -219,7 +224,7 @@ contract VZHAccountFactory {
         address owner,
         uint256 salt
     ) external pure returns (address predicted) {
-        bytes memory bytecode = type(VZHSmartAccount).creationCode;
+        bytes memory bytecode = type(PatientSmartAccount).creationCode;
         bytes memory deployCode = abi.encodePacked(
             bytecode,
             abi.encode(owner)

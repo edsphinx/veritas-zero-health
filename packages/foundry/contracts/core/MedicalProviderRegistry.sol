@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 /**
  * @title MedicalProviderRegistry
+ * @author edsphinx
  * @notice Registry of certified medical providers for DASHI (Decentralized Anonymous Sovereign Health Identity)
  * @dev Manages certification, verification, and revocation of medical providers
  *

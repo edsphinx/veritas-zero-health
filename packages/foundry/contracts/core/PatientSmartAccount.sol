@@ -4,16 +4,17 @@ pragma solidity ^0.8.24;
 import "./HealthIdentitySBT.sol";
 
 /**
- * @title VZHSmartAccount
- * @author Veritas Zero Health
- * @notice Smart Account simple para pacientes de VZH
- * @dev Wallet basada en contrato que permite:
- *      - Misma dirección en todas las chains (via CREATE2)
- *      - Social recovery
- *      - Claim directo de Health Identity SBT
- *      - Ejecutar transacciones arbitrarias
+ * @title PatientSmartAccount
+ * @author edsphinx
+ * @notice Simple Smart Account for DASHI patients
+ * @dev Contract-based wallet that enables:
+ *      - Same address across all chains (via CREATE2)
+ *      - Social recovery mechanism
+ *      - Direct claim of Health Identity SBT
+ *      - Execute arbitrary transactions
+ *      - Multi-chain identity portability
  */
-contract VZHSmartAccount {
+contract PatientSmartAccount {
 
     // --- State Variables ---
 
@@ -56,14 +57,14 @@ contract VZHSmartAccount {
     // --- Modifiers ---
 
     modifier onlyOwner() {
-        require(msg.sender == owner, "VZHSmartAccount: caller is not the owner");
+        require(msg.sender == owner, "PatientSmartAccount: caller is not the owner");
         _;
     }
 
     modifier onlyOwnerOrRecovery() {
         require(
             msg.sender == owner || msg.sender == recoveryAddress,
-            "VZHSmartAccount: caller is not authorized"
+            "PatientSmartAccount: caller is not authorized"
         );
         _;
     }
@@ -75,7 +76,7 @@ contract VZHSmartAccount {
      * @param _owner EOA del paciente que controla esta wallet
      */
     constructor(address _owner) {
-        require(_owner != address(0), "VZHSmartAccount: owner cannot be zero address");
+        require(_owner != address(0), "PatientSmartAccount: owner cannot be zero address");
         owner = _owner;
         emit OwnershipTransferred(address(0), _owner);
     }
@@ -95,16 +96,16 @@ contract VZHSmartAccount {
         uint256 value,
         bytes calldata data
     ) external onlyOwner returns (bytes memory result) {
-        require(target != address(0), "VZHSmartAccount: target cannot be zero address");
+        require(target != address(0), "PatientSmartAccount: target cannot be zero address");
 
         // Prevenir replay usando nonce
         bytes32 txHash = keccak256(abi.encodePacked(target, value, data, nonce));
-        require(!_executedTxs[txHash], "VZHSmartAccount: transaction already executed");
+        require(!_executedTxs[txHash], "PatientSmartAccount: transaction already executed");
         _executedTxs[txHash] = true;
 
         // Ejecutar la transacción
         (bool success, bytes memory returnData) = target.call{value: value}(data);
-        require(success, "VZHSmartAccount: transaction failed");
+        require(success, "PatientSmartAccount: transaction failed");
 
         emit Executed(target, value, data, nonce);
         nonce++;
@@ -126,14 +127,14 @@ contract VZHSmartAccount {
     ) external onlyOwner {
         require(
             targets.length == values.length && values.length == datas.length,
-            "VZHSmartAccount: array length mismatch"
+            "PatientSmartAccount: array length mismatch"
         );
 
         for (uint256 i = 0; i < targets.length; i++) {
-            require(targets[i] != address(0), "VZHSmartAccount: target cannot be zero address");
+            require(targets[i] != address(0), "PatientSmartAccount: target cannot be zero address");
 
             (bool success, ) = targets[i].call{value: values[i]}(datas[i]);
-            require(success, "VZHSmartAccount: batch transaction failed");
+            require(success, "PatientSmartAccount: batch transaction failed");
 
             emit Executed(targets[i], values[i], datas[i], nonce + i);
         }
@@ -159,7 +160,7 @@ contract VZHSmartAccount {
         uint256 voucherNonce,
         bytes calldata signature
     ) external onlyOwner returns (uint256 tokenId) {
-        require(sbtContract != address(0), "VZHSmartAccount: SBT contract cannot be zero address");
+        require(sbtContract != address(0), "PatientSmartAccount: SBT contract cannot be zero address");
 
         // Llamar a la función de claim del SBT
         // El SBT será minted a address(this) - esta smart account
@@ -205,8 +206,8 @@ contract VZHSmartAccount {
      * @param _recoveryAddress Address que puede recuperar la cuenta
      */
     function setRecoveryAddress(address _recoveryAddress) external onlyOwner {
-        require(_recoveryAddress != address(0), "VZHSmartAccount: recovery address cannot be zero");
-        require(_recoveryAddress != owner, "VZHSmartAccount: recovery cannot be owner");
+        require(_recoveryAddress != address(0), "PatientSmartAccount: recovery address cannot be zero");
+        require(_recoveryAddress != owner, "PatientSmartAccount: recovery cannot be owner");
 
         recoveryAddress = _recoveryAddress;
         emit RecoveryAddressSet(_recoveryAddress);
@@ -218,8 +219,8 @@ contract VZHSmartAccount {
      * @param newOwner Nueva address owner
      */
     function transferOwnership(address newOwner) external onlyOwnerOrRecovery {
-        require(newOwner != address(0), "VZHSmartAccount: new owner cannot be zero address");
-        require(newOwner != owner, "VZHSmartAccount: new owner is same as current");
+        require(newOwner != address(0), "PatientSmartAccount: new owner cannot be zero address");
+        require(newOwner != owner, "PatientSmartAccount: new owner is same as current");
 
         address oldOwner = owner;
         owner = newOwner;

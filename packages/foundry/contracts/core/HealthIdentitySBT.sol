@@ -17,10 +17,16 @@ interface IHumanPassport {
 
 /**
  * @title HealthIdentitySBT
- * @author Veritas Zero Health
- * @notice Soulbound Token para identidad de salud verificada
- * @dev Requiere Human Passport SBT para mint. Un solo token por address.
- * Almacena attestations de datos médicos sin revelar los datos.
+ * @author edsphinx
+ * @notice Soulbound Token for verified health identity in DASHI system
+ * @dev Requires Human Passport SBT for minting. One token per address.
+ *      Stores attestations of medical data without revealing the actual data.
+ *
+ * Key Features:
+ * - Non-transferable (Soulbound)
+ * - Links to Nillion encrypted vault via DID
+ * - Medical providers can attest to encrypted data
+ * - Integrates with Human Passport for sybil resistance
  */
 contract HealthIdentitySBT is ERC721, Ownable {
 
@@ -120,7 +126,7 @@ contract HealthIdentitySBT is ERC721, Ownable {
     // --- Constructor ---
 
     constructor(address _humanPassportAddress)
-        ERC721("Veritas Health Identity", "VHI")
+        ERC721("DASHI Health Identity", "DHI")
         Ownable(msg.sender)
     {
         humanPassport = IHumanPassport(_humanPassportAddress);
