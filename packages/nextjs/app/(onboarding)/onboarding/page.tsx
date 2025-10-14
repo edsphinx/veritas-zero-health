@@ -12,9 +12,9 @@
 
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, ArrowRight, Shield, Wallet as WalletIcon, RefreshCw } from 'lucide-react';
+import { WalletConnectButton } from '@/components/WalletConnect';
 import { HumanPassportButton } from '@/presentation/components/features/auth/HumanPassportButton';
 import { HumanVerificationBadge } from '@/presentation/components/features/auth/HumanVerificationBadge';
 import { useHumanPassport } from '@/shared/hooks/useHumanPassport';
@@ -35,42 +35,131 @@ export default function OnboardingPage() {
   useEffect(() => {
     if (isConnected && address && currentStep === 'wallet') {
       console.log('Wallet connected:', address);
+
+      // Notify browser extension if opened from extension
+      const notifyExtension = async () => {
+        try {
+          // First, set cookies via API
+          await fetch('/api/extension/wallet/connect', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              address,
+              method: 'web3',
+            }),
+          });
+
+          console.log('✅ Wallet info stored in session cookies');
+
+          // Try to get extension ID from URL params or localStorage
+          const urlParams = new URLSearchParams(window.location.search);
+          const extensionId = urlParams.get('extensionId') ||
+                             localStorage.getItem('veritas_extension_id');
+
+          // Check if Chrome extension API is available
+          const chromeRuntime = (window as any).chrome?.runtime;
+
+          if (extensionId && chromeRuntime) {
+            // Send wallet connection update to extension
+            chromeRuntime.sendMessage(
+              extensionId,
+              {
+                type: 'UPDATE_WALLET_CONNECTION',
+                data: {
+                  origin: window.location.origin,
+                  address,
+                  method: 'web3',
+                  isVerified: false, // Will update when passport verified
+                  humanityScore: 0,
+                },
+              },
+              (response: any) => {
+                if (chromeRuntime.lastError) {
+                  console.warn('Extension message failed:', chromeRuntime.lastError);
+                } else {
+                  console.log('✅ Extension notified of wallet connection');
+                }
+              }
+            );
+          } else {
+            console.log('⚠️ No extension ID found, using cookies only');
+          }
+        } catch (error) {
+          console.error('Failed to notify extension:', error);
+        }
+      };
+
+      notifyExtension();
       setTimeout(() => setCurrentStep('passport'), 500);
     }
   }, [isConnected, address, currentStep]);
 
   // Auto-advance to complete when verified
   useEffect(() => {
-    if (isVerified && currentStep === 'passport') {
+    if (isVerified && currentStep === 'passport' && address) {
       console.log('User verified, advancing to complete');
       setIsPolling(false); // Stop polling when verified
+
+      // Update passport verification status in session
+      fetch('/api/extension/passport/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ address }),
+      })
+        .then(() => console.log('✅ Passport status updated in session'))
+        .catch(console.error);
+
+      // Notify extension of verification status update
+      const notifyExtensionVerification = async () => {
+        try {
+          const urlParams = new URLSearchParams(window.location.search);
+          const extensionId = urlParams.get('extensionId') ||
+                             localStorage.getItem('veritas_extension_id');
+          const chromeRuntime = (window as any).chrome?.runtime;
+
+          if (extensionId && chromeRuntime) {
+            chromeRuntime.sendMessage(
+              extensionId,
+              {
+                type: 'UPDATE_WALLET_CONNECTION',
+                data: {
+                  origin: window.location.origin,
+                  address,
+                  method: 'web3',
+                  isVerified: true,
+                  humanityScore: humanityScore || 0,
+                },
+              },
+              (response: any) => {
+                if (chromeRuntime.lastError) {
+                  console.warn('Extension verification update failed:', chromeRuntime.lastError);
+                } else {
+                  console.log('✅ Extension notified of verification');
+                }
+              }
+            );
+          }
+        } catch (error) {
+          console.error('Failed to notify extension of verification:', error);
+        }
+      };
+
+      notifyExtensionVerification();
+
       setTimeout(() => setCurrentStep('complete'), 1000);
     }
-  }, [isVerified, currentStep]);
+  }, [isVerified, currentStep, address, humanityScore]);
 
-  // Polling effect - check verification status every 30 seconds when polling is active
-  // (Reduced from 5s to avoid Passport API rate limits)
-  useEffect(() => {
-    if (!isPolling || !address || isVerified || currentStep !== 'passport') {
-      return;
-    }
-
-    console.log('Starting verification polling (every 30s)...');
-
-    // Check immediately when polling starts
-    refetch?.();
-
-    const intervalId = setInterval(() => {
-      console.log('Polling verification status...');
-      refetch?.();
-    }, 30000); // Check every 30 seconds (reduced to avoid rate limits)
-
-    // Cleanup interval on unmount or when dependencies change
-    return () => {
-      console.log('Stopping verification polling');
-      clearInterval(intervalId);
-    };
-  }, [isPolling, address, isVerified, currentStep, refetch]);
+  // DISABLED: Auto-polling causes rate limiting
+  // Users must manually click "Check Verification Status" button
+  // useEffect(() => {
+  //   if (!isPolling || !address || isVerified || currentStep !== 'passport') {
+  //     return;
+  //   }
+  //   ...
+  // }, [isPolling, address, isVerified, currentStep, refetch]);
 
   const handleVerified = (score: number) => {
     console.log('Verified with score:', score);
@@ -79,17 +168,15 @@ export default function OnboardingPage() {
   };
 
   const handleCheckStatus = async () => {
-    if (!isPolling) {
-      setIsPolling(true); // Start polling if not already polling
-    }
+    // Manual check - no auto-polling to avoid rate limiting
     if (refetch) {
       await refetch();
     }
   };
 
   const handleVerifyClick = () => {
-    // Start polling when user clicks verify button
-    setIsPolling(true);
+    // Don't auto-poll - user must click "Check Status" button manually
+    // This prevents rate limiting from Passport API
   };
 
   return (
@@ -179,65 +266,7 @@ export default function OnboardingPage() {
                 </div>
 
                 <div className="flex flex-col items-center gap-4 py-8">
-                  <ConnectButton.Custom>
-                    {({
-                      account,
-                      chain,
-                      openAccountModal,
-                      openChainModal,
-                      openConnectModal,
-                      authenticationStatus,
-                      mounted,
-                    }) => {
-                      const ready = mounted && authenticationStatus !== 'loading';
-                      const connected =
-                        ready &&
-                        account &&
-                        chain &&
-                        (!authenticationStatus ||
-                          authenticationStatus === 'authenticated');
-
-                      return (
-                        <div
-                          {...(!ready && {
-                            'aria-hidden': true,
-                            style: {
-                              opacity: 0,
-                              pointerEvents: 'none',
-                              userSelect: 'none',
-                            },
-                          })}
-                        >
-                          {(() => {
-                            if (!connected) {
-                              return (
-                                <button
-                                  onClick={openConnectModal}
-                                  type="button"
-                                  className="px-8 py-4 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl flex items-center gap-3 font-semibold text-lg"
-                                >
-                                  <WalletIcon className="h-6 w-6" />
-                                  Connect Wallet
-                                </button>
-                              );
-                            }
-
-                            return (
-                              <div className="flex flex-col items-center gap-4">
-                                <div className="flex items-center gap-2 text-green-600">
-                                  <CheckCircle2 className="h-6 w-6" />
-                                  <span className="font-medium">Wallet Connected!</span>
-                                </div>
-                                <p className="text-sm text-muted-foreground">
-                                  {account.displayName}
-                                </p>
-                              </div>
-                            );
-                          })()}
-                        </div>
-                      );
-                    }}
-                  </ConnectButton.Custom>
+                  <WalletConnectButton />
 
                   <p className="text-xs text-muted-foreground text-center max-w-md">
                     We support MetaMask, WalletConnect, Coinbase Wallet, and more.
@@ -304,17 +333,12 @@ export default function OnboardingPage() {
                           className="w-full"
                         />
 
-                        {isPolling && (
-                          <div className="rounded-lg bg-blue-600/10 border border-blue-600/20 p-3 text-sm">
-                            <div className="flex items-center gap-2 text-blue-600">
-                              <RefreshCw className="h-4 w-4 animate-spin" />
-                              <span className="font-medium">Auto-checking your verification status...</span>
-                            </div>
-                            <p className="text-xs text-blue-600/70 mt-1">
-                              Checking every 30 seconds. Or use the button below to check manually.
-                            </p>
-                          </div>
-                        )}
+                        <div className="rounded-lg bg-blue-600/10 border border-blue-600/20 p-3 text-sm">
+                          <p className="text-blue-600 font-medium">After verifying on Passport:</p>
+                          <p className="text-xs text-blue-600/70 mt-1">
+                            Click the "Check Verification Status" button below to update your status.
+                          </p>
+                        </div>
 
                         <button
                           onClick={handleCheckStatus}
