@@ -5,6 +5,10 @@ import { PassportVerificationCard } from '../components/PassportVerification';
 import { PoweredBy } from '../components/PoweredBy';
 import { QRScanner } from '../components/QRScanner';
 import { HumanWalletCard } from '../components/HumanWalletCard';
+import { ZKProofGenerator } from '../components/ZKProofGenerator';
+import { HealthDataView } from '../components/HealthDataView';
+import { PermissionsView } from '../components/PermissionsView';
+import { LoadingScreen } from '../components/LoadingScreen';
 import { SBTService } from '../lib/sbt-service';
 import type { PassportVerification } from '../lib/passport-client';
 
@@ -50,19 +54,37 @@ function App() {
   const [did, setDid] = useState<DIDDocument | null>(null);
   const [loading, setLoading] = useState(true);
   const [password, setPassword] = useState('');
-  const [view, setView] = useState<'main' | 'setup' | 'data' | 'permissions' | 'activity' | 'wallet-connect' | 'passport-verification' | 'scan-qr' | 'claim-sbt'>('main');
+  const [view, setView] = useState<'main' | 'setup' | 'data' | 'permissions' | 'activity' | 'wallet-connect' | 'passport-verification' | 'scan-qr' | 'claim-sbt' | 'generate-zk-proof'>('main');
   const [activityLog, setActivityLog] = useState<ActivityLog[]>([]);
   const [ethAddress, setEthAddress] = useState<string | null>(null);
   const [isVerified, setIsVerified] = useState<boolean>(false);
   const [voucherData, setVoucherData] = useState<VoucherData | null>(null);
   const [walletConnection, setWalletConnection] = useState<WalletConnection | null>(null);
 
+  // Deep link parameters for ZK proof generation
+  const [zkProofParams, setZkProofParams] = useState<{studyId?: string; returnUrl?: string}>({});
+
   useEffect(() => {
     checkDID();
     loadActivityLog();
     loadStoredData();
     loadWalletConnection();
+    handleDeepLink();
   }, []);
+
+  function handleDeepLink() {
+    // Check URL parameters for deep linking
+    const urlParams = new URLSearchParams(window.location.search);
+    const action = urlParams.get('action');
+    const studyId = urlParams.get('studyId');
+    const returnUrl = urlParams.get('returnUrl');
+
+    if (action === 'generate-zk-proof' && studyId && returnUrl) {
+      console.log('🔗 Deep link detected for ZK proof generation:', { studyId, returnUrl });
+      setZkProofParams({ studyId, returnUrl });
+      setView('generate-zk-proof');
+    }
+  }
 
   async function loadStoredData() {
     try {
@@ -435,21 +457,7 @@ function App() {
   }
 
   if (loading && view !== 'setup') {
-    return (
-      <div className="container loading-container">
-        <div className="loading-screen">
-          <div className="loading-header">
-            <div className="loading-icon">🏥</div>
-            <h1 className="loading-title">DASHI</h1>
-            <p className="loading-subtitle">Your Sovereign Health Identity</p>
-          </div>
-          <div className="loading-spinner-wrapper">
-            <div className="loading-spinner"></div>
-          </div>
-          <p className="loading-text">Initializing secure connection...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen message="Initializing secure connection..." fullScreen={true} />;
   }
 
   if (view === 'setup') {
@@ -502,47 +510,16 @@ function App() {
   }
 
   if (view === 'data') {
-    return (
-      <div className="container">
-        <div className="header-nav">
-          <button onClick={() => setView('main')} className="back-button">
-            ← Back
-          </button>
-          <h2>My Health Data</h2>
-        </div>
+    if (!did) {
+      setView('setup');
+      return null;
+    }
 
-        <div className="data-section">
-          <div className="empty-state">
-            <p>📋 No health records yet</p>
-            <p className="hint">
-              Connect to the Veritas Zero Health app to add your medical records
-            </p>
-          </div>
-        </div>
-      </div>
-    );
+    return <HealthDataView onBack={() => setView('main')} userDID={did.id} />;
   }
 
   if (view === 'permissions') {
-    return (
-      <div className="container">
-        <div className="header-nav">
-          <button onClick={() => setView('main')} className="back-button">
-            ← Back
-          </button>
-          <h2>Permissions</h2>
-        </div>
-
-        <div className="permissions-section">
-          <div className="empty-state">
-            <p>🔐 No permissions granted yet</p>
-            <p className="hint">
-              Apps will appear here when you grant them access to your data
-            </p>
-          </div>
-        </div>
-      </div>
-    );
+    return <PermissionsView onBack={() => setView('main')} />;
   }
 
   if (view === 'activity') {
@@ -763,6 +740,19 @@ function App() {
     );
   }
 
+  if (view === 'generate-zk-proof') {
+    return (
+      <ZKProofGenerator
+        onBack={() => {
+          setView('main');
+          setZkProofParams({});
+        }}
+        studyId={zkProofParams.studyId}
+        returnUrl={zkProofParams.returnUrl}
+      />
+    );
+  }
+
   // Main view
   return (
     <div className="container">
@@ -798,14 +788,25 @@ function App() {
 
       <div className="menu">
         {isVerified && ethAddress && (
-          <button onClick={() => setView('scan-qr')} className="menu-item highlight">
-            <span className="menu-icon">📷</span>
-            <div className="menu-content">
-              <div className="menu-title">Scan QR Code</div>
-              <div className="menu-subtitle">Claim your Health Identity SBT</div>
-            </div>
-            <span className="menu-arrow">→</span>
-          </button>
+          <>
+            <button onClick={() => setView('scan-qr')} className="menu-item highlight">
+              <span className="menu-icon">📷</span>
+              <div className="menu-content">
+                <div className="menu-title">Scan QR Code</div>
+                <div className="menu-subtitle">Claim your Health Identity SBT</div>
+              </div>
+              <span className="menu-arrow">→</span>
+            </button>
+
+            <button onClick={() => setView('generate-zk-proof')} className="menu-item">
+              <span className="menu-icon">🔐</span>
+              <div className="menu-content">
+                <div className="menu-title">Generate ZK Proof</div>
+                <div className="menu-subtitle">Prove eligibility without revealing data</div>
+              </div>
+              <span className="menu-arrow">→</span>
+            </button>
+          </>
         )}
 
         <button onClick={() => setView('data')} className="menu-item">
