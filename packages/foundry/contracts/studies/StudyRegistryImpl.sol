@@ -2,12 +2,15 @@
 pragma solidity ^0.8.20;
 
 import "./StudyRegistry.sol";
-import "./AgeVerifier.sol";
+import "../zk/AgeVerifier.sol";
 
 /**
  * @title StudyRegistryImpl
+ * @author edsphinx
  * @notice Implementation of the on-chain clinical trial registry with ZK proof verification
- * @dev Integrates zero-knowledge proofs for anonymous but verifiable eligibility
+ * @dev Integrates zero-knowledge proofs for anonymous but verifiable eligibility.
+ *      Researchers can publish studies and set age-based eligibility criteria.
+ *      Patients can submit anonymous applications with ZK proofs of eligibility without revealing actual age.
  */
 contract StudyRegistryImpl is IStudyRegistry {
     // State variables

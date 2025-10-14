@@ -82,7 +82,7 @@ interface IStudyTypes {
      */
     struct Participation {
         uint256 studyId;
-        address participant;                // VZH Smart Account del paciente
+        address participant;                // DASHI Smart Account del paciente
         uint256 enrolledAt;
         uint256[] completedMilestones;      // IDs de milestones completados
         uint256 totalEarned;                // Total ganado en wei/tokens

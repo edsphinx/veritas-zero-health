@@ -3,6 +3,7 @@ pragma solidity ^0.8.24;
 
 /**
  * @title IStudyRegistry Interface
+ * @author edsphinx
  * @notice Defines the interface for the on-chain registry of clinical trials.
  */
 interface IStudyRegistry {
