@@ -9,6 +9,10 @@ node_modules
 !.yarn/sdks
 !.yarn/versions
 
+# Build outputs
+cache
+out
+
 # eslint
 .eslintcache
 
@@ -18,6 +22,12 @@ node_modules
 # IDE
 .vscode
 .idea
+.cursor
 
 # cli
 dist
+
+# NPM (we use Yarn v3)
+package-lock.json
+
+.private
