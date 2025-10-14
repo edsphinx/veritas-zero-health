@@ -1,21 +1,24 @@
 {
-  "name": "@veritas/browser-extension",
+  "name": "@dashi/browser-extension",
   "version": "0.1.0",
   "private": true,
-  "description": "Veritas Zero Health - Private Data Manager Browser Extension",
+  "description": "DASHI - Decentralized Anonymous Sovereign Health Identity Browser Extension",
   "type": "module",
   "scripts": {
-    "dev": "vite build --watch --mode development",
-    "build": "tsc && vite build && cp src/content/injected-script.js dist/src/content/",
-    "build:firefox": "cross-env BROWSER=firefox vite build && cp src/content/injected-script.js dist/src/content/",
-    "build:chrome": "cross-env BROWSER=chrome vite build && cp src/content/injected-script.js dist/src/content/",
+    "sync-zk": "./sync-zk-files.sh",
+    "dev": "yarn sync-zk && vite build --watch --mode development",
+    "build": "yarn sync-zk && tsc && vite build && cp src/content/injected-script.js dist/src/content/",
+    "build:firefox": "yarn sync-zk && cross-env BROWSER=firefox vite build && cp src/content/injected-script.js dist/src/content/",
+    "build:chrome": "yarn sync-zk && cross-env BROWSER=chrome vite build && cp src/content/injected-script.js dist/src/content/",
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "compile-integration-test": "tsc scripts/test-extension-integration.ts --outDir scripts --module esnext --moduleResolution bundler --target es2022 --esModuleInterop --skipLibCheck",
+    "test:integration": "yarn compile-integration-test && node scripts/test-extension-integration.js"
   },
   "dependencies": {
-    "@nillion/nuc": "latest",
-    "@nillion/secretvaults": "latest",
+    "ethers": "^6.15.0",
+    "jsqr": "^1.4.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "tweetnacl": "^1.0.3",

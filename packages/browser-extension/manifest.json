@@ -1,10 +1,20 @@
 {
   "manifest_version": 3,
-  "name": "Veritas Zero Health - Private Data Manager",
+  "name": "DASHI - Private Health Identity",
   "version": "0.1.0",
-  "description": "Securely manage your health data with zero-knowledge proofs and encrypted storage",
+  "description": "Decentralized Anonymous Sovereign Health Identity - Your health, your identity, your sovereignty",
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
   "action": {
-    "default_popup": "src/popup/index.html"
+    "default_popup": "src/popup/index.html",
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
   },
   "background": {
     "service_worker": "src/background/service-worker.ts",
@@ -24,14 +34,22 @@
   ],
   "host_permissions": [
     "http://localhost:*/*",
-    "https://*.veritas-zero-health.xyz/*"
+    "https://*.veritas-zero-health.xyz/*",
+    "https://*.human.tech/*",
+    "https://passport.xyz/*"
   ],
   "web_accessible_resources": [
     {
-      "resources": ["popup/*", "src/content/injected-script.js"],
+      "resources": ["popup/*", "src/content/injected-script.js", "zk/*"],
       "matches": ["<all_urls>"]
     }
   ],
+  "externally_connectable": {
+    "matches": [
+      "http://localhost:*/*",
+      "https://*.veritas-zero-health.xyz/*"
+    ]
+  },
   "content_security_policy": {
     "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
   }
