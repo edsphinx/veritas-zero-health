@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- Background circle -->
+  <circle cx="64" cy="64" r="60" fill="#2563eb" />
+
+  <!-- Shield shape -->
+  <path d="M64 20 L90 30 L90 60 Q90 80 64 100 Q38 80 38 60 L38 30 Z"
+        fill="#fff" opacity="0.95"/>
+
+  <!-- Medical cross -->
+  <rect x="60" y="45" width="8" height="35" fill="#2563eb" rx="2"/>
+  <rect x="48" y="57" width="32" height="8" fill="#2563eb" rx="2"/>
+
+  <!-- Lock icon (bottom right) -->
+  <circle cx="85" cy="90" r="12" fill="#10b981"/>
+  <rect x="82" y="87" width="6" height="8" fill="#fff" rx="1"/>
+  <path d="M82 87 L82 84 Q82 81 85 81 Q88 81 88 84 L88 87"
+        fill="none" stroke="#fff" stroke-width="2"/>
+</svg>
