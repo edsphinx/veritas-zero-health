@@ -1,7 +1,7 @@
 /**
- * Human Protocol Client
+ * Human Passport Client
  *
- * Infrastructure layer service for Passport (formerly Gitcoin Passport)
+ * Infrastructure layer service for Human Passport (formerly Gitcoin Passport)
  * Integrates Passport API v2 for Sybil-resistant identity verification
  *
  * API Documentation: https://docs.passport.xyz/building-with-passport/passport-api
@@ -121,7 +121,9 @@ export class HumanProtocolClient {
       });
 
       if (!response.ok) {
-        throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        console.error(`[Passport] Score API error ${response.status}:`, errorText);
+        throw new Error(`API request failed: ${response.status} ${response.statusText} - ${errorText}`);
       }
 
       const data: PassportScoreResponse = await response.json();
@@ -157,18 +159,26 @@ export class HumanProtocolClient {
 
   /**
    * Get Passport stamps for an address
-   * Uses Passport API v2: GET /v2/stamps/{scorer_id}/stamps/{address}
+   * Uses Passport API v2: GET /v2/stamps/{address}
    *
    * @param address - Ethereum address to check
+   * @param includeMetadata - Whether to include stamp metadata (default: false)
    * @returns Stamps data
    */
-  async getPassportStamps(address: string): Promise<PassportStampsResponse> {
+  async getPassportStamps(
+    address: string,
+    includeMetadata = false
+  ): Promise<PassportStampsResponse> {
     try {
       console.log(`[Passport] Getting stamps for ${address}`);
 
-      const url = `${this.baseUrl}/v2/stamps/${this.config.passport.scorerId}/stamps/${address}`;
+      // Updated endpoint path for API v2
+      const url = new URL(`${this.baseUrl}/v2/stamps/${address}`);
+      if (includeMetadata) {
+        url.searchParams.set('include_metadata', 'true');
+      }
 
-      const response = await fetch(url, {
+      const response = await fetch(url.toString(), {
         method: 'GET',
         headers: {
           'X-API-KEY': this.config.passport.apiKey,
@@ -208,17 +218,25 @@ export class HumanProtocolClient {
 
   /**
    * Get complete verification details for an address
-   * Includes both score and stamps
+   * Includes score and optionally stamps if available
    *
    * @param address - Ethereum address to check
    * @returns Complete verification details
    */
   async getVerificationDetails(address: string): Promise<VerificationDetails> {
     try {
-      const [scoreResult, stampsResult] = await Promise.all([
-        this.getPassportScore(address),
-        this.getPassportStamps(address),
-      ]);
+      // Get score (this endpoint works)
+      const scoreResult = await this.getPassportScore(address);
+
+      // Try to get stamps, but don't fail if endpoint doesn't exist
+      let stamps: PassportStamp[] | undefined;
+      try {
+        const stampsResult = await this.getPassportStamps(address);
+        stamps = stampsResult.stamps;
+      } catch (error) {
+        console.warn('[Passport] Stamps endpoint not available, continuing without stamps');
+        stamps = undefined;
+      }
 
       return {
         verified: scoreResult.verified,
@@ -226,7 +244,7 @@ export class HumanProtocolClient {
         threshold: scoreResult.threshold,
         verifiedAt: scoreResult.lastUpdated,
         expiresAt: scoreResult.expiresAt,
-        stamps: stampsResult.stamps,
+        stamps,
       };
     } catch (error) {
       console.error('[Passport] Failed to get details:', error);

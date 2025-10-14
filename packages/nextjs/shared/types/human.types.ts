@@ -1,8 +1,8 @@
 /**
- * Shared type definitions for Human Protocol integration
+ * Shared type definitions for Human Passport integration
  *
- * These types are used across the application for Human Wallet,
- * Human Passport, and Human Network interactions.
+ * Human Passport provides Sybil-resistant identity verification.
+ * Note: We use RainbowKit for wallet connection, not Human Wallet.
  */
 
 // ============================================

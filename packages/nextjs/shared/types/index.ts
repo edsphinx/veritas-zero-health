@@ -7,5 +7,5 @@
 // Health types
 export * from './health.types';
 
-// Human Protocol types
+// Human Passport types
 export * from './human.types';

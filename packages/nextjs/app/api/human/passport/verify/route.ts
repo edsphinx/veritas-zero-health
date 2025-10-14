@@ -1,7 +1,8 @@
 /**
- * API Route: Get Passport Score
+ * API Route: Verify/Get Passport Score
  *
  * GET /api/human/passport/verify?address=0x...
+ * POST /api/human/passport/verify
  *
  * Simple proxy - no business logic
  * Delegates to GetPassportScoreUseCase
@@ -39,6 +40,44 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(result);
   } catch (error) {
     console.error('[API] Passport score error:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { address, did } = body;
+
+    // Simple validation
+    if (!address) {
+      return NextResponse.json(
+        { success: false, error: 'Address required' },
+        { status: 400 }
+      );
+    }
+
+    // Initialize infrastructure
+    const humanClient = createPassportClient();
+
+    // Execute use case (all business logic is here)
+    const useCase = new GetPassportScoreUseCase(humanClient);
+    const result = await useCase.execute({ address });
+
+    // Return result
+    if (!result.success) {
+      return NextResponse.json(result, { status: 400 });
+    }
+
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error('[API] Passport verification error:', error);
     return NextResponse.json(
       {
         success: false,

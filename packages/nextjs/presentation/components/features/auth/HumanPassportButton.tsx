@@ -46,6 +46,10 @@ export function HumanPassportButton({
 
     onVerificationStart?.();
 
+    // Open Passport app in new tab for user to add stamps
+    window.open('https://app.passport.xyz/', '_blank', 'noopener,noreferrer');
+
+    // Also trigger a verification check in case they already have stamps
     verify(
       { address, did },
       {

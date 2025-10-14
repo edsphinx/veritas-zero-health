@@ -4,7 +4,7 @@
  * Centralized exports for all application hooks
  */
 
-// Human Protocol hooks
+// Human Passport hooks
 export * from './useHumanPassport';
 export * from './useHumanWallet';
 

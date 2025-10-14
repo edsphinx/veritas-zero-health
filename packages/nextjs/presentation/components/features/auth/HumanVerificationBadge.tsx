@@ -17,12 +17,14 @@ import { cn } from '@/shared/lib/utils';
 interface HumanVerificationBadgeProps {
   address?: string;
   showDetails?: boolean;
+  compact?: boolean;
   className?: string;
 }
 
 export function HumanVerificationBadge({
   address,
   showDetails = false,
+  compact = false,
   className,
 }: HumanVerificationBadgeProps) {
   const {
@@ -117,7 +119,19 @@ export function HumanVerificationBadge({
     );
   }
 
-  // Verified state - compact
+  // Verified state - compact (for user menu, inline display)
+  if (compact) {
+    return (
+      <div className={cn('flex items-center gap-2', className)}>
+        <div className="rounded-full bg-success p-1">
+          <CheckCircle2 className="h-3 w-3 text-success-foreground" />
+        </div>
+        <span className="text-xs font-medium text-success">Verified</span>
+      </div>
+    );
+  }
+
+  // Verified state - standard (not detailed)
   if (!showDetails) {
     return (
       <motion.div
@@ -215,7 +229,7 @@ export function HumanVerificationBadge({
       {/* Info note */}
       <div className="mt-4 rounded-md bg-green-600/10 border border-green-600/20 p-3">
         <p className="text-xs text-green-600/80 leading-relaxed">
-          <strong>What this means:</strong> You&apos;ve proven you&apos;re a unique human through Human Protocol&apos;s Passport system. This helps prevent fake accounts and ensures fair access to clinical trials.
+          <strong>What this means:</strong> You&apos;ve proven you&apos;re a unique human through Human Passport. This helps prevent fake accounts and ensures fair access to clinical trials.
         </p>
       </div>
     </motion.div>

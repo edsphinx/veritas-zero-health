@@ -33,6 +33,7 @@ export async function GET(req: NextRequest) {
 
     // Return result
     if (!result.success) {
+      console.error('[API] Passport status failed:', JSON.stringify(result, null, 2));
       return NextResponse.json(result, { status: 400 });
     }
 
