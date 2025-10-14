@@ -10,7 +10,7 @@ import { IStudyEnrollmentData } from "./IStudyEnrollmentData.sol";
  * @dev This contract separates the interaction data logic (e.g., compliance levels)
  * from the SBT token logic for greater security and flexibility.
  */
-contract MatchData is IStudyEnrollmentData {
+contract StudyEnrollmentData is IStudyEnrollmentData {
     /**
      * @notice The address of the main ProofOfMatch (SBT registry) contract.
      */

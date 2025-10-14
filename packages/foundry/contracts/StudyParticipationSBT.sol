@@ -15,7 +15,7 @@ import { IStudyParticipationSBT } from "./IStudyParticipationSBT.sol";
  * non-transferable (Soulbound) nature of the tokens. It delegates the storage of dynamic
  * interaction data (like compliance levels) to a MatchData contract.
  */
-contract ProofOfMatch is ERC721, Ownable, IStudyParticipationSBT {
+contract StudyParticipationSBT is ERC721, Ownable, IStudyParticipationSBT {
     // --- State Variables ---
     uint256 private _nextTokenId;
     uint256 private _nextMatchId;
