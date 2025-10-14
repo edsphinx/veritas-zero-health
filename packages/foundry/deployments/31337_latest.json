@@ -1,0 +1,16 @@
+{
+  "accountFactory": "0xf968E708a00f78729Dcf1c46325FB215bF3927f6",
+  "ageVerifier": "0x2E5B3b417087f1c19Ff6B804baEaA6CB8C7561fB",
+  "chainId": 31337,
+  "eligibilityVerifier": "0xF9c01EB82F2f60d59eD0Ad8C3613d79d642Ea1D2",
+  "enrollmentData": "0x546992ed4BeF8Db89B5343feaDBCEf24b9E2B2b8",
+  "healthIdentity": "0x4b522F9B0a5A16A26b909a4F62220a5e71c91adB",
+  "humanPassport": "0x0540017f66790FdaaDFE2c84b50935012bCA3B5e",
+  "network": "Localhost",
+  "participationSBT": "0x54b2Dc133cC10dCe7628eEe2101F31Ed6AD82b06",
+  "providerRegistry": "0xeBB25B01faEe3CAa2E6E3f9d71Dc65CC667aba7f",
+  "researchEscrow": "0x68cd4591a0309474056E8c27F61071E610392917",
+  "studyRegistry": "0xAD68036898fc4209b061361426171aD13eFfAcf3",
+  "timestamp": 1760396203,
+  "vaultFactory": "0x93623910B0E16716965c6cD0F3e5D3710EF98603"
+}

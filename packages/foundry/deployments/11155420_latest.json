@@ -1,0 +1,16 @@
+{
+  "accountFactory": "0x4b522F9B0a5A16A26b909a4F62220a5e71c91adB",
+  "ageVerifier": "0x68cd4591a0309474056E8c27F61071E610392917",
+  "chainId": 11155420,
+  "eligibilityVerifier": "0x2DE8f450ed6745bBf73210B3fcB05982CD9b7A1e",
+  "enrollmentData": "0x129289611b05e79eCdAE2a89aFC8d0586c081Ca6",
+  "healthIdentity": "0xeBB25B01faEe3CAa2E6E3f9d71Dc65CC667aba7f",
+  "humanPassport": "0xe53C60F8069C2f0c3a84F9B3DB5cf56f3100ba56",
+  "network": "Optimism Sepolia",
+  "participationSBT": "0xe1D4C921f5eFFaDB2A97452e805302ADb8e315C4",
+  "providerRegistry": "0x0540017f66790FdaaDFE2c84b50935012bCA3B5e",
+  "researchEscrow": "0xf968E708a00f78729Dcf1c46325FB215bF3927f6",
+  "studyRegistry": "0xDD01F974dA09458b7cCFc4B9B976d90A38Ba8a83",
+  "timestamp": 1760400984,
+  "vaultFactory": "0xF9c01EB82F2f60d59eD0Ad8C3613d79d642Ea1D2"
+}
