@@ -29,6 +29,8 @@ jobs:
 
       - name: Install dependencies
         run: yarn install
+        env:
+          YARN_ENABLE_IMMUTABLE_INSTALLS: false
       
       - name: Install foundry-toolchain
         uses: foundry-rs/foundry-toolchain@v1
