@@ -86,16 +86,16 @@ export class GetPassportDetailsUseCase {
   // Business rule: Verification status logic
   private determineVerificationStatus(details: VerificationDetails): boolean {
     // Business rules:
-    // 1. Must have minimum score
+    // 1. Must have minimum score (score already reflects stamps)
     // 2. Must not be expired
-    // 3. Must have at least one stamp (optional rule)
 
     const hasMinScore = details.score >= 20; // Configurable threshold
     const notExpired = details.expiresAt
       ? new Date(details.expiresAt) > new Date()
       : true;
-    const hasStamps = (details.stamps?.length || 0) > 0;
 
-    return details.verified && hasMinScore && notExpired && hasStamps;
+    // If score >= threshold, user is verified regardless of stamp count
+    // The score already includes stamp contributions
+    return details.verified && hasMinScore && notExpired;
   }
 }
