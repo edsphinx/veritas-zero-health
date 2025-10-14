@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 /**
  * @title AgeVerifier
+ * @author edsphinx
  * @notice Verifies zero-knowledge proofs for age range eligibility
  * @dev This is a placeholder verifier contract. In production, this will be replaced
  * with the auto-generated UltraPlonk verifier from the Noir circuit using Barretenberg.
