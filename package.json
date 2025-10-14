@@ -57,8 +57,7 @@
   "engines": {
     "node": ">=20.18.3"
   },
-  "dependencies": {
-    "@aztec/bb.js": "0.41.0",
-    "source-map-support": "^0.5.21"
+  "resolutions": {
+    "starknet": "npm:@starknet-io/starknet.js@^6.20.3"
   }
 }
