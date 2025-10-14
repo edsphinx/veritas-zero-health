@@ -6,8 +6,9 @@ import { Providers } from './providers';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Veritas Zero Health',
-  description: 'Privacy-preserving clinical trial matching with zero-knowledge proofs',
+  title: 'DASHI - Decentralized Anonymous Sovereign Health Identity',
+  description: 'Privacy-preserving health identity powered by Zero-Knowledge Proofs. Own your health data, prove without revealing.',
+  keywords: ['health identity', 'zero-knowledge proofs', 'clinical trials', 'privacy', 'blockchain', 'DeSci'],
 };
 
 export default function RootLayout({

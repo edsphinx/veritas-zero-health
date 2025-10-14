@@ -1,59 +1,172 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.5rem;
-  }
+/**
+ * Veritas Zero Health - Scientific Color Palette
+ * Based on color psychology research for healthcare & research platforms
+ *
+ * Primary: Deep Blue (#0A2540) - Trust, authority, professionalism
+ * Secondary: Emerald Green (#008060) - Growth, health, wellbeing
+ * Accent: Vivid Orange (#F29F05) - Innovation, creativity, action
+ * Neutral: Pure White (#FFFFFF) - Clarity, objectivity, cleanliness
+ */
 
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
-  }
+@theme {
+  /* Base colors */
+  --color-background: #ffffff;
+  --color-foreground: #0a2540;
+
+  /* Card & Surfaces */
+  --color-card: #ffffff;
+  --color-card-foreground: #0a2540;
+
+  /* Popover */
+  --color-popover: #ffffff;
+  --color-popover-foreground: #0a2540;
+
+  /* Primary - Deep Blue (Trust & Authority) */
+  --color-primary: #0a2540;
+  --color-primary-foreground: #ffffff;
+
+  /* Secondary - Emerald Green (Growth & Health) */
+  --color-secondary: #008060;
+  --color-secondary-foreground: #ffffff;
+
+  /* Muted - Light Gray backgrounds */
+  --color-muted: #f6f9fc;
+  --color-muted-foreground: #525f7f;
+
+  /* Accent - Vivid Orange (Innovation & Action) */
+  --color-accent: #f29f05;
+  --color-accent-foreground: #ffffff;
+
+  /* Destructive - Keep for errors */
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+
+  /* Success - Using our green */
+  --color-success: #008060;
+  --color-success-foreground: #ffffff;
+
+  /* Warning - Using our orange */
+  --color-warning: #f29f05;
+  --color-warning-foreground: #ffffff;
+
+  /* Borders & Inputs */
+  --color-border: #e0e7ef;
+  --color-input: #e0e7ef;
+  --color-ring: #0a2540;
+
+  /* Radius */
+  --radius: 0.75rem;
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
+:root {
+  /* Base colors */
+  --background: 0 0% 100%; /* #FFFFFF - Pure White */
+  --foreground: 210 75% 15%; /* #0A2540 - Deep Blue */
+
+  /* Card & Surfaces */
+  --card: 0 0% 100%; /* #FFFFFF */
+  --card-foreground: 210 75% 15%;
+
+  /* Popover */
+  --popover: 0 0% 100%;
+  --popover-foreground: 210 75% 15%;
+
+  /* Primary - Deep Blue (Trust & Authority) */
+  --primary: 210 75% 15%; /* #0A2540 */
+  --primary-foreground: 0 0% 100%; /* White text on blue */
+
+  /* Secondary - Emerald Green (Growth & Health) */
+  --secondary: 173 100% 25%; /* #008060 */
+  --secondary-foreground: 0 0% 100%;
+
+  /* Muted - Light Gray backgrounds */
+  --muted: 210 40% 97%; /* #F6F9FC */
+  --muted-foreground: 210 20% 40%; /* #525F7F - Dark Gray for text */
+
+  /* Accent - Vivid Orange (Innovation & Action) */
+  --accent: 39 98% 49%; /* #F29F05 */
+  --accent-foreground: 0 0% 100%;
+
+  /* Destructive - Keep for errors */
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+
+  /* Success - Using our green */
+  --success: 173 100% 25%; /* #008060 */
+  --success-foreground: 0 0% 100%;
+
+  /* Warning - Using our orange */
+  --warning: 39 98% 49%; /* #F29F05 */
+  --warning-foreground: 0 0% 100%;
+
+  /* Borders & Inputs */
+  --border: 210 30% 90%; /* Subtle blue-gray */
+  --input: 210 30% 90%;
+  --ring: 210 75% 15%; /* Focus ring matches primary */
+
+  /* Radius */
+  --radius: 0.75rem; /* Slightly increased for modern look */
+}
+
+.dark {
+  /* Dark mode - Professional night theme */
+  --color-background: #0d1b2a;
+  --color-foreground: #fafafa;
+  --color-card: #1b2838;
+  --color-card-foreground: #fafafa;
+  --color-popover: #1b2838;
+  --color-popover-foreground: #fafafa;
+  --color-primary: #00a884;
+  --color-primary-foreground: #0d1b2a;
+  --color-secondary: #2d3f54;
+  --color-secondary-foreground: #fafafa;
+  --color-muted: #1f2937;
+  --color-muted-foreground: #9ca3af;
+  --color-accent: #ffa726;
+  --color-accent-foreground: #0d1b2a;
+  --color-destructive: #dc2626;
+  --color-destructive-foreground: #fafafa;
+  --color-success: #00997a;
+  --color-success-foreground: #fafafa;
+  --color-warning: #ffa726;
+  --color-warning-foreground: #0d1b2a;
+  --color-border: #374151;
+  --color-input: #374151;
+  --color-ring: #00a884;
+
+  /* HSL versions */
+  --background: 210 75% 8%;
+  --foreground: 0 0% 98%;
+  --card: 210 60% 12%;
+  --card-foreground: 0 0% 98%;
+  --popover: 210 60% 12%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 173 100% 35%;
+  --primary-foreground: 210 75% 8%;
+  --secondary: 210 60% 25%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 210 50% 15%;
+  --muted-foreground: 210 20% 70%;
+  --accent: 39 98% 55%;
+  --accent-foreground: 210 75% 8%;
+  --destructive: 0 63% 45%;
+  --destructive-foreground: 0 0% 98%;
+  --success: 173 100% 30%;
+  --success-foreground: 0 0% 98%;
+  --warning: 39 98% 55%;
+  --warning-foreground: 210 75% 8%;
+  --border: 210 50% 20%;
+  --input: 210 50% 20%;
+  --ring: 173 100% 35%;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
 }
