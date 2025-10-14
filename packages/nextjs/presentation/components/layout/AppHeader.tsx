@@ -19,7 +19,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { WalletConnectCompact } from '@/components/WalletConnect';
 import { useAuth } from '@/shared/hooks/useAuth';
 import { getNavigationForRole, portalNavigation } from '@/config/navigation.config';
 import type { NavItem } from '@/shared/types/auth.types';
@@ -106,15 +106,8 @@ export function AppHeader() {
               </button>
             )}
 
-            {/* RainbowKit Connect Button */}
-            <ConnectButton
-              chainStatus="icon"
-              showBalance={false}
-              accountStatus={{
-                smallScreen: 'avatar',
-                largeScreen: 'full',
-              }}
-            />
+            {/* Wallet Connect Button */}
+            <WalletConnectCompact />
 
             {/* Mobile Menu Toggle */}
             <button
