@@ -6,18 +6,19 @@ import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "./types/IStudyTypes.sol";
-import "./types/IProviderTypes.sol";
+import "../types/IStudyTypes.sol";
+import "../types/IProviderTypes.sol";
 
 /**
  * @title ResearchFundingEscrow
+ * @author edsphinx
  * @notice Escrow contract for DeSci research studies with milestone-based participant payments
  * @dev Manages study funding, participant enrollment, milestone verification, and automatic payments
  *
  * Flow:
  * 1. Sponsor creates study with defined milestones
  * 2. Sponsor deposits ETH/ERC20 tokens to fund the study
- * 3. Participants (VZH Smart Accounts) enroll in the study
+ * 3. Participants (DASHI Smart Accounts) enroll in the study
  * 4. Participants complete milestones
  * 5. Certified providers verify milestone completion
  * 6. Payments automatically released to participant wallets
@@ -25,7 +26,7 @@ import "./types/IProviderTypes.sol";
  * Integration:
  * - Uses IStudyTypes for all study/milestone/participation data structures
  * - Validates providers through MedicalProviderRegistry
- * - Pays to VZH Smart Account addresses (multi-chain compatible)
+ * - Pays to DASHI Smart Account addresses (multi-chain compatible)
  */
 contract ResearchFundingEscrow is AccessControl, Pausable, ReentrancyGuard, IStudyTypes {
     using SafeERC20 for IERC20;
@@ -387,7 +388,7 @@ contract ResearchFundingEscrow is AccessControl, Pausable, ReentrancyGuard, IStu
     /**
      * @notice Enroll a participant in a study
      * @param studyId The study to enroll in
-     * @param participant The VZH Smart Account address of the participant
+     * @param participant The DASHI Smart Account address of the participant
      */
     function enrollParticipant(
         uint256 studyId,
