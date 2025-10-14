@@ -2,11 +2,11 @@
 pragma solidity ^0.8.24;
 
 import "forge-std/Script.sol";
-import "../contracts/StudyRegistryImpl.sol";
-import "../contracts/StudyParticipationSBT.sol";
-import "../contracts/StudyEnrollmentData.sol";
-import "../contracts/CommitmentVault.sol";
-import "../contracts/CommitmentVaultFactory.sol";
+import "../contracts/studies/StudyRegistryImpl.sol";
+import "../contracts/studies/StudyParticipationSBT.sol";
+import "../contracts/studies/StudyEnrollmentData.sol";
+import "../contracts/funding/CommitmentVault.sol";
+import "../contracts/funding/CommitmentVaultFactory.sol";
 
 /**
  * @title Deploy Clinical Trials Contracts
