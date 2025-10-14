@@ -37,6 +37,7 @@ localhost = "http://127.0.0.1:8545"
 [etherscan]
 polygonMumbai = { key = "${ETHERSCAN_API_KEY}" }
 sepolia = { key = "${ETHERSCAN_API_KEY}" }
+optimismSepolia = { key = "${ETHERSCAN_API_KEY}" }
 
 
 
@@ -47,7 +48,7 @@ quote_style = "double"
 bracket_spacing = true
 int_types = "long"
 
-
+ignored_file_paths = ["contracts/EligibilityCodeVerifier.sol"]
 
 
 # See more config options https://book.getfoundry.sh/reference/config/overview
