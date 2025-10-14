@@ -2,22 +2,22 @@
 pragma solidity ^0.8.24;
 
 import {Script, console2} from "forge-std/Script.sol";
-import {VZHAccountFactory} from "../contracts/VZHAccountFactory.sol";
-import {VZHSmartAccount} from "../contracts/VZHSmartAccount.sol";
-import {HealthIdentitySBT} from "../contracts/HealthIdentitySBT.sol";
+import {PatientAccountFactory} from "../contracts/core/PatientAccountFactory.sol";
+import {PatientSmartAccount} from "../contracts/core/PatientSmartAccount.sol";
+import {HealthIdentitySBT} from "../contracts/core/HealthIdentitySBT.sol";
 import {MockHumanPassport} from "../contracts/mocks/MockHumanPassport.sol";
 
 /**
- * @title DeployVZHMultichain
- * @notice Script para desplegar VZH Smart Account Factory en múltiples chains
+ * @title DeployPatientMultichain
+ * @notice Script para desplegar Patient Smart Account Factory en múltiples chains
  * @dev Usa CREATE2 para garantizar misma dirección en todas las chains
  *
  * Uso:
  * 1. Deploy en una chain:
- *    forge script script/DeployVZHMultichain.s.sol:DeployVZHMultichain --rpc-url <RPC_URL> --broadcast
+ *    forge script script/DeployVZHMultichain.s.sol:DeployPatientMultichain --rpc-url <RPC_URL> --broadcast
  *
  * 2. Predecir dirección antes de deploy:
- *    forge script script/DeployVZHMultichain.s.sol:DeployVZHMultichain --rpc-url <RPC_URL>
+ *    forge script script/DeployVZHMultichain.s.sol:DeployPatientMultichain --rpc-url <RPC_URL>
  *
  * 3. Deploy en múltiples chains (ejecutar para cada una):
  *    - Sepolia: forge script ... --rpc-url $SEPOLIA_RPC_URL --broadcast
@@ -25,17 +25,17 @@ import {MockHumanPassport} from "../contracts/mocks/MockHumanPassport.sol";
  *    - Arbitrum: forge script ... --rpc-url $ARBITRUM_RPC_URL --broadcast
  *    - Base: forge script ... --rpc-url $BASE_RPC_URL --broadcast
  */
-contract DeployVZHMultichain is Script {
+contract DeployPatientMultichain is Script {
 
     // Salt para CREATE2 - USAR EL MISMO EN TODAS LAS CHAINS
-    bytes32 constant FACTORY_SALT = keccak256("VZH_FACTORY_V1");
+    bytes32 constant FACTORY_SALT = keccak256("PATIENT_FACTORY_V1");
 
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         address deployer = vm.addr(deployerPrivateKey);
 
         console2.log("====================================");
-        console2.log("VZH Multichain Deployment");
+        console2.log("Patient Multichain Deployment");
         console2.log("====================================");
         console2.log("Deployer:", deployer);
         console2.log("Chain ID:", block.chainid);
@@ -59,9 +59,9 @@ contract DeployVZHMultichain is Script {
         console2.log("");
 
         // 2. Deploy Factory usando CREATE2 para dirección determinística
-        console2.log("Deploying VZHAccountFactory with CREATE2...");
-        VZHAccountFactory factory = deployFactoryDeterministic(FACTORY_SALT);
-        console2.log("VZHAccountFactory deployed at:", address(factory));
+        console2.log("Deploying PatientAccountFactory with CREATE2...");
+        PatientAccountFactory factory = deployFactoryDeterministic(FACTORY_SALT);
+        console2.log("PatientAccountFactory deployed at:", address(factory));
         console2.log("");
 
         // 3. Deploy Health Identity SBT
@@ -76,7 +76,7 @@ contract DeployVZHMultichain is Script {
             healthSBT.certifyProvider(
                 deployer,
                 "Test Medical Provider",
-                string(abi.encodePacked("did:vzh:provider:", toHexString(deployer)))
+                string(abi.encodePacked("did:dashi:provider:", toHexString(deployer)))
             );
             console2.log("Deployer certified as provider");
             console2.log("");
@@ -92,7 +92,7 @@ contract DeployVZHMultichain is Script {
         console2.log("Chain ID:", block.chainid);
         console2.log("");
         console2.log("Contracts:");
-        console2.log("  VZHAccountFactory:", address(factory));
+        console2.log("  PatientAccountFactory:", address(factory));
         console2.log("  HealthIdentitySBT:", address(healthSBT));
         console2.log("  HumanPassport:", humanPassportAddress);
         console2.log("");
@@ -116,8 +116,8 @@ contract DeployVZHMultichain is Script {
     /**
      * @dev Deploy Factory usando CREATE2 para dirección determinística
      */
-    function deployFactoryDeterministic(bytes32 salt) internal returns (VZHAccountFactory) {
-        bytes memory bytecode = type(VZHAccountFactory).creationCode;
+    function deployFactoryDeterministic(bytes32 salt) internal returns (PatientAccountFactory) {
+        bytes memory bytecode = type(PatientAccountFactory).creationCode;
 
         address factoryAddress;
         assembly {
@@ -125,14 +125,14 @@ contract DeployVZHMultichain is Script {
         }
 
         require(factoryAddress != address(0), "Factory deployment failed");
-        return VZHAccountFactory(factoryAddress);
+        return PatientAccountFactory(factoryAddress);
     }
 
     /**
      * @dev Predecir la dirección del Factory antes de deploy
      */
     function predictFactoryAddress(address deployer, bytes32 salt) public pure returns (address) {
-        bytes memory bytecode = type(VZHAccountFactory).creationCode;
+        bytes memory bytecode = type(PatientAccountFactory).creationCode;
         bytes32 hash = keccak256(
             abi.encodePacked(
                 bytes1(0xff),

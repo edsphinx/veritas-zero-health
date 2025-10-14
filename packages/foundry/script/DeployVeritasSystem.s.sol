@@ -2,8 +2,8 @@
 pragma solidity ^0.8.20;
 
 import "forge-std/Script.sol";
-import "../contracts/AgeVerifier.sol";
-import "../contracts/StudyRegistryImpl.sol";
+import "../contracts/zk/AgeVerifier.sol";
+import "../contracts/studies/StudyRegistryImpl.sol";
 
 /**
  * @title DeployVeritasSystem
