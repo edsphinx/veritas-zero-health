@@ -17,10 +17,24 @@ import {
   type HealthRecordType,
 } from '../lib/nillion-client';
 
+import { getAllSampleHealthData } from '../lib/sample-health-data';
+
+import {
+  initializeZKProofs,
+  generateEligibilityProof,
+  verifyEligibilityProof,
+  generateProofFromHealthData,
+  isZKInitialized,
+  getZKStatus,
+} from '../lib/zk-proof-service';
+
 console.log('🚀 Veritas Zero Health - Service Worker loaded');
 
 // Global Nillion client instance
 let nillionClient: VeritasNillionClient | null = null;
+
+// ZK initialization flag
+let zkInitPromise: Promise<void> | null = null;
 
 // Installation handler
 chrome.runtime.onInstalled.addListener(async (details) => {
@@ -159,6 +173,62 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
             collectionIds: nillionClient?.getCollectionIds() || new Map(),
           };
           sendResponse({ success: true, data: status });
+          break;
+        }
+
+        case 'POPULATE_SAMPLE_DATA': {
+          const result = await handlePopulateSampleData();
+          sendResponse({ success: true, data: result });
+          break;
+        }
+
+        // ZK Proof Integration
+        case 'INIT_ZK': {
+          const result = await handleInitZK();
+          sendResponse({ success: true, data: result });
+          break;
+        }
+
+        case 'GET_ZK_STATUS': {
+          const status = getZKStatus();
+          sendResponse({ success: true, data: status });
+          break;
+        }
+
+        case 'GENERATE_ELIGIBILITY_PROOF': {
+          const result = await handleGenerateEligibilityProof(request.data);
+          sendResponse({ success: true, data: result });
+          break;
+        }
+
+        case 'VERIFY_ELIGIBILITY_PROOF': {
+          const result = await handleVerifyEligibilityProof(request.data);
+          sendResponse({ success: true, data: result });
+          break;
+        }
+
+        case 'GENERATE_PROOF_FROM_HEALTH_DATA': {
+          const result = await handleGenerateProofFromHealthData(request.data);
+          sendResponse({ success: true, data: result });
+          break;
+        }
+
+        // Wallet Connection Management
+        case 'UPDATE_WALLET_CONNECTION': {
+          const result = await handleUpdateWalletConnection(request.data);
+          sendResponse({ success: true, data: result });
+          break;
+        }
+
+        case 'GET_WALLET_CONNECTION': {
+          const connection = await getWalletConnection();
+          sendResponse({ success: true, data: connection });
+          break;
+        }
+
+        case 'DISCONNECT_WALLET': {
+          await handleDisconnectWallet();
+          sendResponse({ success: true });
           break;
         }
 
@@ -317,12 +387,12 @@ chrome.tabs.onUpdated.addListener((_tabId, changeInfo, tab) => {
 
 /**
  * Initialize Nillion client
+ * Nillion operations now go through Next.js API routes
  */
 async function handleInitNillion(data: {
-  builderPrivateKey?: string;
   did: string;
 }) {
-  const { builderPrivateKey, did } = data;
+  const { did } = data;
 
   // Check if already initialized
   if (nillionClient?.isInitialized()) {
@@ -335,10 +405,10 @@ async function handleInitNillion(data: {
 
   console.log('Initializing Nillion client...');
 
-  // Create client (will use env vars if builderPrivateKey not provided)
-  nillionClient = new VeritasNillionClient(
-    builderPrivateKey ? { apiKey: builderPrivateKey, testnet: true } : {}
-  );
+  // Create client - it will use Next.js API routes
+  nillionClient = new VeritasNillionClient({
+    // apiBaseUrl defaults to http://localhost:3000
+  });
 
   await nillionClient.initialize(did);
 
@@ -424,22 +494,25 @@ async function handleGetDocument(data: { documentId: string }) {
 /**
  * Delete a document
  */
-async function handleDeleteDocument(data: { documentId: string }) {
+async function handleDeleteDocument(data: {
+  collection: HealthRecordType;
+  documentId: string;
+}) {
   if (!nillionClient?.isInitialized()) {
     throw new Error('Nillion client not initialized');
   }
 
-  const { documentId } = data;
+  const { collection, documentId } = data;
 
   console.log(`Deleting document ${documentId}...`);
 
-  await nillionClient.deleteRecord(documentId);
+  await nillionClient.deleteRecord(collection, documentId);
 
   // Log activity
   await logActivity({
     type: 'DOCUMENT_DELETED',
     timestamp: Date.now(),
-    details: { documentId },
+    details: { collection, documentId },
   });
 }
 
@@ -541,3 +614,274 @@ setInterval(async () => {
     }
   }
 }, 60 * 1000); // Every minute
+
+/**
+ * Populate sample health data for testing/demo
+ */
+async function handlePopulateSampleData() {
+  if (!nillionClient?.isInitialized()) {
+    throw new Error('Nillion client not initialized');
+  }
+
+  console.log('Populating sample health data...');
+
+  const allData = getAllSampleHealthData();
+  const results = {
+    diagnoses: 0,
+    biomarkers: 0,
+    vitals: 0,
+    medications: 0,
+    allergies: 0,
+  };
+
+  // Store each type of data
+  for (const [type, records] of Object.entries(allData)) {
+    for (const record of records) {
+      try {
+        await nillionClient.storeRecord(type as HealthRecordType, record);
+        results[type as keyof typeof results]++;
+      } catch (error) {
+        console.error(`Error storing ${type}:`, error);
+      }
+    }
+  }
+
+  console.log('Sample data populated:', results);
+
+  // Log activity
+  await logActivity({
+    type: 'SAMPLE_DATA_POPULATED',
+    timestamp: Date.now(),
+    details: results,
+  });
+
+  return results;
+}
+
+/**
+ * Initialize ZK proof system
+ */
+async function handleInitZK() {
+  // Prevent multiple simultaneous initializations
+  if (zkInitPromise) {
+    console.log('ZK initialization already in progress...');
+    await zkInitPromise;
+    return { status: 'initialized', ...getZKStatus() };
+  }
+
+  if (isZKInitialized()) {
+    console.log('ZK proofs already initialized');
+    return { status: 'already_initialized', ...getZKStatus() };
+  }
+
+  console.log('Initializing ZK proof system...');
+
+  zkInitPromise = initializeZKProofs();
+
+  try {
+    await zkInitPromise;
+
+    // Log activity
+    await logActivity({
+      type: 'ZK_INITIALIZED',
+      timestamp: Date.now(),
+      details: getZKStatus(),
+    });
+
+    return { status: 'initialized', ...getZKStatus() };
+  } finally {
+    zkInitPromise = null;
+  }
+}
+
+/**
+ * Generate eligibility proof
+ */
+async function handleGenerateEligibilityProof(data: {
+  eligibilityCode: string;
+}) {
+  if (!isZKInitialized()) {
+    throw new Error('ZK proof system not initialized. Call INIT_ZK first.');
+  }
+
+  const { eligibilityCode } = data;
+
+  console.log(`Generating proof for eligibility code: ${eligibilityCode}`);
+
+  const result = await generateEligibilityProof(eligibilityCode);
+
+  // Log activity
+  await logActivity({
+    type: 'ZK_PROOF_GENERATED',
+    timestamp: Date.now(),
+    details: {
+      eligibilityCode,
+      timeMs: result.timeMs,
+    },
+  });
+
+  return result;
+}
+
+/**
+ * Verify eligibility proof
+ */
+async function handleVerifyEligibilityProof(data: {
+  proof: any;
+  publicInputs: any;
+}) {
+  if (!isZKInitialized()) {
+    throw new Error('ZK proof system not initialized. Call INIT_ZK first.');
+  }
+
+  const { proof, publicInputs } = data;
+
+  console.log('Verifying eligibility proof...');
+
+  const result = await verifyEligibilityProof(proof, publicInputs);
+
+  // Log activity
+  await logActivity({
+    type: 'ZK_PROOF_VERIFIED',
+    timestamp: Date.now(),
+    details: {
+      valid: result.valid,
+      timeMs: result.timeMs,
+    },
+  });
+
+  return result;
+}
+
+/**
+ * Generate proof from health data stored in Nillion
+ */
+async function handleGenerateProofFromHealthData(data: {
+  dataType: string;
+  criteria: { code: string };
+}) {
+  if (!isZKInitialized()) {
+    throw new Error('ZK proof system not initialized. Call INIT_ZK first.');
+  }
+
+  if (!nillionClient?.isInitialized()) {
+    throw new Error('Nillion client not initialized');
+  }
+
+  const { dataType, criteria } = data;
+
+  console.log(`Generating proof from health data: ${dataType}`);
+
+  const result = await generateProofFromHealthData(dataType, criteria);
+
+  // Log activity
+  await logActivity({
+    type: 'ZK_PROOF_FROM_HEALTH_DATA',
+    timestamp: Date.now(),
+    details: {
+      dataType,
+      criteria,
+      timeMs: result.timeMs,
+    },
+  });
+
+  return result;
+}
+
+/**
+ * Update wallet connection from web app
+ */
+async function handleUpdateWalletConnection(data: {
+  origin: string;
+  address: string;
+  method: string;
+  isVerified?: boolean;
+  humanityScore?: number;
+}) {
+  const { origin, address, method, isVerified, humanityScore } = data;
+
+  console.log(`Wallet connected from ${origin}:`, address);
+
+  // Store connection state
+  await chrome.storage.local.set({
+    ethAddress: address,
+    walletConnection: {
+      origin,
+      address,
+      method,
+      isVerified: isVerified || false,
+      humanityScore: humanityScore || 0,
+      connectedAt: Date.now(),
+    },
+  });
+
+  // Log activity
+  await logActivity({
+    type: 'WALLET_CONNECTED',
+    timestamp: Date.now(),
+    details: {
+      origin,
+      address,
+      method,
+    },
+  });
+
+  // Notify all content scripts that connection was updated
+  const tabs = await chrome.tabs.query({});
+  for (const tab of tabs) {
+    if (tab.id && tab.url?.includes(origin)) {
+      chrome.tabs.sendMessage(tab.id, {
+        type: 'WALLET_CONNECTION_UPDATED',
+        data: {
+          address,
+          isConnected: true,
+          origin,
+        },
+      }).catch(() => {
+        // Content script might not be ready, that's okay
+      });
+    }
+  }
+
+  return { success: true };
+}
+
+/**
+ * Get current wallet connection
+ */
+async function getWalletConnection() {
+  const stored = await chrome.storage.local.get(['walletConnection', 'ethAddress']);
+  return stored.walletConnection || { isConnected: false };
+}
+
+/**
+ * Disconnect wallet
+ */
+async function handleDisconnectWallet() {
+  console.log('Disconnecting wallet...');
+
+  // Clear connection state
+  await chrome.storage.local.remove(['walletConnection', 'ethAddress', 'isVerified']);
+
+  // Log activity
+  await logActivity({
+    type: 'WALLET_DISCONNECTED',
+    timestamp: Date.now(),
+    details: {},
+  });
+
+  // Notify all content scripts
+  const tabs = await chrome.tabs.query({});
+  for (const tab of tabs) {
+    if (tab.id) {
+      chrome.tabs.sendMessage(tab.id, {
+        type: 'WALLET_CONNECTION_UPDATED',
+        data: {
+          isConnected: false,
+        },
+      }).catch(() => {
+        // Ignore if content script not ready
+      });
+    }
+  }
+}

@@ -56,6 +56,94 @@ window.addEventListener('message', async (event) => {
         break;
       }
 
+      case 'VERITAS_INIT_NILLION': {
+        // Check if DID exists first
+        const hasDidResponse = await chrome.runtime.sendMessage({
+          type: 'HAS_DID',
+        });
+
+        if (!hasDidResponse.success || !hasDidResponse.data.hasDID) {
+          // No DID exists - need to create one first
+          // Check if we already have a pending request to avoid loops
+          const stored = await chrome.storage.local.get(['pendingNillionInit']);
+
+          if (!stored.pendingNillionInit) {
+            // First time - store flag and open popup
+            await chrome.storage.local.set({
+              pendingNillionInit: true,
+              pendingNillionInitOrigin: window.location.origin,
+            });
+
+            // Open popup to create DID
+            try {
+              await chrome.runtime.sendMessage({ type: 'REQUEST_PERMISSION', data: {
+                origin: window.location.origin,
+                requestedPermissions: ['create:did', 'init:nillion']
+              }});
+            } catch (err) {
+              console.error('Failed to open popup:', err);
+            }
+          }
+
+          // Respond with pending status
+          window.postMessage(
+            {
+              type: 'VERITAS_INIT_NILLION_RESPONSE',
+              status: 'pending',
+              message: 'Please create a DID in the extension popup',
+            },
+            '*'
+          );
+          break;
+        }
+
+        // DID exists, get it and initialize Nillion
+        const didResponse = await chrome.runtime.sendMessage({
+          type: 'GET_DID',
+        });
+
+        if (!didResponse.success || !didResponse.data) {
+          window.postMessage(
+            {
+              type: 'VERITAS_INIT_NILLION_RESPONSE',
+              error: 'Failed to retrieve DID',
+            },
+            '*'
+          );
+          break;
+        }
+
+        // didResponse.data is a DIDDocument with { id, publicKey, created, updated }
+        const didDocument = didResponse.data;
+
+        const response = await chrome.runtime.sendMessage({
+          type: 'INIT_NILLION',
+          data: {
+            did: didDocument.id,
+          },
+        });
+
+        if (response.success) {
+          window.postMessage(
+            {
+              type: 'VERITAS_INIT_NILLION_RESPONSE',
+              status: response.data.status,
+              collectionIds: response.data.collectionIds,
+            },
+            '*'
+          );
+        } else {
+          window.postMessage(
+            {
+              type: 'VERITAS_INIT_NILLION_RESPONSE',
+              error: response.error || 'Failed to initialize Nillion',
+            },
+            '*'
+          );
+        }
+        break;
+      }
+
       case 'VERITAS_REQUEST_PERMISSION': {
         // Request permission from background script
         const origin = window.location.origin;
@@ -91,14 +179,178 @@ window.addEventListener('message', async (event) => {
       }
 
       case 'VERITAS_REQUEST_DATA': {
-        // TODO: Implement data fetching from Nillion
-        window.postMessage(
-          {
-            type: 'VERITAS_DATA_RESPONSE',
-            error: 'Not implemented yet',
+        // Request health data from background script (Nillion)
+        const response = await chrome.runtime.sendMessage({
+          type: 'GET_DOCUMENTS',
+          data: {
+            collection: data.dataType, // e.g., 'diagnoses', 'biomarkers'
           },
-          '*'
-        );
+        });
+
+        if (response.success) {
+          window.postMessage(
+            {
+              type: 'VERITAS_DATA_RESPONSE',
+              data: response.data.documents || [],
+            },
+            '*'
+          );
+        } else {
+          window.postMessage(
+            {
+              type: 'VERITAS_DATA_RESPONSE',
+              error: response.error || 'Failed to fetch data',
+            },
+            '*'
+          );
+        }
+        break;
+      }
+
+      case 'VERITAS_POPULATE_SAMPLE_DATA': {
+        // Populate sample health data
+        const response = await chrome.runtime.sendMessage({
+          type: 'POPULATE_SAMPLE_DATA',
+        });
+
+        if (response.success) {
+          window.postMessage(
+            {
+              type: 'VERITAS_POPULATE_SAMPLE_DATA_RESPONSE',
+              results: response.data,
+            },
+            '*'
+          );
+        } else {
+          window.postMessage(
+            {
+              type: 'VERITAS_POPULATE_SAMPLE_DATA_RESPONSE',
+              error: response.error || 'Failed to populate sample data',
+            },
+            '*'
+          );
+        }
+        break;
+      }
+
+      case 'VERITAS_INIT_ZK': {
+        // Initialize ZK proof system
+        const response = await chrome.runtime.sendMessage({
+          type: 'INIT_ZK',
+        });
+
+        if (response.success) {
+          window.postMessage(
+            {
+              type: 'VERITAS_INIT_ZK_RESPONSE',
+              status: response.data.status,
+              zkStatus: response.data,
+            },
+            '*'
+          );
+        } else {
+          window.postMessage(
+            {
+              type: 'VERITAS_INIT_ZK_RESPONSE',
+              error: response.error || 'Failed to initialize ZK proofs',
+            },
+            '*'
+          );
+        }
+        break;
+      }
+
+      case 'VERITAS_GENERATE_PROOF': {
+        // Generate eligibility proof
+        const response = await chrome.runtime.sendMessage({
+          type: 'GENERATE_ELIGIBILITY_PROOF',
+          data: {
+            eligibilityCode: data.eligibilityCode,
+          },
+        });
+
+        if (response.success) {
+          window.postMessage(
+            {
+              type: 'VERITAS_GENERATE_PROOF_RESPONSE',
+              proof: response.data.proof,
+              publicInputs: response.data.publicInputs,
+              timeMs: response.data.timeMs,
+            },
+            '*'
+          );
+        } else {
+          window.postMessage(
+            {
+              type: 'VERITAS_GENERATE_PROOF_RESPONSE',
+              error: response.error || 'Failed to generate proof',
+            },
+            '*'
+          );
+        }
+        break;
+      }
+
+      case 'VERITAS_VERIFY_PROOF': {
+        // Verify eligibility proof
+        const response = await chrome.runtime.sendMessage({
+          type: 'VERIFY_ELIGIBILITY_PROOF',
+          data: {
+            proof: data.proof,
+            publicInputs: data.publicInputs,
+          },
+        });
+
+        if (response.success) {
+          window.postMessage(
+            {
+              type: 'VERITAS_VERIFY_PROOF_RESPONSE',
+              valid: response.data.valid,
+              timeMs: response.data.timeMs,
+            },
+            '*'
+          );
+        } else {
+          window.postMessage(
+            {
+              type: 'VERITAS_VERIFY_PROOF_RESPONSE',
+              error: response.error || 'Failed to verify proof',
+            },
+            '*'
+          );
+        }
+        break;
+      }
+
+      case 'VERITAS_GENERATE_PROOF_FROM_HEALTH_DATA': {
+        // Generate proof from health data
+        const response = await chrome.runtime.sendMessage({
+          type: 'GENERATE_PROOF_FROM_HEALTH_DATA',
+          data: {
+            dataType: data.dataType,
+            criteria: data.criteria,
+          },
+        });
+
+        if (response.success) {
+          window.postMessage(
+            {
+              type: 'VERITAS_GENERATE_PROOF_FROM_HEALTH_DATA_RESPONSE',
+              proof: response.data.proof,
+              publicInputs: response.data.publicInputs,
+              timeMs: response.data.timeMs,
+            },
+            '*'
+          );
+        } else {
+          window.postMessage(
+            {
+              type: 'VERITAS_GENERATE_PROOF_FROM_HEALTH_DATA_RESPONSE',
+              error: response.error || 'Failed to generate proof from health data',
+            },
+            '*'
+          );
+        }
         break;
       }
 
@@ -119,6 +371,26 @@ window.addEventListener('message', async (event) => {
       '*'
     );
   }
+});
+
+// Listen for wallet connection events from the page
+// This allows Next.js app to notify the extension when wallet is connected
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  console.log('Content script received message from background:', message);
+
+  if (message.type === 'WALLET_CONNECTION_UPDATED') {
+    // Notify the page that wallet connection state changed
+    window.postMessage(
+      {
+        type: 'VERITAS_WALLET_CONNECTION_UPDATED',
+        data: message.data,
+      },
+      '*'
+    );
+    sendResponse({ success: true });
+  }
+
+  return true;
 });
 
 // Log activity when page loads
