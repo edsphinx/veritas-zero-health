@@ -2,11 +2,27 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WagmiProvider } from 'wagmi';
-import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
-import { useState } from 'react';
-import { wagmiConfig } from '@/config/wagmi.config';
-import { veritasTheme } from '@/config/rainbowkit.config';
-import '@rainbow-me/rainbowkit/styles.css';
+import { useState, useEffect } from 'react';
+import { wagmiConfig, chains, projectId, metadata } from '@/config/wagmi.config';
+import { createAppKit } from '@reown/appkit/react';
+import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
+
+// Create Reown AppKit modal
+const wagmiAdapter = new WagmiAdapter({
+  networks: chains as any,
+  projectId,
+  ssr: true,
+});
+
+createAppKit({
+  adapters: [wagmiAdapter],
+  networks: chains as any,
+  projectId,
+  metadata,
+  features: {
+    analytics: false,
+  },
+});
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -24,9 +40,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider theme={veritasTheme} modalSize="compact">
-          {children}
-        </RainbowKitProvider>
+        {children}
       </QueryClientProvider>
     </WagmiProvider>
   );

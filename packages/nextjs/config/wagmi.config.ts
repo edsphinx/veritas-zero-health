@@ -2,16 +2,20 @@
  * Wagmi Configuration
  *
  * Configures Web3 wallet connection for Veritas Zero Health
- * Supports multiple chains and wallet connectors
+ * Supports multiple chains and wallet connectors via Reown AppKit
  */
 
-import { http, createConfig } from 'wagmi';
+import { http, createConfig, cookieStorage, createStorage } from 'wagmi';
 import { mainnet, sepolia, polygon, polygonAmoy, celo, celoAlfajores } from 'wagmi/chains';
-import { injected, walletConnect, coinbaseWallet } from 'wagmi/connectors';
 
 // Get environment variables
-const walletConnectProjectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '';
+const reownProjectId = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID || '';
 const alchemyApiKey = process.env.NEXT_PUBLIC_ALCHEMY_API_KEY || '';
+
+// Validate required environment variables
+if (!reownProjectId) {
+  console.error('⚠️ NEXT_PUBLIC_REOWN_PROJECT_ID is not set in environment variables');
+}
 
 // Define supported chains
 // Default to testnets for development, can be overridden with env vars
@@ -24,35 +28,14 @@ export const chains = [
     : []),
 ] as const;
 
-// Configure connectors
-const connectors = [
-  // Injected connector (MetaMask, Rainbow, etc.)
-  injected({
-    shimDisconnect: true,
-  }),
-
-  // WalletConnect
-  ...(walletConnectProjectId
-    ? [
-        walletConnect({
-          projectId: walletConnectProjectId,
-          metadata: {
-            name: 'Veritas Zero Health',
-            description: 'Private, Verifiable Patient Data for Clinical Trials',
-            url: typeof window !== 'undefined' ? window.location.origin : 'https://veritas.health',
-            icons: ['https://veritas.health/icon.png'],
-          },
-          showQrModal: true,
-        }),
-      ]
-    : []),
-
-  // Coinbase Wallet
-  coinbaseWallet({
-    appName: 'Veritas Zero Health',
-    appLogoUrl: 'https://veritas.health/icon.png',
-  }),
-];
+// App metadata for Reown AppKit
+export const projectId = reownProjectId;
+export const metadata = {
+  name: 'Veritas Zero Health',
+  description: 'Private, Verifiable Patient Data for Clinical Trials',
+  url: typeof window !== 'undefined' ? window.location.origin : 'https://veritas.health',
+  icons: ['https://veritas.health/icon.png'],
+};
 
 // Configure transports (RPC providers)
 const transports = {
@@ -85,11 +68,14 @@ const transports = {
 };
 
 // Create Wagmi config
+// Note: Connectors are managed by Reown AppKit, not defined here
 export const wagmiConfig = createConfig({
   chains,
-  connectors,
   transports: transports as any, // Type assertion for conditional transports
   ssr: true, // Enable server-side rendering support
+  storage: createStorage({
+    storage: cookieStorage,
+  }),
 });
 
 // Export individual chains for convenience
