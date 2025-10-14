@@ -1,56 +1,33 @@
 /**
  * Nillion Client Wrapper for Veritas Zero Health
  *
- * TODO: Update to latest SecretVaults SDK API
- * The Nillion SecretVaults SDK API has changed significantly.
- * This file needs to be updated with the correct API usage.
+ * This client communicates with Next.js API routes that handle Nillion operations.
+ * Architecture: Browser Extension → Next.js API → Nillion SecretVaults SDK → Nillion Network
  *
- * For now, this is a placeholder implementation.
- *
- * References to check:
- * - https://docs.nillion.com/build/private-storage/ts-docs
- * - https://github.com/NillionNetwork/blind-module-examples/tree/main/nildb/secretvaults-ts
- * - https://nillion.pub/secretvaults-ts/
+ * Benefits:
+ * - No need for complex browser polyfills in extension
+ * - Server-side API handles all Nillion SDK complexity
+ * - Extension just makes simple HTTP requests
  */
 
 /**
  * Health record types supported by Veritas
  */
-export type HealthRecordType = 'diagnoses' | 'biomarkers' | 'vitals' | 'medications';
+export type HealthRecordType = 'diagnoses' | 'biomarkers' | 'vitals' | 'medications' | 'allergies';
 
 /**
  * Configuration for Nillion client
  */
 export interface NillionConfig {
-  apiKey?: string;          // Private API Key from nilPay subscription (falls back to env var)
-  nodeUrls?: string[];      // nilDB node URLs (defaults to testnet)
-  testnet?: boolean;        // Use testnet (default: true)
+  apiBaseUrl?: string;      // Next.js API base URL (default: http://localhost:3000)
 }
 
 /**
  * Get Nillion configuration from environment variables
  */
 function getNillionEnvConfig(): Required<NillionConfig> {
-  const apiKey = import.meta.env.VITE_NILLION_PRIVATE_API_KEY || '';
-  const testnet = import.meta.env.VITE_NILLION_TESTNET !== 'false';
-
-  const nodeUrls = [
-    import.meta.env.VITE_NILLION_NODE_URL_1,
-    import.meta.env.VITE_NILLION_NODE_URL_2,
-    import.meta.env.VITE_NILLION_NODE_URL_3,
-  ].filter(Boolean);
-
-  // Fallback to default testnet URLs if not configured
-  const defaultUrls = [
-    'https://node-1.testnet-photon.nillion-network.nilogy.xyz:14111',
-    'https://node-2.testnet-photon.nillion-network.nilogy.xyz:14111',
-    'https://node-3.testnet-photon.nillion-network.nilogy.xyz:14111',
-  ];
-
   return {
-    apiKey,
-    nodeUrls: nodeUrls.length > 0 ? nodeUrls : defaultUrls,
-    testnet,
+    apiBaseUrl: import.meta.env.VITE_NEXTJS_API_URL || 'http://localhost:3000',
   };
 }
 
@@ -93,23 +70,17 @@ export class VeritasNillionClient {
     const envConfig = getNillionEnvConfig();
 
     this.config = {
-      apiKey: config.apiKey ?? envConfig.apiKey,
-      nodeUrls: config.nodeUrls ?? envConfig.nodeUrls,
-      testnet: config.testnet ?? envConfig.testnet,
+      apiBaseUrl: config.apiBaseUrl ?? envConfig.apiBaseUrl,
     };
 
-    // Log configuration (without exposing API key)
     console.log('Nillion client configured:', {
-      testnet: this.config.testnet,
-      nodeUrls: this.config.nodeUrls,
-      hasApiKey: !!this.config.apiKey,
+      apiBaseUrl: this.config.apiBaseUrl,
     });
   }
 
   /**
-   * Initialize Nillion client and create health record collections
-   *
-   * TODO: Implement with current SecretVaults SDK
+   * Initialize Nillion client
+   * The actual Nillion operations happen on the Next.js server
    */
   async initialize(userDID: string): Promise<void> {
     if (this.initialized) {
@@ -119,54 +90,67 @@ export class VeritasNillionClient {
 
     this.userDID = userDID;
 
-    // TODO: Initialize SecretVaultBuilderClient with correct API
-    // TODO: Create standard collections for each health record type
-
-    console.log('⚠️  Nillion integration pending - using mock implementation');
-
-    // Mock collection IDs for now
-    this.collectionIds.set('diagnoses', 'mock-collection-diagnoses');
-    this.collectionIds.set('biomarkers', 'mock-collection-biomarkers');
-    this.collectionIds.set('vitals', 'mock-collection-vitals');
-    this.collectionIds.set('medications', 'mock-collection-medications');
+    console.log('✅ Nillion client initialized - using Next.js API at:', this.config.apiBaseUrl);
 
     this.initialized = true;
   }
 
   /**
-   * Store a health record in Nillion
-   *
-   * TODO: Implement with current SecretVaults SDK
+   * Store a health record in Nillion via Next.js API
    */
   async storeRecord(
     type: HealthRecordType,
-    _data: any
+    data: any
   ): Promise<string> {
     this.ensureInitialized();
 
-    console.log(`⚠️  Mock: Storing ${type} record...`);
+    console.log(`📤 Storing ${type} record via Next.js API...`);
 
-    // TODO: Use builderClient.createStandardData() with _data
+    const response = await fetch(`${this.config.apiBaseUrl}/api/nillion/store`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type,
+        userId: this.userDID,
+        data,
+      }),
+    });
 
-    // Mock record ID
-    const recordId = `${type}_${Date.now()}`;
-    return recordId;
+    const result = await response.json();
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to store record');
+    }
+
+    console.log(`✅ Stored ${type} record:`, result.data.recordId);
+
+    return result.data.recordId;
   }
 
   /**
-   * Retrieve health records by type
-   *
-   * TODO: Implement with current SecretVaults SDK
+   * Retrieve health records by type via Next.js API
    */
   async getRecords(type: HealthRecordType): Promise<HealthRecord[]> {
     this.ensureInitialized();
 
-    console.log(`⚠️  Mock: Retrieving ${type} records...`);
+    console.log(`📥 Fetching ${type} records via Next.js API...`);
 
-    // TODO: Use builderClient.findData()
+    const url = new URL(`${this.config.apiBaseUrl}/api/nillion/retrieve`);
+    url.searchParams.set('type', type);
+    if (this.userDID) {
+      url.searchParams.set('userId', this.userDID);
+    }
 
-    // Mock empty array
-    return [];
+    const response = await fetch(url.toString());
+    const result = await response.json();
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to retrieve records');
+    }
+
+    console.log(`✅ Retrieved ${result.data.count} ${type} records`);
+
+    return result.data.records;
   }
 
   /**
@@ -185,16 +169,29 @@ export class VeritasNillionClient {
   }
 
   /**
-   * Delete a health record
-   *
-   * TODO: Implement with current SecretVaults SDK
+   * Delete a health record via Next.js API
    */
-  async deleteRecord(recordId: string): Promise<void> {
+  async deleteRecord(type: HealthRecordType, recordId: string): Promise<void> {
     this.ensureInitialized();
 
-    console.log(`⚠️  Mock: Deleting record ${recordId}...`);
+    console.log(`🗑️  Deleting ${type} record ${recordId} via Next.js API...`);
 
-    // TODO: Use builderClient.deleteData()
+    const response = await fetch(`${this.config.apiBaseUrl}/api/nillion/delete`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type,
+        recordId,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to delete record');
+    }
+
+    console.log(`✅ Deleted ${type} record: ${recordId}`);
   }
 
   /**
@@ -204,7 +201,7 @@ export class VeritasNillionClient {
     this.ensureInitialized();
 
     const allRecords = new Map<HealthRecordType, HealthRecord[]>();
-    const recordTypes: HealthRecordType[] = ['diagnoses', 'biomarkers', 'vitals', 'medications'];
+    const recordTypes: HealthRecordType[] = ['diagnoses', 'biomarkers', 'vitals', 'medications', 'allergies'];
 
     for (const type of recordTypes) {
       try {
