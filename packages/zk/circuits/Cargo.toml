@@ -1,0 +1,27 @@
+[workspace]
+members = [
+    "circuits/composite",
+    "plonk-wrappers/plonk-composite",
+]
+resolver = "2"
+
+[workspace.dependencies]
+# Use same Halo2 fork as plonkish-fibonacci for compatibility
+halo2_proofs = { git = "https://github.com/han0110/halo2.git", branch = "feature/for-benchmark" }
+halo2curves = { git = "https://github.com/privacy-scaling-explorations/halo2curves", tag = "0.3.2" }
+plonkish_backend = { git = "https://github.com/sifnoc/plonkish", branch = "setup_custom", features = ["frontend-halo2", "benchmark"] }
+
+# Poseidon hash
+poseidon = { git = "https://github.com/han0110/poseidon", branch = "feature/with-spec" }
+
+# Field arithmetic
+ff = "0.13"
+group = "0.13"
+
+# Utilities
+bincode = "1.3.3"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+rand = "0.8"
+thiserror = "1.0"
+itertools = "0.13"

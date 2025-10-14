@@ -1,0 +1,22 @@
+{
+    "name": "@se-2/circuits",
+    "version": "1.0.0",
+    "private": true,
+    "scripts": {
+        "compile": "cd age_verification && $HOME/.nargo/bin/nargo compile",
+        "test": "cd age_verification && $HOME/.nargo/bin/nargo test",
+        "execute": "cd age_verification && $HOME/.nargo/bin/nargo execute witness",
+        "write-vk": "cd age_verification && npx bb.js write_vk -b ./target/age_verification.json -o ./target",
+        "prove": "cd age_verification && npx bb.js prove -b ./target/age_verification.json -w ./target/witness.gz -o ./target",
+        "verify": "cd age_verification && npx bb.js verify -k ./target/vk -p ./target/proof",
+        "export:verifier": "cd age_verification && npx bb.js contract -k ./target/vk -o ../../foundry/contracts/AgeVerifierGenerated.sol",
+        "generate:all": "yarn compile && yarn execute && yarn write-vk && yarn export:verifier && yarn prove && yarn verify"
+    },
+    "devDependencies": {
+        "snarkjs": "^0.7.5"
+    },
+    "dependencies": {
+        "@aztec/bb.js": "0.87.0",
+        "@noir-lang/noir_js": "1.0.0-beta.9"
+    }
+}

@@ -1,0 +1,16 @@
+[package]
+name = "plonk-composite-eligibility"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "gen-plonk-keys"
+path = "src/bin/gen_plonk_keys.rs"
+
+[dependencies]
+composite-eligibility-circuit = { path = "../../circuits/composite" }
+halo2_proofs = { workspace = true }
+plonkish_backend = { workspace = true }
+serde = { workspace = true }
+bincode = { workspace = true }
+rand = { workspace = true }

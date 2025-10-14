@@ -1,0 +1,7 @@
+# Example inputs for proof generation
+# Private input (not revealed in proof)
+age = "25"
+
+# Public inputs (revealed in proof)
+min_age = "18"
+max_age = "65"

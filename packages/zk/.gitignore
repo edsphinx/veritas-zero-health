@@ -1,0 +1,12 @@
+.private
+
+*.md
+
+build/
+node_modules/
+out/
+deps/
+.fingerprint/
+incremental/
+
+*.gz

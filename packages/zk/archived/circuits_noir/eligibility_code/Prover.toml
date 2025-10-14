@@ -1,0 +1,18 @@
+# Example Eligibility Code Input
+# This represents a simple code: "AG1845" (Age Group 18-45)
+
+# Private input: The eligibility code (32 bytes, ASCII encoded)
+eligibility_code = [
+    65, 71, 49, 56, 52, 53,  # "AG1845"
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  # Padding
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0
+]
+
+# Public input: Hash of the required eligibility code
+# This hash is computed from the code above using pedersen_hash
+# In production, this hash is published by the researcher on-chain
+# Patients prove they know a code that hashes to this value
+# NOTE: This must match pedersen_hash(eligibility_code)
+# We'll compute it dynamically or get it from a test
+required_code_hash = "1"
