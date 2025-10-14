@@ -10,11 +10,11 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, ArrowRight, Shield, Wallet as WalletIcon } from 'lucide-react';
-import { HumanWalletConnect } from '@/presentation/components/features/auth/HumanWalletConnect';
+import { CheckCircle2, ArrowRight, Shield, Wallet as WalletIcon, RefreshCw } from 'lucide-react';
 import { HumanPassportButton } from '@/presentation/components/features/auth/HumanPassportButton';
 import { HumanVerificationBadge } from '@/presentation/components/features/auth/HumanVerificationBadge';
 import { useHumanPassport } from '@/shared/hooks/useHumanPassport';
@@ -24,21 +24,72 @@ type OnboardingStep = 'wallet' | 'passport' | 'complete';
 
 export default function OnboardingPage() {
   const [currentStep, setCurrentStep] = useState<OnboardingStep>('wallet');
+  const [isPolling, setIsPolling] = useState(false);
   const { address, isConnected } = useAccount();
-  const { isVerified } = useHumanPassport({
+  const { isVerified, refetch, isLoading: isCheckingVerification, humanityScore } = useHumanPassport({
     address,
     enabled: !!address,
   });
 
-  // Auto-advance steps
-  const handleWalletConnected = (addr: string) => {
-    console.log('Wallet connected:', addr);
-    setTimeout(() => setCurrentStep('passport'), 500);
-  };
+  // Auto-advance steps based on wallet connection
+  useEffect(() => {
+    if (isConnected && address && currentStep === 'wallet') {
+      console.log('Wallet connected:', address);
+      setTimeout(() => setCurrentStep('passport'), 500);
+    }
+  }, [isConnected, address, currentStep]);
+
+  // Auto-advance to complete when verified
+  useEffect(() => {
+    if (isVerified && currentStep === 'passport') {
+      console.log('User verified, advancing to complete');
+      setIsPolling(false); // Stop polling when verified
+      setTimeout(() => setCurrentStep('complete'), 1000);
+    }
+  }, [isVerified, currentStep]);
+
+  // Polling effect - check verification status every 30 seconds when polling is active
+  // (Reduced from 5s to avoid Passport API rate limits)
+  useEffect(() => {
+    if (!isPolling || !address || isVerified || currentStep !== 'passport') {
+      return;
+    }
+
+    console.log('Starting verification polling (every 30s)...');
+
+    // Check immediately when polling starts
+    refetch?.();
+
+    const intervalId = setInterval(() => {
+      console.log('Polling verification status...');
+      refetch?.();
+    }, 30000); // Check every 30 seconds (reduced to avoid rate limits)
+
+    // Cleanup interval on unmount or when dependencies change
+    return () => {
+      console.log('Stopping verification polling');
+      clearInterval(intervalId);
+    };
+  }, [isPolling, address, isVerified, currentStep, refetch]);
 
   const handleVerified = (score: number) => {
     console.log('Verified with score:', score);
+    setIsPolling(false); // Stop polling when verified
     setTimeout(() => setCurrentStep('complete'), 500);
+  };
+
+  const handleCheckStatus = async () => {
+    if (!isPolling) {
+      setIsPolling(true); // Start polling if not already polling
+    }
+    if (refetch) {
+      await refetch();
+    }
+  };
+
+  const handleVerifyClick = () => {
+    // Start polling when user clicks verify button
+    setIsPolling(true);
   };
 
   return (
@@ -52,10 +103,10 @@ export default function OnboardingPage() {
             className="text-center mb-12"
           >
             <h1 className="text-4xl font-bold mb-3">
-              Welcome to Veritas Zero Health
+              Welcome to DASHI
             </h1>
             <p className="text-lg text-muted-foreground">
-              Join the future of private, verifiable clinical trials
+              Create your sovereign health identity with privacy and control
             </p>
           </motion.div>
 
@@ -122,12 +173,77 @@ export default function OnboardingPage() {
                   <div>
                     <h2 className="text-xl font-semibold">Connect Your Wallet</h2>
                     <p className="text-sm text-muted-foreground">
-                      Choose your preferred login method
+                      Choose your preferred wallet provider
                     </p>
                   </div>
                 </div>
 
-                <HumanWalletConnect onConnected={handleWalletConnected} />
+                <div className="flex flex-col items-center gap-4 py-8">
+                  <ConnectButton.Custom>
+                    {({
+                      account,
+                      chain,
+                      openAccountModal,
+                      openChainModal,
+                      openConnectModal,
+                      authenticationStatus,
+                      mounted,
+                    }) => {
+                      const ready = mounted && authenticationStatus !== 'loading';
+                      const connected =
+                        ready &&
+                        account &&
+                        chain &&
+                        (!authenticationStatus ||
+                          authenticationStatus === 'authenticated');
+
+                      return (
+                        <div
+                          {...(!ready && {
+                            'aria-hidden': true,
+                            style: {
+                              opacity: 0,
+                              pointerEvents: 'none',
+                              userSelect: 'none',
+                            },
+                          })}
+                        >
+                          {(() => {
+                            if (!connected) {
+                              return (
+                                <button
+                                  onClick={openConnectModal}
+                                  type="button"
+                                  className="px-8 py-4 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl flex items-center gap-3 font-semibold text-lg"
+                                >
+                                  <WalletIcon className="h-6 w-6" />
+                                  Connect Wallet
+                                </button>
+                              );
+                            }
+
+                            return (
+                              <div className="flex flex-col items-center gap-4">
+                                <div className="flex items-center gap-2 text-green-600">
+                                  <CheckCircle2 className="h-6 w-6" />
+                                  <span className="font-medium">Wallet Connected!</span>
+                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                  {account.displayName}
+                                </p>
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      );
+                    }}
+                  </ConnectButton.Custom>
+
+                  <p className="text-xs text-muted-foreground text-center max-w-md">
+                    We support MetaMask, WalletConnect, Coinbase Wallet, and more.
+                    Your wallet is your identity in DASHI.
+                  </p>
+                </div>
               </motion.div>
             )}
 
@@ -165,12 +281,50 @@ export default function OnboardingPage() {
                         </ul>
                       </div>
 
-                      <HumanPassportButton
-                        address={address}
-                        onVerified={handleVerified}
-                        size="lg"
-                        className="w-full"
-                      />
+                      <div className="rounded-lg bg-blue-600/10 border border-blue-600/20 p-4 text-sm">
+                        <p className="font-medium mb-2 text-blue-600">How it works:</p>
+                        <ol className="space-y-1 text-blue-600/80 list-decimal list-inside">
+                          <li>Click the button below to open Human Passport</li>
+                          <li>Connect your wallet and add verification stamps</li>
+                          <li>Return here to see your verified status</li>
+                        </ol>
+                        {humanityScore !== undefined && (
+                          <p className="text-xs text-blue-600/70 mt-2">
+                            Current score: {humanityScore} (Need ≥ 20 to verify)
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex flex-col gap-3">
+                        <HumanPassportButton
+                          address={address}
+                          onVerified={handleVerified}
+                          onVerificationStart={handleVerifyClick}
+                          size="lg"
+                          className="w-full"
+                        />
+
+                        {isPolling && (
+                          <div className="rounded-lg bg-blue-600/10 border border-blue-600/20 p-3 text-sm">
+                            <div className="flex items-center gap-2 text-blue-600">
+                              <RefreshCw className="h-4 w-4 animate-spin" />
+                              <span className="font-medium">Auto-checking your verification status...</span>
+                            </div>
+                            <p className="text-xs text-blue-600/70 mt-1">
+                              Checking every 30 seconds. Or use the button below to check manually.
+                            </p>
+                          </div>
+                        )}
+
+                        <button
+                          onClick={handleCheckStatus}
+                          disabled={isCheckingVerification}
+                          className="flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-6 py-3 font-medium hover:bg-accent transition-colors disabled:opacity-50"
+                        >
+                          <RefreshCw className={cn("h-5 w-5", isCheckingVerification && "animate-spin")} />
+                          {isCheckingVerification ? 'Checking...' : 'Check Verification Status'}
+                        </button>
+                      </div>
                     </div>
                   ) : (
                     <HumanVerificationBadge address={address} showDetails />
