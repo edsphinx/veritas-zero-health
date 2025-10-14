@@ -9,11 +9,19 @@
     "format": "prettier --write . '!(node_modules|.next|contracts)/**/*'",
     "lint": "next lint",
     "serve": "next start",
-    "start": "next dev"
+    "start": "next dev",
+    "nillion:compile-script": "tsc scripts/create-nillion-collections.ts --outDir scripts --module esnext --moduleResolution bundler --target es2022 --esModuleInterop --skipLibCheck",
+    "nillion:create-collections": "yarn nillion:compile-script && node scripts/create-nillion-collections.js",
+    "nillion:compile-test": "tsc scripts/test-nillion-collections.ts --outDir scripts --module esnext --moduleResolution bundler --target es2022 --esModuleInterop --skipLibCheck",
+    "nillion:test-collections": "yarn nillion:compile-test && node scripts/test-nillion-collections.js",
+    "nillion:compile-api-test": "tsc scripts/test-api-routes.ts --outDir scripts --module esnext --moduleResolution bundler --target es2022 --esModuleInterop --skipLibCheck",
+    "nillion:test-api": "yarn nillion:compile-api-test && node scripts/test-api-routes.js"
   },
   "dependencies": {
+    "@nillion/blindfold": "^0.1.0",
     "@nillion/nuc": "^0.1.1",
     "@nillion/secretvaults": "latest",
+    "@rainbow-me/rainbowkit": "^2.2.8",
     "@tanstack/react-query": "^5.90.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -21,16 +29,20 @@
     "framer-motion": "^12.23.22",
     "lucide-react": "^0.545.0",
     "next": "15.5.4",
+    "pino": "^9.7.0",
+    "pino-pretty": "^13.0.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "tailwind-merge": "^3.3.1",
     "usehooks-ts": "^3.1.1",
+    "uuid": "^11.0.5",
     "viem": "^2.38.0",
     "wagmi": "^2.17.5",
     "zod": "^4.1.12",
     "zustand": "^5.0.8"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.14",
     "@types/node": "24.7.0",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.1",
@@ -42,6 +54,7 @@
     "postcss": "8.5.6",
     "prettier": "~3.6.2",
     "tailwindcss": "4.1.14",
+    "ts-node": "^10.9.2",
     "typescript": "5.9.3"
   },
   "packageManager": "yarn@3.2.3"
