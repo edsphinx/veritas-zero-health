@@ -40,7 +40,15 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["popup/*", "src/content/injected-script.js", "zk/*"],
+      "resources": [
+        "popup/*",
+        "src/content/injected-script.js",
+        "zk/*",
+        "zk/mopro_wasm.js",
+        "zk/mopro_wasm_bg.wasm",
+        "zk/*.bin",
+        "zk/snippets/**/*.js"
+      ],
       "matches": ["<all_urls>"]
     }
   ],

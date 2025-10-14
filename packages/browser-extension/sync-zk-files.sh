@@ -53,6 +53,16 @@ copy_file \
   "$EXTENSION_ZK_DIR/mopro_wasm.js" \
   "WASM JS bindings"
 
+# Copy snippets directory (required for WASM imports)
+echo ""
+echo "📦 WASM Dependencies:"
+if [ -d "$ZK_ROOT/mopro/mopro-wasm/pkg/snippets" ]; then
+  cp -r "$ZK_ROOT/mopro/mopro-wasm/pkg/snippets" "$EXTENSION_ZK_DIR/"
+  echo -e "${GREEN}✅${NC} Copied WASM snippets directory"
+else
+  echo -e "${YELLOW}⚠️${NC}  WASM snippets not found"
+fi
+
 echo ""
 
 # Copy cryptographic keys
