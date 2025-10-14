@@ -2,10 +2,10 @@
 pragma solidity ^0.8.24;
 
 import "forge-std/Script.sol";
-import "../contracts/HealthIdentitySBT.sol";
-import "../contracts/VZHAccountFactory.sol";
-import "../contracts/MedicalProviderRegistry.sol";
-import "../contracts/ResearchFundingEscrow.sol";
+import "../contracts/core/HealthIdentitySBT.sol";
+import "../contracts/core/PatientAccountFactory.sol";
+import "../contracts/core/MedicalProviderRegistry.sol";
+import "../contracts/funding/ResearchFundingEscrow.sol";
 import "../contracts/mocks/MockHumanPassport.sol";
 
 /**
@@ -16,7 +16,7 @@ import "../contracts/mocks/MockHumanPassport.sol";
  * Components:
  * 1. MedicalProviderRegistry - Provider certification and management
  * 2. HealthIdentitySBT - Patient health identity SBT
- * 3. VZHAccountFactory - Smart account factory for multi-chain
+ * 3. PatientAccountFactory - Smart account factory for multi-chain
  * 4. ResearchFundingEscrow - Research study funding and milestone payments
  */
 contract DeployDASHI is Script {
@@ -24,7 +24,7 @@ contract DeployDASHI is Script {
     // Deployed contract addresses
     MedicalProviderRegistry public providerRegistry;
     HealthIdentitySBT public healthIdentity;
-    VZHAccountFactory public accountFactory;
+    PatientAccountFactory public accountFactory;
     ResearchFundingEscrow public researchEscrow;
 
     function run() external {
@@ -62,10 +62,10 @@ contract DeployDASHI is Script {
         healthIdentity = new HealthIdentitySBT(humanPassportAddress);
         console.log("HealthIdentitySBT deployed at:", address(healthIdentity));
 
-        // ============ 3. Deploy VZHAccountFactory ============
-        console.log("\n=== Deploying VZHAccountFactory ===");
-        accountFactory = new VZHAccountFactory();
-        console.log("VZHAccountFactory deployed at:", address(accountFactory));
+        // ============ 3. Deploy PatientAccountFactory ============
+        console.log("\n=== Deploying PatientAccountFactory ===");
+        accountFactory = new PatientAccountFactory();
+        console.log("PatientAccountFactory deployed at:", address(accountFactory));
 
         // ============ 4. Deploy ResearchFundingEscrow ============
         console.log("\n=== Deploying ResearchFundingEscrow ===");
@@ -239,7 +239,7 @@ contract DeployDASHI is Script {
         console.log("-------------------------------------------------------------");
         console.log("MedicalProviderRegistry:    ", address(providerRegistry));
         console.log("HealthIdentitySBT:          ", address(healthIdentity));
-        console.log("VZHAccountFactory:          ", address(accountFactory));
+        console.log("PatientAccountFactory:      ", address(accountFactory));
         console.log("ResearchFundingEscrow:      ", address(researchEscrow));
         console.log("-------------------------------------------------------------");
         console.log("Human Passport:             ", humanPassportAddress);

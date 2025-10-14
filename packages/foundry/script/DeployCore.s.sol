@@ -2,10 +2,10 @@
 pragma solidity ^0.8.24;
 
 import "forge-std/Script.sol";
-import "../contracts/HealthIdentitySBT.sol";
-import "../contracts/VZHAccountFactory.sol";
-import "../contracts/MedicalProviderRegistry.sol";
-import "../contracts/ResearchFundingEscrow.sol";
+import "../contracts/core/HealthIdentitySBT.sol";
+import "../contracts/core/PatientAccountFactory.sol";
+import "../contracts/core/MedicalProviderRegistry.sol";
+import "../contracts/funding/ResearchFundingEscrow.sol";
 import "../contracts/mocks/MockHumanPassport.sol";
 
 /**
@@ -18,7 +18,7 @@ contract DeployCore is Script {
     // Deployed contracts
     MedicalProviderRegistry public providerRegistry;
     HealthIdentitySBT public healthIdentity;
-    VZHAccountFactory public accountFactory;
+    PatientAccountFactory public accountFactory;
     ResearchFundingEscrow public researchEscrow;
     address public humanPassportAddress;
 
@@ -27,7 +27,7 @@ contract DeployCore is Script {
      * @return _humanPassport Address of Human Passport (or mock)
      * @return _providerRegistry Address of MedicalProviderRegistry
      * @return _healthIdentity Address of HealthIdentitySBT
-     * @return _accountFactory Address of VZHAccountFactory
+     * @return _accountFactory Address of PatientAccountFactory
      * @return _researchEscrow Address of ResearchFundingEscrow
      */
     function run() external returns (
@@ -57,10 +57,10 @@ contract DeployCore is Script {
         healthIdentity = new HealthIdentitySBT(humanPassportAddress);
         console.log("HealthIdentitySBT:", address(healthIdentity));
 
-        // ============ 4. Deploy VZHAccountFactory ============
-        console.log("\n=== Step 4: Deploying VZHAccountFactory ===");
-        accountFactory = new VZHAccountFactory();
-        console.log("VZHAccountFactory:", address(accountFactory));
+        // ============ 4. Deploy PatientAccountFactory ============
+        console.log("\n=== Step 4: Deploying PatientAccountFactory ===");
+        accountFactory = new PatientAccountFactory();
+        console.log("PatientAccountFactory:", address(accountFactory));
 
         // ============ 5. Deploy ResearchFundingEscrow ============
         console.log("\n=== Step 5: Deploying ResearchFundingEscrow ===");
@@ -176,7 +176,7 @@ contract DeployCore is Script {
         console.log("Human Passport:             ", humanPassportAddress);
         console.log("MedicalProviderRegistry:    ", address(providerRegistry));
         console.log("HealthIdentitySBT:          ", address(healthIdentity));
-        console.log("VZHAccountFactory:          ", address(accountFactory));
+        console.log("PatientAccountFactory:      ", address(accountFactory));
         console.log("ResearchFundingEscrow:      ", address(researchEscrow));
         console.log("=============================================================");
     }

@@ -101,7 +101,7 @@ contract Deploy is Script {
         console.log("  Human Passport:           ", addresses.humanPassport);
         console.log("  MedicalProviderRegistry:  ", addresses.providerRegistry);
         console.log("  HealthIdentitySBT:        ", addresses.healthIdentity);
-        console.log("  VZHAccountFactory:        ", addresses.accountFactory);
+        console.log("  PatientAccountFactory:    ", addresses.accountFactory);
         console.log("  ResearchFundingEscrow:    ", addresses.researchEscrow);
         console.log("\nCLINICAL TRIALS:");
         console.log("  StudyRegistryImpl:        ", addresses.studyRegistry);
