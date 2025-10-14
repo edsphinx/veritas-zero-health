@@ -1,0 +1,16 @@
+[workspace]
+members = [
+    # Fibonacci circuit
+    "circuit",
+
+    # Plonkish Backends
+    "gemini",
+    "plonk",
+    "hyperplonk",
+]
+resolver = "2"
+
+[workspace.dependencies]
+halo2_proofs = { git = "https://github.com/han0110/halo2.git", branch = "feature/for-benchmark" }
+plonkish_backend = { git = "https://github.com/sifnoc/plonkish", branch = "setup_custom", features = ["frontend-halo2", "benchmark"] }
+bincode = "1.3.3"

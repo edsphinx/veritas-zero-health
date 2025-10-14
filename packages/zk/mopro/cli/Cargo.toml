@@ -1,0 +1,33 @@
+[package]
+name = "mopro-cli"
+version = "0.3.0"
+edition = "2021"
+description = "A CLI tool for creating a mobile native app with Mopro FFI"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/zkmopro/mopro"
+readme = "README.md"
+keywords = ["cli", "tool", "mobile", "zk"]
+categories = ["command-line-utilities"]
+
+[[bin]]
+name = "mopro"
+path = "src/main.rs"
+
+[dependencies]
+mopro-ffi = { path = "../mopro-ffi", features = [
+    "build",
+    "uniffi",
+], default-features = false }
+
+clap = { version = "4.0", features = ["derive"] }
+fs_extra = "1.2.0"
+include_dir = "0.7"
+dialoguer = "0.10"
+console = "0.15.8"
+anyhow = "1.0.86"
+toml = "0.9.2"
+zip = "2.2.1"
+reqwest = { version = "0.12.9", features = ["blocking"] }
+indicatif = "0.17.9"
+serde = { version = "1.0.216", features = ["derive"] }
+walkdir = "2"

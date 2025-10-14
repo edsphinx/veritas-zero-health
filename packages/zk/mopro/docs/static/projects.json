@@ -1,0 +1,162 @@
+[
+    {
+        "name": "World ID",
+        "description": "World ID is a privacy-preserving proof of human for age of AI. It securely and anonymously proves you are human online.",
+        "links": {
+            "github": "https://github.com/worldcoin",
+            "website": "https://world.org/world-id",
+            "ios": "https://apps.apple.com/no/app/world-app-worldcoin-wallet/id1560859847",
+            "android": "https://play.google.com/store/apps/details?id=com.worldcoin"
+        }
+    },
+    {
+        "name": "Privado.iD",
+        "description": "Privado ID enables secure identity data verification everywhere. Any service, any device, any protocol.",
+        "links": {
+            "github": "https://github.com/0xpolygonID",
+            "website": "https://www.privado.id/",
+            "ios": "https://apps.apple.com/us/app/privado-id/id6566184703",
+            "android": "https://play.google.com/store/apps/details?id=id.privado.wallet"
+        }
+    },
+    {
+        "name": "Rarimo",
+        "description": "Rarimo is building a permissionless ZK Registry that redefines how identities, interactions, and social graphs are managed.",
+        "links": {
+            "github": "https://github.com/rarimo",
+            "website": "https://rarimo.com",
+            "ios": "https://apps.apple.com/us/app/rarime/id6503300598",
+            "android": "https://play.google.com/store/apps/details?id=com.rarilabs.rarime&hl=en"
+        }
+    },
+    {
+        "name": "Anon Aadhaar",
+        "description": "Anon Aadhaar is a zero-knowledge protocol that allows Aadhaar ID owners to prove their identity in a privacy-preserving way.",
+        "links": {
+            "github": "https://github.com/anon-aadhaar",
+            "website": "https://documentation.anon-aadhaar.pse.dev",
+            "ios": "https://github.com/anon-aadhaar/anon-aadhaar-react-native",
+            "android": "https://github.com/anon-aadhaar/anon-aadhaar-react-native"
+        }
+    },
+    {
+        "name": "Self Protocol",
+        "description": "Self Protocol is an identity wallet that lets users generate privacy-preserving proofs from government-issued IDs such as passports.",
+        "links": {
+            "github": "https://github.com/selfxyz/self",
+            "website": "https://self.xyz/",
+            "ios": "https://apps.apple.com/us/app/self-zk/id6478563710",
+            "android": "https://play.google.com/store/apps/details?id=com.proofofpassportapp&pli=1"
+        }
+    },
+    {
+        "name": "ZKPassport",
+        "description": "Generate a zero-knowledge proof on your phone from your passport credentials, then securely verify it using this demo web app.",
+        "links": {
+            "github": "https://github.com/zkpassport",
+            "website": "https://zkpassport.id",
+            "ios": "https://apps.apple.com/us/app/zkpassport/id6477371975",
+            "android": "https://play.google.com/store/apps/details?id=app.zkpassport.zkpassport&pli=1"
+        }
+    },
+    {
+        "name": "EZKL",
+        "description": "Ezkl is the simplest way to run ML, AI, and other business logic for on-chain applications. This iOS package is a port of the EZKL library, which allows you to generate and verify zero-knowledge proofs (ZKPs) for neural networks.",
+        "links": {
+            "github": "https://github.com/zkonduit",
+            "website": "https://docs.ezkl.xyz",
+            "ios": "https://github.com/zkonduit/ezkl-swift-package"
+        }
+    },
+    {
+        "name": "Zuma",
+        "description": "Zuma is a ZK-powered Luma app. Zuma works just like Luma, but with enhanced privacy. Users don’t need to share their email or name with the verifier. Even better, anyone—not just the host—can verify the QR code presented by the user!",
+        "links": {
+            "github": "https://github.com/chengggkk/zuma",
+            "website": "https://ethglobal.com/showcase/zuma-6vnoj",
+            "ios": "https://testflight.apple.com/join/ZmHHSrmP"
+        }
+    },
+    {
+        "name": "Stealthnote Mobile",
+        "description": "This project is inspired by stealthnote.xyz. The goal is to build on the core idea of StealthNote while significantly enhancing performance and user experience using Mopro. By leveraging native execution, our implementation achieves at least ~10× faster performance compared to the browser-based version",
+        "links": {
+            "github": "https://github.com/vivianjeng/stealthnote-mobile",
+            "website": "https://stealthnote.xyz",
+            "ios": "https://testflight.apple.com/join/8hqYwe8C",
+            "android": "https://drive.google.com/file/d/1IMsH0fBpaLGkFgFX0oqnlS6LQk3WCr3t/view?usp=sharing"
+        }
+    },
+    {
+        "name": "Mopro dApp On-chain Verification (Circom)",
+        "description": "A Flutter template for building Mobile dApps using Mopro with and on-chain verification",
+        "links": {
+            "github": "https://github.com/moven0831/mopro-wallet-connet-circom",
+            "website": "https://github.com/moven0831/mopro-wallet-connet-circom"
+        }
+    },
+    {
+        "name": "Mopro dApp On-chain Verification (Noir)",
+        "description": "Minimal Flutter template for Sepolia on-chain verification via Mopro & Noir.",
+        "links": {
+            "github": "https://github.com/moven0831/mopro-wallet-connect-noir",
+            "website": "https://ethglobal.com/showcase/moirpro-e347p"
+        }
+    },
+    {
+        "name": "Zkipper",
+        "description": "This projects demonstrates role based access control enforced by EIP-7702, PQC admin, and ZK users",
+        "links": {
+            "github": "https://github.com/ZKNoxHQ/ZKipper",
+            "website": "https://ethglobal.com/showcase/zkipper-czc3z"
+        }
+    },
+    {
+        "name": "MobiScale",
+        "description": "Cryptographic Photo-Identity Verification using Apple's Secure Enclave and RISC-0 ZK Proofs.",
+        "links": {
+            "github": "https://github.com/ElusAegis/MobiScale",
+            "website": "https://ethglobal.com/showcase/mobiscale-n9vj6"
+        }
+    },
+    {
+        "name": "bidet",
+        "description": "\"Tag\"-like game where people infect other people scanning NFC wristbands with ZK proofs",
+        "links": {
+            "github": "https://github.com/aciceri/bidet",
+            "website": "https://ethglobal.com/showcase/bidet-gdvtq"
+        }
+    },
+    {
+        "name": "ProofOfFunds",
+        "description": "Mobile app that generates ZK proofs of crypto balances without revealing exact amounts",
+        "links": {
+            "github": "https://github.com/sanandmv7/ProofOfFunds-Android",
+            "website": "https://ethglobal.com/showcase/proofoffunds-zczod"
+        }
+    },
+    {
+        "name": "ProofOfParticipation",
+        "description": "Prove you were in Cannes for the event with your mobile and mint a NFT",
+        "links": {
+            "github": "https://github.com/youtpout/eth-cannes",
+            "website": "https://ethglobal.com/showcase/proofofparticipation-xca0a"
+        }
+    },
+    {
+        "name": "ZKAge Proof Mobile",
+        "description": "ZK Age Proof Mobile: Verify your age, without revealing any personal information.",
+        "links": {
+            "github": "https://github.com/Ty-HA/zkage-proof-mobile",
+            "website": "https://ethglobal.com/showcase/zkage-proof-mobile-2yroo"
+        }
+    },
+    {
+        "name": "👀Proov!",
+        "description": "Fotos & Videos with Built-in Truth: Tamper-proof media with ZK verifiable origins and authenticity.",
+        "links": {
+            "github": "https://github.com/undefinedlab/PROOV_ZK",
+            "website": "https://ethglobal.com/showcase/eyes-proov-at10u"
+        }
+    }
+]

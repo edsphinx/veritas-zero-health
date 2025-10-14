@@ -1,0 +1,14 @@
+.vscode
+.DS_Store
+target/
+mopro-example-app
+!templates/mopro-example-app
+graph.bin
+
+*.xcframework/
+node_modules
+
+mopro_flutter_bindings
+MoproAndroidBindings
+MoproiOSBindings
+build/

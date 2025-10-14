@@ -1,0 +1,13 @@
+[package]
+name = "hyperplonk-fibonacci"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "gen-hyperplonk-keys"
+path = "src/bin/gen_hyperplonk_keys.rs"
+
+[dependencies]
+fibonacci-circuit = { path = "../circuit" }
+halo2_proofs = { workspace = true }
+plonkish_backend = { workspace = true }

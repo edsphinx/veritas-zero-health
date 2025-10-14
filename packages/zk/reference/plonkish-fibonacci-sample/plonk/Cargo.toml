@@ -1,0 +1,16 @@
+[package]
+name = "plonk-fibonacci"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "gen-plonk-keys"
+path = "src/bin/gen_plonk_keys.rs"
+
+[dependencies]
+fibonacci-circuit = { path = "../circuit" }
+halo2_proofs = { workspace = true }
+plonkish_backend = { workspace = true }
+serde = { version = "1.0.210", features = ["derive"] }
+bincode = { workspace = true }
+rand = "0.8.5"
