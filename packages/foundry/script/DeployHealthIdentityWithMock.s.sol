@@ -13,10 +13,16 @@ import "../contracts/mocks/MockHumanPassport.sol";
 contract DeployHealthIdentityWithMock is Script {
 
     function run() external {
-        uint256 deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
-        address deployer = vm.addr(deployerPrivateKey);
+        address deployer;
 
-        vm.startBroadcast(deployerPrivateKey);
+        if (block.chainid == 31337) {
+            deployer = msg.sender;
+            vm.startBroadcast();
+        } else {
+            uint256 deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
+            deployer = vm.addr(deployerPrivateKey);
+            vm.startBroadcast(deployerPrivateKey);
+        }
 
         // 1. Deploy MockHumanPassport
         MockHumanPassport mockPassport = new MockHumanPassport();

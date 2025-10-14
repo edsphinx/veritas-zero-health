@@ -25,9 +25,12 @@ contract DeployZK is Script {
         address _ageVerifier,
         address _eligibilityVerifier
     ) {
-        uint256 deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
-
-        vm.startBroadcast(deployerPrivateKey);
+        if (block.chainid == 31337) {
+            vm.startBroadcast();
+        } else {
+            uint256 deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
+            vm.startBroadcast(deployerPrivateKey);
+        }
 
         // ============ 1. Deploy AgeVerifier ============
         console.log("\n=== Step 1: Deploying AgeVerifier ===");

@@ -28,13 +28,15 @@ contract DeployDASHI is Script {
     ResearchFundingEscrow public researchEscrow;
 
     function run() external {
-        // Load environment variables
-        uint256 deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
+        if (block.chainid == 31337) {
+            vm.startBroadcast();
+        } else {
+            uint256 deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
+            vm.startBroadcast(deployerPrivateKey);
+        }
 
         // Human Passport address (deploy mock for local testnet)
         address humanPassportAddress;
-
-        vm.startBroadcast(deployerPrivateKey);
 
         // ============ 0. Deploy MockHumanPassport (for local testing) ============
         if (block.chainid == 31337) {
