@@ -2,8 +2,8 @@
 pragma solidity ^0.8.24;
 
 import "forge-std/Script.sol";
-import "../contracts/AgeVerifier.sol";
-import "../contracts/EligibilityCodeVerifier.sol";
+import "../contracts/zk/AgeVerifier.sol";
+import "../contracts/zk/EligibilityCodeVerifier.sol";
 
 /**
  * @title Deploy ZK Verifiers

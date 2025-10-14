@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 import "forge-std/Script.sol";
-import "../contracts/HealthIdentitySBT.sol";
+import "../contracts/core/HealthIdentitySBT.sol";
 
 /**
  * @title Deploy Health Identity SBT
