@@ -14,7 +14,7 @@ import {
   Plus,
   ArrowRight,
 } from 'lucide-react';
-import { ResearcherLayout } from '@/presentation/components/layout';
+import { ResearcherLayout } from '@/components/layout';
 
 export default function ResearcherDashboard() {
   return (
