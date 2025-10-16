@@ -76,7 +76,7 @@ contract Deploy is Script {
             addresses.enrollmentData,
             addresses.vaultFactory
         ) = studiesDeployer.run(
-            addresses.ageVerifier
+            addresses.eligibilityVerifier
         );
 
         // ============ Final Summary ============
@@ -104,7 +104,7 @@ contract Deploy is Script {
         console.log("  PatientAccountFactory:    ", addresses.accountFactory);
         console.log("  ResearchFundingEscrow:    ", addresses.researchEscrow);
         console.log("\nCLINICAL TRIALS:");
-        console.log("  StudyRegistryImpl:        ", addresses.studyRegistry);
+        console.log("  StudyRegistry:            ", addresses.studyRegistry);
         console.log("  StudyParticipationSBT:    ", addresses.participationSBT);
         console.log("  StudyEnrollmentData:      ", addresses.enrollmentData);
         console.log("  CommitmentVaultFactory:   ", addresses.vaultFactory);

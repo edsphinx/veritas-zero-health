@@ -2,23 +2,24 @@
 pragma solidity ^0.8.24;
 
 import "forge-std/Script.sol";
-import "../contracts/zk/AgeVerifier.sol";
 import "../contracts/zk/EligibilityCodeVerifier.sol";
 
 /**
  * @title Deploy ZK Verifiers
  * @notice Deploys Zero-Knowledge proof verifiers for privacy-preserving eligibility checks
  * @dev Multi-network compatible
+ *
+ * NOTE: Age verification is done client-side using Halo2/Mopro WASM (33-60ms)
+ * Only medical eligibility code verification is done on-chain using Circom/Groth16
  */
 contract DeployZK is Script {
 
-    // Deployed contracts
-    AgeVerifier public ageVerifier;
-    EligibilityCodeVerifier public eligibilityVerifier;
+    // Deployed contract
+    Groth16Verifier public eligibilityVerifier;
 
     /**
      * @notice Main deployment function
-     * @return _ageVerifier Address of AgeVerifier
+     * @return _ageVerifier Address placeholder (0x0 - age verification is client-side)
      * @return _eligibilityVerifier Address of EligibilityCodeVerifier
      */
     function run() external returns (
@@ -32,23 +33,18 @@ contract DeployZK is Script {
             vm.startBroadcast(deployerPrivateKey);
         }
 
-        // ============ 1. Deploy AgeVerifier ============
-        console.log("\n=== Step 1: Deploying AgeVerifier ===");
-        ageVerifier = new AgeVerifier();
-        console.log("AgeVerifier:", address(ageVerifier));
-
-        // ============ 2. Deploy EligibilityCodeVerifier ============
-        console.log("\n=== Step 2: Deploying EligibilityCodeVerifier ===");
-        eligibilityVerifier = new EligibilityCodeVerifier();
+        // ============ 1. Deploy EligibilityCodeVerifier (Groth16) ============
+        console.log("\n=== Step 1: Deploying EligibilityCodeVerifier ===");
+        eligibilityVerifier = new Groth16Verifier();
         console.log("EligibilityCodeVerifier:", address(eligibilityVerifier));
 
         vm.stopBroadcast();
 
-        // ============ 3. Print Summary ============
+        // ============ 2. Print Summary ============
         printDeploymentSummary();
 
         return (
-            address(ageVerifier),
+            address(0), // Age verification is client-side
             address(eligibilityVerifier)
         );
     }
@@ -64,12 +60,14 @@ contract DeployZK is Script {
         console.log("Network:", getNetworkName(block.chainid));
         console.log("Chain ID:", block.chainid);
         console.log("-------------------------------------------------------------");
-        console.log("AgeVerifier:                ", address(ageVerifier));
         console.log("EligibilityCodeVerifier:    ", address(eligibilityVerifier));
+        console.log("-------------------------------------------------------------");
+        console.log("NOTE: Age verification is done client-side using Halo2/Mopro");
+        console.log("      Medical eligibility verification is done on-chain");
         console.log("=============================================================");
-        console.log("\nNote: These verifiers enable privacy-preserving eligibility");
-        console.log("checks. Patients can prove they meet criteria without");
-        console.log("revealing their actual medical data.");
+        console.log("\nThese verifiers enable privacy-preserving eligibility checks.");
+        console.log("Patients can prove they meet criteria without revealing");
+        console.log("their actual medical data.");
         console.log("=============================================================");
     }
 

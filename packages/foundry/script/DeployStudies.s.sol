@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 import "forge-std/Script.sol";
-import "../contracts/studies/StudyRegistryImpl.sol";
+import "../contracts/studies/StudyRegistry.sol";
 import "../contracts/studies/StudyParticipationSBT.sol";
 import "../contracts/studies/StudyEnrollmentData.sol";
 import "../contracts/funding/CommitmentVault.sol";
@@ -16,28 +16,28 @@ import "../contracts/funding/CommitmentVaultFactory.sol";
 contract DeployStudies is Script {
 
     // Deployed contracts
-    StudyRegistryImpl public studyRegistry;
+    StudyRegistry public studyRegistry;
     StudyParticipationSBT public participationSBT;
     StudyEnrollmentData public enrollmentData;
     CommitmentVaultFactory public vaultFactory;
 
     /**
      * @notice Main deployment function
-     * @param ageVerifierAddress Address of AgeVerifier (from DeployZK)
-     * @return _studyRegistry Address of StudyRegistryImpl
+     * @param eligibilityVerifierAddress Address of EligibilityCodeVerifier (Groth16 from DeployZK)
+     * @return _studyRegistry Address of StudyRegistry
      * @return _participationSBT Address of StudyParticipationSBT
      * @return _enrollmentData Address of StudyEnrollmentData
      * @return _vaultFactory Address of CommitmentVaultFactory
      */
     function run(
-        address ageVerifierAddress
+        address eligibilityVerifierAddress
     ) external returns (
         address _studyRegistry,
         address _participationSBT,
         address _enrollmentData,
         address _vaultFactory
     ) {
-        require(ageVerifierAddress != address(0), "AgeVerifier address required");
+        require(eligibilityVerifierAddress != address(0), "EligibilityVerifier address required");
 
         address deployer;
 
@@ -50,10 +50,10 @@ contract DeployStudies is Script {
             vm.startBroadcast(deployerPrivateKey);
         }
 
-        // ============ 1. Deploy StudyRegistryImpl ============
-        console.log("\n=== Step 1: Deploying StudyRegistryImpl ===");
-        studyRegistry = new StudyRegistryImpl(ageVerifierAddress);
-        console.log("StudyRegistryImpl:", address(studyRegistry));
+        // ============ 1. Deploy StudyRegistry ============
+        console.log("\n=== Step 1: Deploying StudyRegistry ===");
+        studyRegistry = new StudyRegistry(eligibilityVerifierAddress);
+        console.log("StudyRegistry:", address(studyRegistry));
 
         // ============ 2. Deploy StudyParticipationSBT ============
         console.log("\n=== Step 2: Deploying StudyParticipationSBT ===");
@@ -65,10 +65,10 @@ contract DeployStudies is Script {
         enrollmentData = new StudyEnrollmentData(address(participationSBT), deployer);
         console.log("StudyEnrollmentData:", address(enrollmentData));
 
-        // ============ 4. Set MatchDataContract in StudyParticipationSBT ============
-        console.log("\n=== Step 4: Setting MatchDataContract ===");
-        participationSBT.setMatchDataContract(address(enrollmentData));
-        console.log("MatchDataContract set in StudyParticipationSBT");
+        // ============ 4. Set EnrollmentDataContract in StudyParticipationSBT ============
+        console.log("\n=== Step 4: Setting EnrollmentDataContract ===");
+        participationSBT.setEnrollmentDataContract(address(enrollmentData));
+        console.log("EnrollmentDataContract set in StudyParticipationSBT");
 
         // ============ 5. Deploy CommitmentVaultFactory ============
         console.log("\n=== Step 5: Deploying CommitmentVaultFactory ===");
@@ -134,7 +134,7 @@ contract DeployStudies is Script {
         console.log("Network:", getNetworkName(block.chainid));
         console.log("Chain ID:", block.chainid);
         console.log("-------------------------------------------------------------");
-        console.log("StudyRegistryImpl:          ", address(studyRegistry));
+        console.log("StudyRegistry:              ", address(studyRegistry));
         console.log("StudyParticipationSBT:      ", address(participationSBT));
         console.log("StudyEnrollmentData:        ", address(enrollmentData));
         console.log("CommitmentVaultFactory:     ", address(vaultFactory));

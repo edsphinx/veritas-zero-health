@@ -73,9 +73,12 @@ contract DeployCore is Script {
         // ============ 6. Initial Configuration ============
         console.log("\n=== Step 6: Initial Configuration ===");
 
-        // Setup example providers on local/testnet
-        if (block.chainid == 31337 || block.chainid == 11155111) {
+        // Setup example providers ONLY on localhost
+        if (block.chainid == 31337) {
             setupExampleProviders();
+        } else {
+            // On testnets/mainnet, register deployer as initial provider
+            setupDeployerAsProvider();
         }
 
         vm.stopBroadcast();
@@ -115,8 +118,60 @@ contract DeployCore is Script {
     }
 
     /**
+     * @notice Setup deployer as initial provider for testnets
+     * @dev Uses real clinic addresses from .env on live networks
+     */
+    function setupDeployerAsProvider() internal {
+        console.log("Setting up real providers from .env...");
+
+        // Get clinic addresses from .env
+        address clinic1 = vm.envAddress("CLINIC_1_ADDRESS");
+        address clinic2 = vm.envAddress("CLINIC_2_ADDRESS");
+
+        // Clinic 1: Primary Medical Provider
+        string[] memory specializations1 = new string[](3);
+        specializations1[0] = "cardiology";
+        specializations1[1] = "oncology";
+        specializations1[2] = "clinical-trials";
+
+        providerRegistry.certifyProvider(
+            clinic1,
+            "Veritas Clinical Research Center",
+            "OP-SEPOLIA-MED-001",
+            keccak256("veritas-clinic-1-license"),
+            3, // Hospital level
+            365 days,
+            "US",
+            specializations1
+        );
+        console.log("Certified Clinic 1:", clinic1);
+
+        // Clinic 2: Secondary Medical Provider
+        string[] memory specializations2 = new string[](2);
+        specializations2[0] = "research";
+        specializations2[1] = "clinical-trials";
+
+        providerRegistry.certifyProvider(
+            clinic2,
+            "Optimism Health Research Institute",
+            "OP-SEPOLIA-MED-002",
+            keccak256("veritas-clinic-2-license"),
+            3,
+            365 days,
+            "US",
+            specializations2
+        );
+        console.log("Certified Clinic 2:", clinic2);
+
+        // Grant verifier roles
+        researchEscrow.addVerifier(clinic1);
+        researchEscrow.addVerifier(clinic2);
+        console.log("Granted verifier roles to clinics");
+    }
+
+    /**
      * @notice Setup example providers for testing
-     * @dev Only runs on localhost and Sepolia
+     * @dev Only runs on localhost
      */
     function setupExampleProviders() internal {
         console.log("Setting up example providers...");
