@@ -73,17 +73,20 @@ export async function GET(
         ...study.criteria,
         blockNumber: study.criteria.blockNumber.toString(),
       } : null,
-      milestones: study.milestones.map(m => ({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      milestones: study.milestones.map((m: any) => ({
         ...m,
         blockNumber: m.blockNumber.toString(),
       })),
-      applications: study.applications.map(a => ({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      applications: study.applications.map((a: any) => ({
         ...a,
         applicationBlockNumber: a.applicationBlockNumber.toString(),
         proofBlockNumber: a.proofBlockNumber?.toString() || null,
         enrollmentBlockNumber: a.enrollmentBlockNumber?.toString() || null,
       })),
-      deposits: study.deposits.map(d => ({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      deposits: study.deposits.map((d: any) => ({
         ...d,
         amount: d.amount.toString(),
         blockNumber: d.blockNumber.toString(),
