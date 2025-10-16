@@ -27,11 +27,22 @@ export async function GET(
       );
     }
 
-    // Create repository
-    const studyRepository = createStudyRepository(prisma);
-
-    // Fetch study by escrowId (studyId in URL is actually escrowId from blockchain)
-    const study = await studyRepository.findByEscrowId(Number(studyId));
+    // Fetch study with all relations (criteria, milestones, applications, deposits)
+    const study = await prisma.study.findFirst({
+      where: { escrowId: Number(studyId) },
+      include: {
+        criteria: true,
+        milestones: {
+          orderBy: { milestoneId: 'asc' },
+        },
+        applications: {
+          orderBy: { appliedAt: 'desc' },
+        },
+        deposits: {
+          orderBy: { depositedAt: 'desc' },
+        },
+      },
+    });
 
     if (!study) {
       return NextResponse.json(
@@ -49,6 +60,7 @@ export async function GET(
       description: study.description,
       researcherAddress: study.researcherAddress,
       status: study.status,
+      totalFunding: study.totalFunding,
       chainId: study.chainId,
       escrowTxHash: study.escrowTxHash,
       registryTxHash: study.registryTxHash,
@@ -57,6 +69,26 @@ export async function GET(
       registryBlockNumber: study.registryBlockNumber.toString(),
       createdAt: study.createdAt,
       updatedAt: study.updatedAt,
+      // Include relations
+      criteria: study.criteria ? {
+        ...study.criteria,
+        blockNumber: study.criteria.blockNumber.toString(),
+      } : null,
+      milestones: study.milestones.map(m => ({
+        ...m,
+        blockNumber: m.blockNumber.toString(),
+      })),
+      applications: study.applications.map(a => ({
+        ...a,
+        applicationBlockNumber: a.applicationBlockNumber.toString(),
+        proofBlockNumber: a.proofBlockNumber?.toString() || null,
+        enrollmentBlockNumber: a.enrollmentBlockNumber?.toString() || null,
+      })),
+      deposits: study.deposits.map(d => ({
+        ...d,
+        amount: d.amount.toString(),
+        blockNumber: d.blockNumber.toString(),
+      })),
     };
 
     return NextResponse.json({

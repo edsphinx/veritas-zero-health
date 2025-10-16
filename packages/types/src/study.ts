@@ -127,6 +127,22 @@ export interface StudyApplication {
   appliedAt: Date | string; // Allow both for serialization
 }
 
+/**
+ * Sponsor deposit record
+ */
+export interface SponsorDeposit {
+  id: string;
+  sponsorAddress: string;
+  studyId: string;
+  escrowId: number;
+  amount: string; // BigInt as string (USDC with 6 decimals)
+  chainId: number;
+  transactionHash: string;
+  blockNumber: string; // BigInt as string
+  depositedAt: Date | string; // Allow both for serialization
+  createdAt: Date | string; // Allow both for serialization
+}
+
 // ============================================================================
 // Core Study Entity
 // ============================================================================
@@ -186,6 +202,7 @@ export interface Study {
   criteria?: StudyCriteria | null;
   milestones?: StudyMilestone[];
   applications?: StudyApplication[];
+  deposits?: SponsorDeposit[];
 }
 
 // ============================================================================
@@ -418,6 +435,7 @@ export type StudyWithRelations = Study & {
   criteria: StudyCriteria;
   milestones: StudyMilestone[];
   applications: StudyApplication[];
+  deposits: SponsorDeposit[];
 };
 
 /**
