@@ -9,7 +9,6 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useAccount } from 'wagmi';
 import {
   Shield,
   Award,
@@ -22,9 +21,10 @@ import {
 import Link from 'next/link';
 import { PatientLayout } from '@/components/layout';
 import { useHealthIdentity } from '@/shared/hooks/useHealthIdentity';
+import { useAuth } from '@/shared/hooks/useAuth';
 
 export default function PatientIdentityPage() {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useAuth();
   const [showClaimInstructions, setShowClaimInstructions] = useState(false);
 
   // Use clean hook that calls service layer

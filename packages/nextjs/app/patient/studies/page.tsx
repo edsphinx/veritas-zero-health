@@ -8,7 +8,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAccount } from 'wagmi';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
@@ -21,7 +20,8 @@ import {
   Shield,
   AlertCircle,
 } from 'lucide-react';
-import { PatientLayout } from '@/presentation/components/layout';
+import { PatientLayout } from '@/components/layout';
+import { useAuth } from '@/shared/hooks/useAuth';
 
 interface Milestone {
   id: number;
@@ -50,7 +50,7 @@ interface Study {
 
 export default function MyStudiesPage() {
   const router = useRouter();
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useAuth();
   const [studies, setStudies] = useState<Study[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all');

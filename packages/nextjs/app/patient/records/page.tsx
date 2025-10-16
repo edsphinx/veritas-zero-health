@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAccount } from 'wagmi';
 import { FileText, Plus, Lock, AlertCircle, CheckCircle, Calendar } from 'lucide-react';
-import { PatientLayout } from '@/presentation/components/layout';
+import { PatientLayout } from '@/components/layout';
+import { useAuth } from '@/shared/hooks/useAuth';
 
 interface MedicalRecord {
   id: string;
@@ -17,7 +17,7 @@ interface MedicalRecord {
 }
 
 export default function PatientRecordsPage() {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useAuth();
   const [records, setRecords] = useState<MedicalRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasHealthIdentity, setHasHealthIdentity] = useState(false);
