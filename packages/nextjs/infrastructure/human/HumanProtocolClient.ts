@@ -86,6 +86,8 @@ export interface VerificationDetails {
   stamps?: PassportStamp[];
 }
 
+import { testAddressProvider } from './TestAddressProvider';
+
 export class HumanProtocolClient {
   private config: HumanConfig;
   private baseUrl: string;
@@ -110,6 +112,14 @@ export class HumanProtocolClient {
     try {
       console.log(`[Passport] Getting score for ${address}`);
 
+      // Check if this is a test address that should bypass verification
+      if (testAddressProvider.isTestAddress(address)) {
+        console.log(`[Passport] ✅ BYPASS: Test address detected, returning mock verification`);
+        return testAddressProvider.getMockVerificationResult();
+      }
+
+      // Real verification for addresses that require it
+      console.log(`[Passport] 🔐 REAL VERIFICATION: Making API call for ${address}`);
       const url = `${this.baseUrl}/v2/stamps/${this.config.passport.scorerId}/score/${address}`;
 
       const response = await fetch(url, {
@@ -225,7 +235,14 @@ export class HumanProtocolClient {
    */
   async getVerificationDetails(address: string): Promise<VerificationDetails> {
     try {
-      // Get score (this endpoint works)
+      // Check if this is a test address that should bypass verification
+      if (testAddressProvider.isTestAddress(address)) {
+        console.log(`[Passport] ✅ BYPASS: Test address detected for verification details`);
+        return testAddressProvider.getMockVerificationDetails(address);
+      }
+
+      // Real verification - get score (this endpoint works)
+      console.log(`[Passport] 🔐 REAL VERIFICATION: Getting details for ${address}`);
       const scoreResult = await this.getPassportScore(address);
 
       // Try to get stamps, but don't fail if endpoint doesn't exist
