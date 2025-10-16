@@ -1,0 +1,67 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// User model - stores wallet addresses and their roles
+model User {
+  id        String   @id @default(cuid())
+  address   String   @unique // Ethereum wallet address (lowercase)
+  role      String   // 'patient', 'clinic', 'researcher', 'sponsor', 'admin', 'superadmin'
+
+  // Human Passport verification
+  isVerified      Boolean @default(false)
+  humanityScore   Int?
+  verifiedAt      DateTime?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  lastActiveAt DateTime @default(now())
+
+  // Optional profile data
+  displayName String?
+  email       String?
+  avatar      String?
+
+  @@index([address])
+  @@index([role])
+  @@map("users")
+}
+
+// Role history for audit trail
+model RoleChange {
+  id          String   @id @default(cuid())
+  userId      String
+  fromRole    String?
+  toRole      String
+  changedBy   String   // Address of admin who made the change
+  reason      String?
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([changedBy])
+  @@map("role_changes")
+}
+
+// Session model for tracking active sessions (optional)
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  address   String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([address])
+  @@index([expiresAt])
+  @@map("sessions")
+}
