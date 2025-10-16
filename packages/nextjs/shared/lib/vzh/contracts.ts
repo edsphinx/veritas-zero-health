@@ -10,7 +10,19 @@ import deployedContracts from '@/contracts/deployedContracts';
 /**
  * Contract names available in Veritas system
  */
-export type ContractName = 'StudyRegistryImpl' | 'AgeVerifier';
+export type ContractName =
+  | 'StudyRegistry'
+  | 'StudyParticipationSBT'
+  | 'StudyEnrollmentData'
+  | 'ResearchFundingEscrow'
+  | 'HealthIdentitySBT'
+  | 'PatientAccountFactory'
+  | 'MedicalProviderRegistry'
+  | 'CommitmentVaultFactory'
+  | 'EligibilityCodeVerifier'
+  | 'MockHumanPassport'
+  | 'MockUSDC'
+  | 'StudyAccessNFT';
 
 /**
  * Get contract address for a specific chain
@@ -22,7 +34,7 @@ export function getContractAddress(
   const chainContracts = deployedContracts[chainId as keyof typeof deployedContracts];
   if (!chainContracts) return undefined;
 
-  const contract = chainContracts[contractName as keyof typeof chainContracts];
+  const contract = chainContracts[contractName as keyof typeof chainContracts] as any;
   return contract?.address as `0x${string}` | undefined;
 }
 
@@ -36,7 +48,7 @@ export function getContractABI(contractName: ContractName): readonly any[] {
 
   if (!chainContracts) return [];
 
-  const contract = chainContracts[contractName as keyof typeof chainContracts];
+  const contract = chainContracts[contractName as keyof typeof chainContracts] as any;
   return contract?.abi || [];
 }
 
