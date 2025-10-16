@@ -46,10 +46,24 @@ export default function CreateStudyPage() {
     paymentPerParticipant: '',
     requiredAppointments: 5,
 
-    // Eligibility Criteria
+    // Eligibility Criteria - Age (✅ ZK Proof Available: Halo2/Plonk + Mopro WASM)
     minAge: 18,
     maxAge: 65,
     requiresAgeProof: true,
+
+    // Eligibility Criteria - Medical (✅ ZK Proof Available: Groth16 + Circom)
+    requiredDiagnoses: [] as string[],
+    excludedDiagnoses: [] as string[],
+    requiredBiomarkers: [] as string[],
+    requiredVitals: [] as string[],
+    medicalAllergies: [] as string[],
+
+    // Future Criteria (⚠️ ZK Proof NOT Available - for demo only)
+    requiredMedications: [] as string[],
+    excludedMedications: [] as string[],
+    minBMI: '',
+    maxBMI: '',
+    smokingStatus: 'any' as 'any' | 'smoker' | 'non-smoker' | 'former-smoker',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -189,8 +203,23 @@ export default function CreateStudyPage() {
       setTxStatus({ step: 3, message: 'Waiting for final confirmation...', hash: criteriaHash });
       const criteriaReceipt = await publicClient.waitForTransactionReceipt({ hash: criteriaHash });
 
-      // Index the study in our database for fast lookups
-      setTxStatus({ step: 4, message: 'Indexing study...' });
+      // Success! Show toast immediately with Etherscan link
+      toast.success('Study Created Successfully!', {
+        description: `Study ID: ${escrowStudyId} | Max Participants: ${maxParticipants}`,
+        duration: 5000,
+        action: {
+          label: 'View on Etherscan',
+          onClick: () => {
+            window.open(
+              `https://sepolia-optimism.etherscan.io/tx/${escrowHash}`,
+              '_blank'
+            );
+          },
+        },
+      });
+
+      // Index the study in our database for fast lookups (non-blocking)
+      setTxStatus({ step: 4, message: 'Indexing study and redirecting...' });
 
       try {
         const indexResponse = await fetch('/api/studies/index', {
@@ -224,29 +253,11 @@ export default function CreateStudyPage() {
         // Continue anyway - study exists on blockchain
       }
 
-      // Success! Show toast with Etherscan link
-      setTxStatus({ step: 4, message: 'Study created successfully! Redirecting...' });
-
-      toast.success('Study Created Successfully!', {
-        description: `Study ID: ${escrowStudyId} | Max Participants: ${maxParticipants}`,
-        duration: 5000,
-        action: {
-          label: 'View on Etherscan',
-          onClick: () => {
-            window.open(
-              `https://sepolia-optimism.etherscan.io/tx/${escrowHash}`,
-              '_blank'
-            );
-          },
-        },
-      });
-
-      // Wait 3 seconds to allow user to click Etherscan link, then redirect
+      // Keep overlay visible and redirect quickly
       // Note: We use escrowStudyId because that's where the full study data is stored
       setTimeout(() => {
-        setTxStatus(null);
         router.push(`/researcher/studies/${escrowStudyId}`);
-      }, 3000);
+      }, 1000);
 
       // Reset form
       setFormData({
@@ -306,16 +317,18 @@ export default function CreateStudyPage() {
                         <Loader2 className="h-10 w-10 text-primary animate-spin" />
                       )}
                     </div>
-                    <div className="absolute -top-1 -right-1 bg-primary text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
-                      {txStatus.step}/3
-                    </div>
+                    {txStatus.step <= 3 && (
+                      <div className="absolute -top-1 -right-1 bg-primary text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
+                        {txStatus.step}/3
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 {/* Status Message */}
                 <div>
                   <h3 className="text-xl font-bold mb-2">
-                    {txStatus.step === 4 ? 'Success!' : 'Creating Study...'}
+                    {txStatus.step === 4 ? 'Study Created Successfully!' : 'Creating Study...'}
                   </h3>
                   <p className="text-muted-foreground">{txStatus.message}</p>
                 </div>
@@ -366,9 +379,14 @@ export default function CreateStudyPage() {
                 </div>
 
                 {txStatus.step === 4 && (
-                  <p className="text-xs text-muted-foreground pt-2">
-                    Redirecting to study details in a moment...
-                  </p>
+                  <div className="pt-2 space-y-2">
+                    <p className="text-sm text-success font-medium">
+                      ✓ All transactions confirmed
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Redirecting to study details...
+                    </p>
+                  </div>
                 )}
               </div>
             </motion.div>
