@@ -44,7 +44,7 @@ export class PrismaSponsorDepositRepository implements ISponsorDepositRepository
       orderBy: { depositedAt: 'desc' },
     });
 
-    return deposits.map(d => this.toDomain(d));
+    return deposits.map((d: any) => this.toDomain(d));
   }
 
   async findByStudy(studyId: string): Promise<SponsorDeposit[]> {
@@ -53,7 +53,7 @@ export class PrismaSponsorDepositRepository implements ISponsorDepositRepository
       orderBy: { depositedAt: 'desc' },
     });
 
-    return deposits.map(d => this.toDomain(d));
+    return deposits.map((d: any) => this.toDomain(d));
   }
 
   async findBySponsorAndStudy(
@@ -68,7 +68,7 @@ export class PrismaSponsorDepositRepository implements ISponsorDepositRepository
       orderBy: { depositedAt: 'desc' },
     });
 
-    return deposits.map(d => this.toDomain(d));
+    return deposits.map((d: any) => this.toDomain(d));
   }
 
   async getTotalBySponsor(sponsorAddress: Address): Promise<bigint> {

@@ -21,7 +21,7 @@ async function main() {
       });
 
       console.log('📋 Studies:\n');
-      studies.forEach((study, index) => {
+      studies.forEach((study: any, index: any) => {
         console.log(`${index + 1}. ${study.title}`);
         console.log(`   ID: ${study.id}`);
         console.log(`   Registry ID: ${study.registryId}`);

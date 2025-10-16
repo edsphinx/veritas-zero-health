@@ -60,7 +60,7 @@ export class PrismaStudyRepository implements IStudyRepository {
       },
     });
 
-    return studies.map((s) => this.toDomain(s));
+    return studies.map((s: any) => this.toDomain(s));
   }
 
   async findById(id: string): Promise<Study | null> {
@@ -89,7 +89,7 @@ export class PrismaStudyRepository implements IStudyRepository {
       take: params?.take,
     });
 
-    return studies.map((s) => this.toDomain(s));
+    return studies.map((s: any) => this.toDomain(s));
   }
 
   async count(): Promise<number> {
