@@ -36,11 +36,13 @@ export async function GET(request: NextRequest) {
 
     // Filter by status if provided
     if (status) {
-      studies = studies.filter(s => s.status === status);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      studies = studies.filter((s: any) => s.status === status);
     }
 
     // Convert BigInt to string for JSON serialization
-    const responseData = studies.map(study => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const responseData = studies.map((study: any) => ({
       id: study.id,
       registryId: study.registryId,
       escrowId: study.escrowId,
