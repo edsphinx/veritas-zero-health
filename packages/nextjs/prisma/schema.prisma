@@ -12,6 +12,7 @@ datasource db {
 }
 
 // User model - stores wallet addresses and their roles
+// Extended for NextAuth compatibility
 model User {
   id        String   @id @default(cuid())
   address   String   @unique // Ethereum wallet address (lowercase)
@@ -22,6 +23,12 @@ model User {
   humanityScore   Int?
   verifiedAt      DateTime?
 
+  // NextAuth fields
+  name          String?
+  email         String?
+  emailVerified DateTime?
+  image         String?
+
   // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -29,8 +36,11 @@ model User {
 
   // Optional profile data
   displayName String?
-  email       String?
   avatar      String?
+
+  // Relations
+  accounts Account[]
+  sessions NextAuthSession[]
 
   @@index([address])
   @@index([role])
@@ -52,7 +62,47 @@ model RoleChange {
   @@map("role_changes")
 }
 
-// Session model for tracking active sessions (optional)
+// NextAuth models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model NextAuthSession {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("next_auth_sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// Custom session model for tracking active sessions (keeping your original)
 model Session {
   id        String   @id @default(cuid())
   userId    String
@@ -64,4 +114,80 @@ model Session {
   @@index([address])
   @@index([expiresAt])
   @@map("sessions")
+}
+
+// Study Indexer - Maps registry studies to escrow studies
+model Study {
+  id                String   @id @default(cuid())
+
+  // Contract IDs
+  registryId        Int      @unique // ID from StudyRegistry contract
+  escrowId          Int      // ID from ResearchFundingEscrow contract
+
+  // Basic info (cached from blockchain)
+  title             String
+  description       String
+  researcherAddress String   // Creator's wallet address
+
+  // Status
+  status            String   // Created, Funding, Active, Paused, Completed, Cancelled
+
+  // Blockchain tracking
+  chainId           Int      @default(11155420) // Optimism Sepolia
+
+  // Transaction hashes for verification
+  escrowTxHash      String   // TX that created study in escrow
+  registryTxHash    String   // TX that published to registry
+  criteriaTxHash    String   // TX that set criteria
+
+  // Timestamps
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Block numbers for event indexing
+  escrowBlockNumber BigInt
+  registryBlockNumber BigInt
+
+  // Relations
+  deposits SponsorDeposit[]
+
+  @@index([researcherAddress])
+  @@index([registryId])
+  @@index([escrowId])
+  @@index([status])
+  @@map("studies")
+}
+
+// Sponsor Deposit Indexer - Tracks sponsor funding for studies
+model SponsorDeposit {
+  id              String   @id @default(cuid())
+
+  // Sponsor info
+  sponsorAddress  String   // Wallet address of sponsor
+
+  // Study relation
+  studyId         String   // Reference to Study model
+  study           Study    @relation(fields: [studyId], references: [id], onDelete: Cascade)
+
+  // Blockchain IDs
+  escrowId        Int      // ID from ResearchFundingEscrow contract
+
+  // Deposit details
+  amount          BigInt   // Amount in USDC (with 6 decimals)
+
+  // Blockchain tracking
+  chainId         Int      @default(11155420) // Optimism Sepolia
+  transactionHash String   // TX hash of deposit
+  blockNumber     BigInt   // Block number of deposit
+
+  // Timestamps
+  depositedAt     DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([sponsorAddress])
+  @@index([studyId])
+  @@index([escrowId])
+  @@index([transactionHash])
+  @@map("sponsor_deposits")
 }
