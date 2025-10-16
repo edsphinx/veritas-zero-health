@@ -46,24 +46,10 @@ export default function CreateStudyPage() {
     paymentPerParticipant: '',
     requiredAppointments: 5,
 
-    // Eligibility Criteria - Age (✅ ZK Proof Available: Halo2/Plonk + Mopro WASM)
+    // Eligibility Criteria - Age (✅ ZK Proof Available: Halo2/PLONK + Mopro WASM)
     minAge: 18,
     maxAge: 65,
     requiresAgeProof: true,
-
-    // Eligibility Criteria - Medical (✅ ZK Proof Available: Groth16 + Circom)
-    requiredDiagnoses: [] as string[],
-    excludedDiagnoses: [] as string[],
-    requiredBiomarkers: [] as string[],
-    requiredVitals: [] as string[],
-    medicalAllergies: [] as string[],
-
-    // Future Criteria (⚠️ ZK Proof NOT Available - for demo only)
-    requiredMedications: [] as string[],
-    excludedMedications: [] as string[],
-    minBMI: '',
-    maxBMI: '',
-    smokingStatus: 'any' as 'any' | 'smoker' | 'non-smoker' | 'former-smoker',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -381,16 +367,6 @@ export default function CreateStudyPage() {
         minAge: 18,
         maxAge: 65,
         requiresAgeProof: true,
-        requiredDiagnoses: [],
-        excludedDiagnoses: [],
-        requiredBiomarkers: [],
-        requiredVitals: [],
-        medicalAllergies: [],
-        requiredMedications: [],
-        excludedMedications: [],
-        minBMI: '',
-        maxBMI: '',
-        smokingStatus: 'any',
       });
 
     } catch (error: any) {
@@ -696,72 +672,83 @@ export default function CreateStudyPage() {
             </div>
           </motion.div>
 
-          {/* Eligibility Criteria */}
+          {/* Eligibility Criteria - ZK Proof Available */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="rounded-xl border border-border bg-card p-6"
+            className="rounded-xl border border-success/30 bg-card p-6"
           >
-            <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
-              <Shield className="h-6 w-6 text-primary" />
-              Eligibility Criteria
-            </h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-semibold flex items-center gap-2">
+                <Shield className="h-6 w-6 text-success" />
+                Eligibility Criteria
+              </h2>
+              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-success/10 border border-success/20">
+                <CheckCircle2 className="h-4 w-4 text-success" />
+                <span className="text-xs font-medium text-success">ZK Proof Available</span>
+              </div>
+            </div>
 
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Minimum Age *
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.minAge}
-                    onChange={(e) => setFormData({ ...formData, minAge: Number(e.target.value) })}
-                    min="0"
-                    max="120"
-                    className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
-                    required
-                  />
+            <div className="space-y-6">
+              {/* Age Range - ZK Verified */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <h3 className="text-lg font-semibold">Age Requirements</h3>
+                  <div className="px-2 py-0.5 rounded bg-success/10 text-success text-xs font-medium">
+                    Halo2 + PLONK
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Maximum Age *
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.maxAge}
-                    onChange={(e) => setFormData({ ...formData, maxAge: Number(e.target.value) })}
-                    min="0"
-                    max="120"
-                    className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
-                    required
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Minimum Age *
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.minAge}
+                      onChange={(e) => setFormData({ ...formData, minAge: Number(e.target.value) })}
+                      min="0"
+                      max="120"
+                      className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-success"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Maximum Age *
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.maxAge}
+                      onChange={(e) => setFormData({ ...formData, maxAge: Number(e.target.value) })}
+                      min="0"
+                      max="120"
+                      className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-success"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="bg-success/10 border border-success/20 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-success">
+                        Anonymous Age Verification with Zero-Knowledge Proofs
+                      </p>
+                      <ul className="text-xs text-success space-y-1">
+                        <li>• Patients prove age range without revealing exact age</li>
+                        <li>• Generated client-side in browser extension (33-60ms)</li>
+                        <li>• Verified cryptographically on Optimism Sepolia</li>
+                        <li>• No personal data leaves patient's device</li>
+                      </ul>
+                    </div>
+                  </div>
                 </div>
               </div>
-
-              <div className="flex items-center gap-2 p-4 rounded-lg border border-border">
-                <input
-                  type="checkbox"
-                  id="requiresAgeProof"
-                  checked={formData.requiresAgeProof}
-                  onChange={(e) => setFormData({ ...formData, requiresAgeProof: e.target.checked })}
-                  className="w-4 h-4 text-primary border-border rounded focus:ring-primary"
-                />
-                <label htmlFor="requiresAgeProof" className="text-sm font-medium flex-1">
-                  Require ZK age proof (anonymous verification)
-                </label>
-              </div>
-
-              {formData.requiresAgeProof && (
-                <div className="bg-success/10 border border-success/20 rounded-lg p-4 flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-success">
-                    Applicants will prove they meet age requirements using Zero-Knowledge Proofs without revealing their exact age or identity.
-                  </p>
-                </div>
-              )}
             </div>
           </motion.div>
 
