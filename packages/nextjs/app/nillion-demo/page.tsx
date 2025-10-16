@@ -5,7 +5,7 @@
  * Shows extension detection, connection, permissions, and health data access.
  */
 
-import { NillionDemo } from '@/presentation/components/NillionDemo';
+import { NillionDemo } from '@/components/NillionDemo';
 
 export const metadata = {
   title: 'Nillion Demo | Veritas',
