@@ -5,7 +5,7 @@
  * Adapts Prisma's data format to our domain entities.
  */
 
-import type { PrismaClient, SponsorDeposit as PrismaSponsorDeposit } from '@prisma/client';
+import type { PrismaClient } from '@prisma/client';
 import type { Address } from 'viem';
 import type { ISponsorDepositRepository } from '@/core/domain/ISponsorDepositRepository';
 import type { SponsorDeposit, CreateSponsorDepositData } from '@/core/domain/SponsorDeposit';
@@ -123,7 +123,8 @@ export class PrismaSponsorDepositRepository implements ISponsorDepositRepository
   /**
    * Convert Prisma model to domain entity
    */
-  private toDomain(prismaDeposit: PrismaSponsorDeposit): SponsorDeposit {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private toDomain(prismaDeposit: any): SponsorDeposit {
     return {
       id: prismaDeposit.id,
       sponsorAddress: prismaDeposit.sponsorAddress as Address,
