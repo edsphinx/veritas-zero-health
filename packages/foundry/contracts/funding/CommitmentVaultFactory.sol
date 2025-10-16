@@ -13,52 +13,52 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
  * RWA NFTs, such as tokenized access to clinical trials.
  */
 contract CommitmentVaultFactory {
-    IStudyEnrollmentData public matchDataContract;
-    mapping(uint256 => address) public matchIdToVault;
+    IStudyEnrollmentData public enrollmentDataContract;
+    mapping(uint256 => address) public enrollmentIdToVault;
 
-    event VaultCreated(uint256 indexed matchId, address vaultAddress, address indexed creator);
+    event VaultCreated(uint256 indexed enrollmentId, address vaultAddress, address indexed creator);
 
-    constructor(address _matchDataAddress) {
-        matchDataContract = IStudyEnrollmentData(_matchDataAddress);
+    constructor(address _enrollmentDataAddress) {
+        enrollmentDataContract = IStudyEnrollmentData(_enrollmentDataAddress);
     }
 
     /**
-     * @notice Creates a Commitment Vault for a specific on-chain interaction.
-     * @dev Verifies that the interaction's compliance level is 2 or higher.
-     * The caller must be a participant in the interaction and the owner of the RWA NFT.
-     * @param _matchId The ID of the on-chain interaction (e.g., a verified clinical visit).
+     * @notice Creates a Commitment Vault for a specific study enrollment.
+     * @dev Verifies that the enrollment's compliance level is 2 or higher.
+     * The caller must be a participant in the enrollment and the owner of the RWA NFT.
+     * @param _enrollmentId The ID of the study enrollment (e.g., a verified clinical visit).
      * @param _experienceNFTAddress The address of the RWA NFT contract (e.g., Trial Access Token).
      * @param _experienceTokenId The ID of the specific RWA NFT to be escrowed.
      */
     function createCommitmentVault(
-        uint256 _matchId,
+        uint256 _enrollmentId,
         address _experienceNFTAddress,
         uint256 _experienceTokenId
     ) external {
         // --- Security Checks ---
-        require(matchIdToVault[_matchId] == address(0), "Vault already exists for this match");
+        require(enrollmentIdToVault[_enrollmentId] == address(0), "Vault already exists for this enrollment");
 
-        IStudyEnrollmentData.Match memory currentMatch = matchDataContract.getMatchDetails(_matchId);
-        require(currentMatch.timestamp != 0, "Match does not exist");
-        require(currentMatch.level >= 2, "Match level must be 2 or higher");
+        IStudyEnrollmentData.Enrollment memory enrollment = enrollmentDataContract.getEnrollmentDetails(_enrollmentId);
+        require(enrollment.timestamp != 0, "Enrollment does not exist");
+        require(enrollment.complianceLevel >= 2, "Compliance level must be 2 or higher");
 
-        address userA = msg.sender;
-        address userB;
-        if (userA == currentMatch.userA) {
-            userB = currentMatch.userB;
-        } else if (userA == currentMatch.userB) {
-            userB = currentMatch.userA;
+        address participant = msg.sender;
+        address counterparty;
+        if (participant == enrollment.participant) {
+            counterparty = enrollment.institution;
+        } else if (participant == enrollment.institution) {
+            counterparty = enrollment.participant;
         } else {
-            revert("You are not part of this match");
+            revert("You are not part of this enrollment");
         }
 
         // --- Creation and Transfer ---
-        CommitmentVault newVault = new CommitmentVault(userA, userB, _experienceNFTAddress, _experienceTokenId);
-        matchIdToVault[_matchId] = address(newVault);
+        CommitmentVault newVault = new CommitmentVault(participant, counterparty, _experienceNFTAddress, _experienceTokenId);
+        enrollmentIdToVault[_enrollmentId] = address(newVault);
 
-        // Transfers the RWA NFT from the user to the newly created vault.
+        // Transfers the RWA NFT from the participant to the newly created vault.
         IERC721(_experienceNFTAddress).safeTransferFrom(msg.sender, address(newVault), _experienceTokenId);
 
-        emit VaultCreated(_matchId, address(newVault), msg.sender);
+        emit VaultCreated(_enrollmentId, address(newVault), msg.sender);
     }
 }
