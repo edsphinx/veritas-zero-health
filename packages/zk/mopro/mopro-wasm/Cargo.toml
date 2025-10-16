@@ -16,7 +16,7 @@ eligibility = ["plonk-composite-eligibility"]
 plonk-fibonacci = { package = "plonk-fibonacci", git = "https://github.com/sifnoc/plonkish-fibonacci-sample.git", optional = true }
 hyperplonk-fibonacci = { package = "hyperplonk-fibonacci", git = "https://github.com/sifnoc/plonkish-fibonacci-sample.git", optional = true }
 gemini-fibonacci = { package = "gemini-fibonacci", git = "https://github.com/sifnoc/plonkish-fibonacci-sample.git", optional = true }
-plonk-composite-eligibility = { path = "../circuits/plonk-wrappers/plonk-composite", optional = true }
+plonk-composite-eligibility = { path = "../../circuits/plonk-wrappers/plonk-composite", optional = true }
 rand = "0.8.5"
 
 [target.wasm32-unknown-unknown.dependencies]
