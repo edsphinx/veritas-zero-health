@@ -758,7 +758,7 @@ async function handleVerifyEligibilityProof(data: {
  */
 async function handleGenerateProofFromHealthData(data: {
   dataType: string;
-  criteria: { code: string };
+  criteria: { age?: string; minAge?: string; maxAge?: string; studyId?: string };
 }) {
   if (!isZKInitialized()) {
     throw new Error('ZK proof system not initialized. Call INIT_ZK first.');
