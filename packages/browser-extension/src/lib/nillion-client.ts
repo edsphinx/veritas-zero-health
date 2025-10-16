@@ -141,16 +141,30 @@ export class VeritasNillionClient {
       url.searchParams.set('userId', this.userDID);
     }
 
-    const response = await fetch(url.toString());
-    const result = await response.json();
+    console.log(`   URL: ${url.toString()}`);
 
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to retrieve records');
+    try {
+      const response = await fetch(url.toString());
+
+      console.log(`   Response status: ${response.status}`);
+      console.log(`   Response headers:`, Object.fromEntries(response.headers.entries()));
+
+      const result = await response.json();
+
+      console.log(`   Response:`, result);
+
+      if (!result.success) {
+        console.error(`   Error: ${result.error}`);
+        throw new Error(result.error || 'Failed to retrieve records');
+      }
+
+      console.log(`✅ Retrieved ${result.data.count} ${type} records`);
+
+      return result.data.records;
+    } catch (error) {
+      console.error(`   Fetch error for ${type}:`, error);
+      throw error;
     }
-
-    console.log(`✅ Retrieved ${result.data.count} ${type} records`);
-
-    return result.data.records;
   }
 
   /**

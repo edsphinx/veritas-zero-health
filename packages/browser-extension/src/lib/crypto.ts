@@ -144,13 +144,19 @@ export function generateNonce(): string {
 }
 
 /**
- * Store keypair securely in chrome.storage.local
+ * Store keypair securely in chrome.storage.sync (persists across reinstalls)
  */
 export async function storeKeypair(keyPair: KeyPair, password: string): Promise<void> {
   const secretKey = deriveSecretKey(password);
 
   // Encrypt private key before storage
   const encryptedPrivateKey = encryptData(keyPair.privateKey, secretKey);
+
+  // Store in both sync (for persistence) and local (for backup)
+  await chrome.storage.sync.set({
+    publicKey: keyPair.publicKey,
+    encryptedPrivateKey,
+  });
 
   await chrome.storage.local.set({
     publicKey: keyPair.publicKey,
@@ -159,10 +165,16 @@ export async function storeKeypair(keyPair: KeyPair, password: string): Promise<
 }
 
 /**
- * Retrieve keypair from chrome.storage.local
+ * Retrieve keypair from chrome.storage (tries sync first, then local)
  */
 export async function retrieveKeypair(password: string): Promise<KeyPair | null> {
-  const data = await chrome.storage.local.get(['publicKey', 'encryptedPrivateKey']);
+  // Try sync storage first
+  let data = await chrome.storage.sync.get(['publicKey', 'encryptedPrivateKey']);
+
+  // Fallback to local storage
+  if (!data.publicKey || !data.encryptedPrivateKey) {
+    data = await chrome.storage.local.get(['publicKey', 'encryptedPrivateKey']);
+  }
 
   if (!data.publicKey || !data.encryptedPrivateKey) {
     return null;
@@ -182,31 +194,49 @@ export async function retrieveKeypair(password: string): Promise<KeyPair | null>
 }
 
 /**
- * Check if keypair exists in storage
+ * Check if keypair exists in storage (checks both sync and local)
  */
 export async function hasKeypair(): Promise<boolean> {
-  const data = await chrome.storage.local.get(['publicKey']);
+  // Check sync storage first
+  let data = await chrome.storage.sync.get(['publicKey']);
+
+  if (data.publicKey) {
+    return true;
+  }
+
+  // Fallback to local storage
+  data = await chrome.storage.local.get(['publicKey']);
   return !!data.publicKey;
 }
 
 /**
- * Delete keypair from storage
+ * Delete keypair from storage (both sync and local)
  */
 export async function deleteKeypair(): Promise<void> {
+  await chrome.storage.sync.remove(['publicKey', 'encryptedPrivateKey', 'did']);
   await chrome.storage.local.remove(['publicKey', 'encryptedPrivateKey', 'did']);
 }
 
 /**
- * Store DID document
+ * Store DID document (in both sync and local for persistence)
  */
 export async function storeDID(didDocument: DIDDocument): Promise<void> {
+  await chrome.storage.sync.set({ did: didDocument });
   await chrome.storage.local.set({ did: didDocument });
 }
 
 /**
- * Retrieve DID document
+ * Retrieve DID document (tries sync first, then local)
  */
 export async function retrieveDID(): Promise<DIDDocument | null> {
-  const data = await chrome.storage.local.get(['did']);
+  // Try sync storage first
+  let data = await chrome.storage.sync.get(['did']);
+
+  if (data.did) {
+    return data.did;
+  }
+
+  // Fallback to local storage
+  data = await chrome.storage.local.get(['did']);
   return data.did || null;
 }

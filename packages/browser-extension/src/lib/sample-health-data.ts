@@ -6,6 +6,7 @@
 
 export const sampleDiagnoses = [
   {
+    id: 'dx-1',
     date: '2024-12-15',
     icd10Codes: ['E11.9'],
     description: 'Type 2 diabetes mellitus without complications',
@@ -14,6 +15,7 @@ export const sampleDiagnoses = [
     notes: 'Well controlled with metformin',
   },
   {
+    id: 'dx-2',
     date: '2024-11-20',
     icd10Codes: ['I10'],
     description: 'Essential (primary) hypertension',
