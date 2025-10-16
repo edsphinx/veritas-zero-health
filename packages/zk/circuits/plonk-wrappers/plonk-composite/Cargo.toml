@@ -7,6 +7,10 @@ edition = "2021"
 name = "gen-plonk-keys"
 path = "src/bin/gen_plonk_keys.rs"
 
+[[bin]]
+name = "gen-solidity-verifier"
+path = "src/bin/gen_solidity_verifier.rs"
+
 [dependencies]
 composite-eligibility-circuit = { path = "../../circuits/composite" }
 halo2_proofs = { workspace = true }
@@ -14,3 +18,8 @@ plonkish_backend = { workspace = true }
 serde = { workspace = true }
 bincode = { workspace = true }
 rand = { workspace = true }
+hex = "0.4"
+
+# Snark verifier dependencies for Solidity generation
+snark-verifier = { version = "0.2.3", default-features = false, features = ["loader_evm", "halo2-axiom"] }
+snark-verifier-sdk = { version = "0.2.3", default-features = false, features = ["loader_evm", "halo2-axiom"] }

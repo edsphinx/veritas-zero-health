@@ -7,7 +7,8 @@ use halo2_proofs::{
     SerdeFormat::RawBytes,
 };
 
-use composite_eligibility_circuit::CompositeEligibilityCircuit;
+use composite_eligibility_circuit::AgeRangeCircuit;
+use halo2_proofs::{circuit::Value, halo2curves::bn256::Fr};
 
 pub fn main() {
     // This key generator is based on halo2
@@ -31,9 +32,12 @@ pub fn main() {
         std::fs::create_dir(&out_dir).expect("Unable to create out directory");
     }
 
-    // Use empty value on public input for only for getting proving / verifying keys
-    let circuit = CompositeEligibilityCircuit {
-        public_input: vec![vec![]],
+    // Use empty circuit for getting proving / verifying keys
+    let circuit = AgeRangeCircuit::<Fr> {
+        age: Value::unknown(),
+        min_age: Fr::from(0),
+        max_age: Fr::from(0),
+        study_id: Fr::from(0),
     };
 
     let verifying_key = keygen_vk::<_, _, _, false>(&params, &circuit)

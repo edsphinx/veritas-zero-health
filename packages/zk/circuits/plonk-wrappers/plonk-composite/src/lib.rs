@@ -8,10 +8,10 @@ use std::io::BufReader;
 use std::{collections::HashMap, error::Error};
 
 use composite_eligibility_circuit::{
-    serialization::*, CompositeEligibilityCircuit, EligibilityError,
+    serialization::*, AgeRangeCircuit, EligibilityError, validate_age_range,
 };
 use halo2_proofs::{
-    halo2curves::bn256::{Bn256, Fr, G1Affine},
+    halo2curves::{bn256::{Bn256, Fr, G1Affine}, ff::PrimeField},
     plonk::{create_proof, verify_proof, ProvingKey, VerifyingKey},
     poly::{
         commitment::Params,
@@ -33,7 +33,7 @@ pub type GenerateProofResult = (Vec<u8>, Vec<u8>);
 pub fn generate_halo2_proof(
     params: &ParamsKZG<Bn256>,
     pk: &ProvingKey<G1Affine>,
-    circuit: CompositeEligibilityCircuit<Fr>,
+    circuit: AgeRangeCircuit<Fr>,
     public_inputs: Vec<Fr>,
 ) -> Result<(Vec<u8>, Vec<Fr>), Box<dyn Error>> {
     let mut transcript = Blake2bWrite::<_, _, Challenge255<_>>::init(vec![]);
@@ -93,27 +93,78 @@ fn prove_with_params(
     proving_key: &ProvingKey<G1Affine>,
     input: HashMap<String, Vec<String>>,
 ) -> Result<GenerateProofResult, Box<dyn Error>> {
-    let circuit = CompositeEligibilityCircuit::<Fr>::default();
-
     let circuit_inputs = deserialize_circuit_inputs(input)
         .map_err(|e| EligibilityError(format!("Failed to deserialize inputs: {}", e)))?;
 
-    let code = circuit_inputs
-        .get("code")
-        .ok_or_else(|| EligibilityError("Missing 'code' input".to_string()))?
+    // Extract age range inputs
+    let age = circuit_inputs
+        .get("age")
+        .ok_or_else(|| EligibilityError("Missing 'age' input".to_string()))?
         .get(0)
-        .ok_or_else(|| EligibilityError("Invalid 'code' value".to_string()))?
+        .ok_or_else(|| EligibilityError("Invalid 'age' value".to_string()))?
         .clone();
 
-    let public_input = vec![code];
+    let min_age = circuit_inputs
+        .get("min_age")
+        .ok_or_else(|| EligibilityError("Missing 'min_age' input".to_string()))?
+        .get(0)
+        .ok_or_else(|| EligibilityError("Invalid 'min_age' value".to_string()))?
+        .clone();
+
+    let max_age = circuit_inputs
+        .get("max_age")
+        .ok_or_else(|| EligibilityError("Missing 'max_age' input".to_string()))?
+        .get(0)
+        .ok_or_else(|| EligibilityError("Invalid 'max_age' value".to_string()))?
+        .clone();
+
+    let study_id = circuit_inputs
+        .get("study_id")
+        .ok_or_else(|| EligibilityError("Missing 'study_id' input".to_string()))?
+        .get(0)
+        .ok_or_else(|| EligibilityError("Invalid 'study_id' value".to_string()))?
+        .clone();
+
+    // Client-side validation (hybrid MVP approach)
+    let age_u64 = field_to_u64(&age)?;
+    let min_age_u64 = field_to_u64(&min_age)?;
+    let max_age_u64 = field_to_u64(&max_age)?;
+
+    validate_age_range(age_u64, min_age_u64, max_age_u64)
+        .map_err(|e| Box::new(e) as Box<dyn Error>)?;
+
+    // Create circuit with validated inputs
+    use halo2_proofs::circuit::Value;
+    let circuit = AgeRangeCircuit::<Fr> {
+        age: Value::known(age),
+        min_age,
+        max_age,
+        study_id,
+    };
+
+    let public_inputs = vec![min_age, max_age, study_id];
 
     let (proof, unserialized_inputs) =
-        generate_halo2_proof(&params, &proving_key, circuit, public_input)?;
+        generate_halo2_proof(&params, &proving_key, circuit, public_inputs)?;
 
     let serialized_inputs = bincode::serialize(&InputsSerializationWrapper(unserialized_inputs))
         .map_err(|e| EligibilityError(format!("Serialization failed: {}", e)))?;
 
     Ok((proof, serialized_inputs))
+}
+
+// Helper function
+fn field_to_u64<F: PrimeField>(field: &F) -> Result<u64, Box<dyn Error>> {
+    let bytes = field.to_repr();
+    let bytes_ref = bytes.as_ref();
+
+    if bytes_ref.len() < 8 {
+        return Err("Field element too small".into());
+    }
+
+    let mut array = [0u8; 8];
+    array.copy_from_slice(&bytes_ref[0..8]);
+    Ok(u64::from_le_bytes(array))
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -126,7 +177,7 @@ pub fn prove(
     let params = ParamsKZG::<Bn256>::read(&mut param_fs)?;
 
     let mut pk_fs = File::open(proving_key_path)?;
-    let proving_key = ProvingKey::read::<_, CompositeEligibilityCircuit<Fr>, false>(&mut pk_fs, RawBytes)?;
+    let proving_key = ProvingKey::read::<_, AgeRangeCircuit<Fr>, false>(&mut pk_fs, RawBytes)?;
 
     prove_with_params(&params, &proving_key, input)
 }
@@ -141,7 +192,7 @@ pub fn prove(
     let params = ParamsKZG::<Bn256>::read(&mut params_reader)?;
 
     let mut pk_reader = BufReader::new(proving_key);
-    let proving_key = ProvingKey::read::<_, CompositeEligibilityCircuit<Fr>, false>(&mut pk_reader, RawBytes)?;
+    let proving_key = ProvingKey::read::<_, AgeRangeCircuit<Fr>, false>(&mut pk_reader, RawBytes)?;
 
     prove_with_params(&params, &proving_key, input)
 }
@@ -172,7 +223,7 @@ pub fn verify(
     let params = ParamsKZG::<Bn256>::read(&mut param_fs)?;
 
     let mut vk_fs = File::open(verifying_key_path)?;
-    let verifying_key = VerifyingKey::read::<_, CompositeEligibilityCircuit<Fr>, false>(&mut vk_fs, RawBytes)?;
+    let verifying_key = VerifyingKey::read::<_, AgeRangeCircuit<Fr>, false>(&mut vk_fs, RawBytes)?;
 
     verify_with_params(&params, &verifying_key, proof, public_inputs)
 }
@@ -188,7 +239,7 @@ pub fn verify(
     let params = ParamsKZG::<Bn256>::read(&mut params_reader)?;
 
     let mut vk_reader = BufReader::new(verifying_key);
-    let verifying_key = VerifyingKey::read::<_, CompositeEligibilityCircuit<Fr>, false>(&mut vk_reader, RawBytes)?;
+    let verifying_key = VerifyingKey::read::<_, AgeRangeCircuit<Fr>, false>(&mut vk_reader, RawBytes)?;
 
     verify_with_params(&params, &verifying_key, proof, public_inputs)
 }
