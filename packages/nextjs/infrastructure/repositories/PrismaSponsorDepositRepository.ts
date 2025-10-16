@@ -44,6 +44,7 @@ export class PrismaSponsorDepositRepository implements ISponsorDepositRepository
       orderBy: { depositedAt: 'desc' },
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return deposits.map((d: any) => this.toDomain(d));
   }
 
@@ -53,6 +54,7 @@ export class PrismaSponsorDepositRepository implements ISponsorDepositRepository
       orderBy: { depositedAt: 'desc' },
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return deposits.map((d: any) => this.toDomain(d));
   }
 
@@ -68,6 +70,7 @@ export class PrismaSponsorDepositRepository implements ISponsorDepositRepository
       orderBy: { depositedAt: 'desc' },
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return deposits.map((d: any) => this.toDomain(d));
   }
 

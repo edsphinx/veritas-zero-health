@@ -21,6 +21,7 @@ async function main() {
       });
 
       console.log('📋 Studies:\n');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       studies.forEach((study: any, index: any) => {
         console.log(`${index + 1}. ${study.title}`);
         console.log(`   ID: ${study.id}`);

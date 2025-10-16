@@ -60,6 +60,7 @@ export class PrismaStudyRepository implements IStudyRepository {
       },
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return studies.map((s: any) => this.toDomain(s));
   }
 
@@ -89,6 +90,7 @@ export class PrismaStudyRepository implements IStudyRepository {
       take: params?.take,
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return studies.map((s: any) => this.toDomain(s));
   }
 

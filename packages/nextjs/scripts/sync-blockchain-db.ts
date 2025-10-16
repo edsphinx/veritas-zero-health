@@ -518,6 +518,7 @@ async function updateTotalFunding(studyDbId: string): Promise<void> {
 
     // Calculate total funding (sum of all milestone rewards)
     // rewardAmount is already in display format (e.g., "100.00")
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const totalFunding = milestones.reduce((sum: any, milestone: any) => {
       return sum + parseFloat(milestone.rewardAmount.toString());
     }, 0);

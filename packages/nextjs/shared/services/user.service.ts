@@ -182,6 +182,7 @@ export class UserService {
       orderBy: { createdAt: 'desc' },
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return users.map((user: any) => ({
       ...user,
       role: user.role as UserRole,
