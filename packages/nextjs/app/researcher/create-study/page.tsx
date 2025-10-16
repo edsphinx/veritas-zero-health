@@ -46,10 +46,14 @@ export default function CreateStudyPage() {
     paymentPerParticipant: '',
     requiredAppointments: 5,
 
-    // Eligibility Criteria - Age (✅ ZK Proof Available: Halo2/PLONK + Mopro WASM)
+    // Eligibility Criteria - Age (✅ ZK Proof Available: Halo2/PLONK + Mopro WASM, Off-chain)
     minAge: 18,
     maxAge: 65,
     requiresAgeProof: true,
+
+    // Eligibility Criteria - Medical (✅ ZK Proof Available: Circom/Groth16, On-chain OP Sepolia)
+    eligibilityCodeHash: '0', // Will be computed from patient data + criteria
+    requiresEligibilityProof: false,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -367,6 +371,8 @@ export default function CreateStudyPage() {
         minAge: 18,
         maxAge: 65,
         requiresAgeProof: true,
+        eligibilityCodeHash: '0',
+        requiresEligibilityProof: false,
       });
 
     } catch (error: any) {
@@ -672,7 +678,7 @@ export default function CreateStudyPage() {
             </div>
           </motion.div>
 
-          {/* Eligibility Criteria - ZK Proof Available */}
+          {/* Eligibility Criteria - Age (Off-chain ZK) */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -682,7 +688,7 @@ export default function CreateStudyPage() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-semibold flex items-center gap-2">
                 <Shield className="h-6 w-6 text-success" />
-                Eligibility Criteria
+                Age Verification (Off-Chain)
               </h2>
               <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-success/10 border border-success/20">
                 <CheckCircle2 className="h-4 w-4 text-success" />
@@ -748,6 +754,92 @@ export default function CreateStudyPage() {
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Eligibility Criteria - Medical (On-chain ZK) */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="rounded-xl border border-primary/30 bg-card p-6"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-semibold flex items-center gap-2">
+                <Shield className="h-6 w-6 text-primary" />
+                Medical Eligibility (On-Chain)
+              </h2>
+              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
+                <CheckCircle2 className="h-4 w-4 text-primary" />
+                <span className="text-xs font-medium text-primary">ZK Proof Available</span>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              {/* Medical Eligibility - ZK Verified On-Chain */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <h3 className="text-lg font-semibold">Medical Criteria Verification</h3>
+                  <div className="px-2 py-0.5 rounded bg-primary/10 text-primary text-xs font-medium">
+                    Circom + Groth16
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 p-4 rounded-lg border border-border">
+                  <input
+                    type="checkbox"
+                    id="requiresEligibilityProof"
+                    checked={formData.requiresEligibilityProof}
+                    onChange={(e) => setFormData({ ...formData, requiresEligibilityProof: e.target.checked })}
+                    className="w-4 h-4 text-primary border-border rounded focus:ring-primary"
+                  />
+                  <label htmlFor="requiresEligibilityProof" className="text-sm font-medium flex-1">
+                    Require medical eligibility proof (verified on-chain)
+                  </label>
+                </div>
+
+                <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-primary">
+                        Trustless Medical Verification with Zero-Knowledge Proofs
+                      </p>
+                      <ul className="text-xs text-primary space-y-1">
+                        <li>• Patients prove medical eligibility without revealing exact health data</li>
+                        <li>• Generated in browser extension using Circom + Groth16 (2-5s)</li>
+                        <li>• <strong>Verified on-chain</strong> in Optimism Sepolia smart contract</li>
+                        <li>• Supports: biomarkers (HbA1c, cholesterol), vitals (BP, BMI), diagnoses (ICD-10)</li>
+                        <li>• Verifier deployed: <code className="text-xs">0x1BBc9BD...1C0Dd</code></li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                {formData.requiresEligibilityProof && (
+                  <div className="bg-warning/10 border border-warning/20 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="h-5 w-5 text-warning flex-shrink-0 mt-0.5" />
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium text-warning">
+                          How Medical Eligibility Works (MVP)
+                        </p>
+                        <ol className="text-xs text-warning space-y-1 list-decimal list-inside">
+                          <li>Patient provides medical data in browser extension</li>
+                          <li>Extension generates eligibility code (Poseidon hash)</li>
+                          <li>System creates Groth16 ZK proof (2-5 seconds)</li>
+                          <li>Smart contract verifies proof on Optimism Sepolia</li>
+                          <li>If valid: Application accepted, event emitted</li>
+                        </ol>
+                        <p className="text-xs text-warning mt-2">
+                          <strong>Note:</strong> Eligibility code hash is set to <code>0</code> by default (no specific medical criteria).
+                          Configure specific medical criteria via API or contract after study creation.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>
