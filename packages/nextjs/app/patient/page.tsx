@@ -15,7 +15,7 @@ import {
   Lock,
   ArrowRight,
 } from 'lucide-react';
-import { PatientLayout } from '@/presentation/components/layout';
+import { PatientLayout } from '@/components/layout';
 
 export default function PatientDashboard() {
   return (
@@ -51,9 +51,9 @@ export default function PatientDashboard() {
           />
           <QuickActionCard
             icon={<FlaskConical className="h-6 w-6" />}
-            title="Clinical Trials"
+            title="Clinical Studies"
             description="Browse & apply"
-            href="/trials"
+            href="/studies"
             delay={0.3}
           />
           <QuickActionCard
