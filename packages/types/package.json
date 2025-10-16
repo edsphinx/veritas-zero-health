@@ -29,6 +29,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "prepare": "tsc",
     "watch": "tsc --watch",
     "clean": "rm -rf dist"
   },
