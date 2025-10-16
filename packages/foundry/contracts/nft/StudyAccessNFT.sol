@@ -5,14 +5,14 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
- * @title Experience NFT
+ * @title StudyAccess NFT
  * @author edsphinx
  * @notice A contract for tokenizing real-world services as NFT vouchers.
  * @dev In the DeSci context, this allows a sponsor (e.g., a research DAO or biotech company)
- * to tokenize patient access to a clinical trial as an RWA NFT. The contract owner (the sponsor)
+ * to tokenize patient access to a clinical study as an RWA NFT. The contract owner (the sponsor)
  * is the only entity that can mint new access tokens.
  */
-contract ExperienceNFT is ERC721, Ownable {
+contract StudyAccessNFT is ERC721, Ownable {
     uint256 private _nextTokenId;
 
     // Mapping to store the URI for each specific token.
@@ -35,11 +35,11 @@ contract ExperienceNFT is ERC721, Ownable {
     }
 
     /**
-     * @notice Mints a new trial access NFT and assigns it to a patient.
+     * @notice Mints a new study access NFT and assigns it to a patient.
      * @param to The patient's address that will receive the access NFT.
-     * @param _tokenURI The metadata URI that describes the trial and its terms.
+     * @param _tokenURI The metadata URI that describes the study and its terms.
      */
-    function mintExperience(address to, string memory _tokenURI) public onlyOwner returns (uint256) {
+    function mintStudyAccess(address to, string memory _tokenURI) public onlyOwner returns (uint256) {
         uint256 tokenId = _nextTokenId++;
         _safeMint(to, tokenId);
         _tokenURIs[tokenId] = _tokenURI;
