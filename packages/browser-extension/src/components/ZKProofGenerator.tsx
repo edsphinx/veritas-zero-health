@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import {
   initializeZKProofs,
   generateEligibilityProof,
@@ -161,9 +162,6 @@ export function ZKProofGenerator({ onBack, studyId, returnUrl }: ZKProofGenerato
       }
     }
 
-    // Convert age to eligibility code (for the ZK circuit)
-    const code = age.toString();
-
     setGenerating(true);
     setError(null);
     setProof(null);
@@ -171,7 +169,13 @@ export function ZKProofGenerator({ onBack, studyId, returnUrl }: ZKProofGenerato
     setVerificationResult(null);
 
     try {
-      const result = await generateEligibilityProof(code);
+      // Prepare inputs for AgeRangeCircuit
+      const ageStr = age.toString();
+      const minAgeStr = studyCriteria?.minAge?.toString() || '18';
+      const maxAgeStr = studyCriteria?.maxAge?.toString() || '65';
+      const studyIdStr = studyId || '1';
+
+      const result = await generateEligibilityProof(ageStr, minAgeStr, maxAgeStr, studyIdStr);
       setProof(result.proof);
       setPublicInputs(result.publicInputs);
       setProofTime(result.timeMs);
@@ -240,7 +244,7 @@ export function ZKProofGenerator({ onBack, studyId, returnUrl }: ZKProofGenerato
     };
 
     navigator.clipboard.writeText(JSON.stringify(proofData, null, 2));
-    alert('Proof copied to clipboard!');
+    toast.success('Proof copied to clipboard!');
   }
 
   if (initializing) {

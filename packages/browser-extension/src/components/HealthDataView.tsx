@@ -28,8 +28,9 @@ export function HealthDataView({ onBack, userDID }: HealthDataViewProps) {
       const client = new VeritasNillionClient();
       await client.initialize(userDID);
 
-      // Fetch all health records
+      // Fetch all health records (no timeout - let it complete)
       const records = await client.getAllRecords();
+
       setAllRecords(records);
 
       console.log('✅ Loaded health records from Nillion');
@@ -342,16 +343,7 @@ export function HealthDataView({ onBack, userDID }: HealthDataViewProps) {
   }
 
   if (loading) {
-    return (
-      <div className="container">
-        <div className="header-nav">
-          <button onClick={onBack} className="back-button">← Back</button>
-          <h2>My Health Data</h2>
-        </div>
-
-        <LoadingScreen message="Loading health records..." />
-      </div>
-    );
+    return <LoadingScreen message="Loading health records..." fullScreen={true} />;
   }
 
   if (error) {
@@ -393,26 +385,25 @@ export function HealthDataView({ onBack, userDID }: HealthDataViewProps) {
         </div>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="filter-tabs">
-        <button
-          onClick={() => setSelectedType('all')}
-          className={`filter-tab ${selectedType === 'all' ? 'active' : ''}`}
+      {/* Filter Dropdown */}
+      <div className="filter-container">
+        <label htmlFor="record-type-filter" className="filter-label">Filter by type:</label>
+        <select
+          id="record-type-filter"
+          value={selectedType}
+          onChange={(e) => setSelectedType(e.target.value as HealthRecordType | 'all')}
+          className="filter-select"
         >
-          All ({totalRecords})
-        </button>
-        {recordTypes.map(({ type, icon, label }) => {
-          const count = allRecords.get(type)?.length || 0;
-          return (
-            <button
-              key={type}
-              onClick={() => setSelectedType(type)}
-              className={`filter-tab ${selectedType === type ? 'active' : ''}`}
-            >
-              {icon} {label} ({count})
-            </button>
-          );
-        })}
+          <option value="all">All Records ({totalRecords})</option>
+          {recordTypes.map(({ type, icon, label }) => {
+            const count = allRecords.get(type)?.length || 0;
+            return (
+              <option key={type} value={type}>
+                {icon} {label} ({count})
+              </option>
+            );
+          })}
+        </select>
       </div>
 
       {/* Records List */}
@@ -471,36 +462,39 @@ export function HealthDataView({ onBack, userDID }: HealthDataViewProps) {
           margin-top: 0.25rem;
         }
 
-        .filter-tabs {
-          display: flex;
-          gap: 0.5rem;
-          overflow-x: auto;
-          padding: 0.5rem 0;
+        .filter-container {
           margin-bottom: 1rem;
         }
 
-        .filter-tab {
-          padding: 0.5rem 1rem;
-          border: 1px solid #e5e7eb;
+        .filter-label {
+          display: block;
+          font-size: 14px;
+          font-weight: 500;
+          color: #374151;
+          margin-bottom: 0.5rem;
+        }
+
+        .filter-select {
+          width: 100%;
+          padding: 0.625rem 0.75rem;
+          border: 1px solid #d1d5db;
           border-radius: 8px;
           background: white;
-          color: #6b7280;
+          color: #111827;
           font-size: 14px;
           font-weight: 500;
           cursor: pointer;
-          white-space: nowrap;
           transition: all 0.2s;
         }
 
-        .filter-tab:hover {
+        .filter-select:hover {
           border-color: #6366f1;
-          background: #f5f3ff;
         }
 
-        .filter-tab.active {
+        .filter-select:focus {
+          outline: none;
           border-color: #6366f1;
-          background: #6366f1;
-          color: white;
+          box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
         }
 
         .records-list {

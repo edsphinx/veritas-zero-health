@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 
 interface PermissionGrant {
   appOrigin: string;
@@ -60,7 +61,7 @@ export function PermissionsView({ onBack }: PermissionsViewProps) {
         delete updatedPermissions[origin];
         setPermissions(updatedPermissions);
 
-        alert(`✅ Access revoked for ${origin}`);
+        toast.success(`Access revoked for ${origin}`);
       } else {
         setError('Failed to revoke permission');
       }
