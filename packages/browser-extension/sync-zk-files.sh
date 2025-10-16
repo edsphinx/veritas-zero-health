@@ -79,8 +79,22 @@ copy_file \
 
 copy_file \
   "$ZK_ROOT/mopro/cli/src/template/init/test-vectors/halo2/plonk_fibonacci_srs.bin" \
-  "$EXTENSION_ZK_DIR/plonk_fibonacci_srs.bin" \
+  "$EXTENSION_ZK_DIR/plonk_clinical_trials_srs.bin" \
   "SRS (Structured Reference String)"
+
+echo ""
+
+# Copy Circom circuit files
+echo "🔐 Circom Eligibility Circuit:"
+copy_file \
+  "$ZK_ROOT/archived/circom/build/eligibility_code_js/eligibility_code.wasm" \
+  "$EXTENSION_ZK_DIR/eligibility_code.wasm" \
+  "Eligibility Circuit WASM"
+
+copy_file \
+  "$ZK_ROOT/archived/circom/setup/eligibility_0000.zkey" \
+  "$EXTENSION_ZK_DIR/eligibility_0000.zkey" \
+  "Eligibility Proving Key (zkey)"
 
 echo ""
 echo -e "${GREEN}✅ ZK files synced successfully!${NC}"
