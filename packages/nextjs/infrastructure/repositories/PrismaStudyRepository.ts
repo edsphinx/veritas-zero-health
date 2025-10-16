@@ -115,7 +115,7 @@ export class PrismaStudyRepository implements IStudyRepository {
       title: prismaStudy.title,
       description: prismaStudy.description,
       researcherAddress: prismaStudy.researcherAddress,
-      status: prismaStudy.status as string,
+      status: prismaStudy.status as typeof StudyStatus[keyof typeof StudyStatus],
       chainId: prismaStudy.chainId,
       escrowTxHash: prismaStudy.escrowTxHash,
       registryTxHash: prismaStudy.registryTxHash,

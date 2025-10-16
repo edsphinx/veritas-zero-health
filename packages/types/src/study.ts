@@ -166,6 +166,10 @@ export interface Study {
   researcherAddress: string;
   status: StudyStatus;
 
+  // Funding & Participants
+  totalFunding?: string; // Total funding required (sum of milestone rewards) in USDC display format
+  maxParticipants?: number; // Maximum number of participants allowed
+
   // Blockchain tracking
   chainId: number;
   escrowTxHash: string;
