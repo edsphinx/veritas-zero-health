@@ -6,7 +6,7 @@
  */
 
 import { http, createConfig, cookieStorage, createStorage } from 'wagmi';
-import { mainnet, sepolia, polygon, polygonAmoy, celo, celoAlfajores } from 'wagmi/chains';
+import { mainnet, sepolia, polygon, polygonAmoy, celo, celoAlfajores, optimismSepolia, optimism } from 'wagmi/chains';
 
 // Get environment variables
 const reownProjectId = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID || '';
@@ -20,11 +20,12 @@ if (!reownProjectId) {
 // Define supported chains
 // Default to testnets for development, can be overridden with env vars
 export const chains = [
-  sepolia,        // Ethereum Sepolia testnet
-  polygonAmoy,    // Polygon Amoy testnet
-  celoAlfajores,  // Celo Alfajores testnet
+  optimismSepolia, // Optimism Sepolia testnet (PRIMARY)
+  sepolia,         // Ethereum Sepolia testnet
+  polygonAmoy,     // Polygon Amoy testnet
+  celoAlfajores,   // Celo Alfajores testnet
   ...(process.env.NODE_ENV === 'production'
-    ? [mainnet, polygon, celo]  // Add mainnets in production
+    ? [optimism, mainnet, polygon, celo]  // Add mainnets in production
     : []),
 ] as const;
 
@@ -39,6 +40,7 @@ export const metadata = {
 
 // Configure transports (RPC providers)
 const transports = {
+  [optimismSepolia.id]: http('https://sepolia.optimism.io'),
   [sepolia.id]: http(
     alchemyApiKey
       ? `https://eth-sepolia.g.alchemy.com/v2/${alchemyApiKey}`
@@ -52,6 +54,7 @@ const transports = {
   [celoAlfajores.id]: http('https://alfajores-forno.celo-testnet.org'),
   ...(process.env.NODE_ENV === 'production'
     ? {
+        [optimism.id]: http('https://mainnet.optimism.io'),
         [mainnet.id]: http(
           alchemyApiKey
             ? `https://eth-mainnet.g.alchemy.com/v2/${alchemyApiKey}`
@@ -79,7 +82,7 @@ export const wagmiConfig = createConfig({
 });
 
 // Export individual chains for convenience
-export { mainnet, sepolia, polygon, polygonAmoy, celo, celoAlfajores };
+export { mainnet, sepolia, polygon, polygonAmoy, celo, celoAlfajores, optimismSepolia, optimism };
 
 // Helper: Get chain by ID
 export function getChainById(chainId: number) {
@@ -94,7 +97,7 @@ export function getChainName(chainId: number) {
 
 // Helper: Check if chain is testnet
 export function isTestnet(chainId: number) {
-  return [sepolia.id as number, polygonAmoy.id as number, celoAlfajores.id as number].includes(chainId);
+  return [optimismSepolia.id as number, sepolia.id as number, polygonAmoy.id as number, celoAlfajores.id as number as number].includes(chainId);
 }
 
 // Helper: Get block explorer URL
@@ -107,7 +110,7 @@ export function getBlockExplorerUrl(chainId: number, hash: string, type: 'tx' | 
 }
 
 // Default chain for the app (can be overridden with env var)
-export const defaultChain = sepolia;
+export const defaultChain = optimismSepolia;
 
 // Export config as default
 export default wagmiConfig;

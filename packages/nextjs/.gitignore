@@ -49,3 +49,5 @@ SESSION_STATUS.md
 SETUP_STATUS.md
 TODO.md
 UNIFIED_ARCHITECTURE.md
+
+/app/generated/prisma

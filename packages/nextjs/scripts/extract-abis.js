@@ -15,15 +15,18 @@ const OUTPUT_FILE = path.resolve(__dirname, '../shared/lib/vzh/generated-abis.ts
 
 // Contracts we want to extract ABIs for
 const CONTRACTS = [
-  { name: 'StudyRegistryImpl', file: 'StudyRegistryImpl.sol/StudyRegistryImpl.json' },
-  { name: 'AgeVerifier', file: 'AgeVerifier.sol/AgeVerifier.json' },
-  { name: 'StudyParticipationSBT', file: 'StudyParticipationSBT.sol/ProofOfMatch.json' },
-  { name: 'StudyEnrollmentData', file: 'StudyEnrollmentData.sol/MatchData.json' },
+  { name: 'StudyRegistry', file: 'StudyRegistry.sol/StudyRegistry.json' },
+  { name: 'StudyParticipationSBT', file: 'StudyParticipationSBT.sol/StudyParticipationSBT.json' },
+  { name: 'StudyEnrollmentData', file: 'StudyEnrollmentData.sol/StudyEnrollmentData.json' },
+  { name: 'ResearchFundingEscrow', file: 'ResearchFundingEscrow.sol/ResearchFundingEscrow.json' },
+  { name: 'HealthIdentitySBT', file: 'HealthIdentitySBT.sol/HealthIdentitySBT.json' },
+  { name: 'PatientAccountFactory', file: 'PatientAccountFactory.sol/PatientAccountFactory.json' },
+  { name: 'MedicalProviderRegistry', file: 'MedicalProviderRegistry.sol/MedicalProviderRegistry.json' },
   { name: 'CommitmentVault', file: 'CommitmentVault.sol/CommitmentVault.json' },
   { name: 'CommitmentVaultFactory', file: 'CommitmentVaultFactory.sol/CommitmentVaultFactory.json' },
-  { name: 'TrialAccessNFT', file: 'TrialAccessNFT.sol/ExperienceNFT.json' },
-  { name: 'ComplianceScore', file: 'ComplianceScore.sol/ComplianceScore.json' },
-  { name: 'EligibilityCodeVerifier', file: 'EligibilityCodeVerifier.sol/Groth16Verifier.json' },
+  { name: 'StudyAccessNFT', file: 'StudyAccessNFT.sol/StudyAccessNFT.json' },
+  { name: 'EligibilityCodeVerifier', file: 'EligibilityCodeVerifier.sol/EligibilityCodeVerifier.json' },
+  { name: 'MockHumanPassport', file: 'MockHumanPassport.sol/MockHumanPassport.json' },
 ];
 
 function extractABIs() {
