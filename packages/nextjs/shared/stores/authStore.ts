@@ -14,7 +14,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { devtools } from 'zustand/middleware';
 import type { Address } from 'viem';
-import { UserRole, UserRoleEnum, Permission } from '@/shared/types/auth.types';
+import { UserRole, Permission } from '@/shared/types/auth.types';
 
 // ==================== TYPE DEFINITIONS ====================
 
@@ -81,7 +81,7 @@ const initialState: AuthState = {
   isConnected: false,
   isVerified: false,
   humanId: null,
-  role: UserRoleEnum.GUEST,
+  role: UserRole.GUEST,
   permissions: [],
   isLoading: false,
   roleLoading: false,
@@ -94,15 +94,14 @@ const initialState: AuthState = {
 
 const getRolePermissions = (role: UserRole): Permission[] => {
   switch (role) {
-    case UserRoleEnum.PATIENT:
+    case UserRole.PATIENT:
       return [
         Permission.VIEW_OWN_RECORDS,
-        Permission.SHARE_RECORDS,
-        Permission.APPLY_TO_STUDIES,
-        Permission.VIEW_OWN_APPLICATIONS,
+        Permission.MANAGE_OWN_DATA,
+        Permission.APPLY_TO_TRIALS,
       ];
 
-    case UserRoleEnum.RESEARCHER:
+    case UserRole.RESEARCHER:
       return [
         Permission.CREATE_STUDIES,
         Permission.MANAGE_STUDIES,
@@ -110,16 +109,14 @@ const getRolePermissions = (role: UserRole): Permission[] => {
         Permission.VIEW_ANALYTICS,
       ];
 
-    case UserRoleEnum.CLINIC:
+    case UserRole.CLINIC:
       return [
         Permission.VIEW_PATIENTS,
         Permission.CREATE_RECORDS,
-        Permission.UPDATE_RECORDS,
         Permission.SCHEDULE_APPOINTMENTS,
-        Permission.VERIFY_ELIGIBILITY,
       ];
 
-    case UserRoleEnum.SPONSOR:
+    case UserRole.SPONSOR:
       return [
         Permission.FUND_STUDIES,
         Permission.VIEW_FUNDED_STUDIES,
@@ -127,7 +124,7 @@ const getRolePermissions = (role: UserRole): Permission[] => {
         Permission.VIEW_ANALYTICS,
       ];
 
-    case UserRoleEnum.ADMIN:
+    case UserRole.ADMIN:
       return [
         Permission.MANAGE_USERS,
         Permission.MANAGE_STUDIES,
@@ -136,7 +133,7 @@ const getRolePermissions = (role: UserRole): Permission[] => {
         Permission.MANAGE_CONTRACTS,
       ];
 
-    case UserRoleEnum.SUPERADMIN:
+    case UserRole.SUPERADMIN:
       return [
         Permission.SYSTEM_ADMIN,
         Permission.ASSIGN_ROLES,
@@ -144,9 +141,10 @@ const getRolePermissions = (role: UserRole): Permission[] => {
         Permission.MANAGE_CONTRACTS,
         Permission.SYSTEM_CONFIG,
         Permission.VIEW_ANALYTICS,
+        Permission.MANAGE_ADMINS,
       ];
 
-    case UserRoleEnum.GUEST:
+    case UserRole.GUEST:
     default:
       return [];
   }
@@ -176,7 +174,7 @@ export const useAuthStore = create<AuthStore>()(
             isConnected: false,
             isVerified: false,
             humanId: null,
-            role: UserRoleEnum.GUEST,
+            role: UserRole.GUEST,
             permissions: [],
             isTestAddress: false,
           }, false, 'wallet/disconnected');

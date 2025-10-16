@@ -21,14 +21,13 @@
 'use client';
 
 import React, { ReactNode, useEffect, useRef } from 'react';
-import { useAccount } from 'wagmi';
 import { useAuthStore } from '@/shared/stores/authStore';
+import { useWalletConnection } from '@/shared/hooks/useWalletConnection';
 import { useHumanPassport } from '@/shared/hooks/useHumanPassport';
 import { isSuperAdmin } from '@/shared/lib/auth/superadmin';
 import { detectRoleFromAddress } from '@/shared/lib/auth/role-detector';
 import { testAddressProvider } from '@/infrastructure/human/TestAddressProvider';
-import { UserRole as UserRoleEnum } from '@/shared/types/auth.types';
-import type { UserRole } from '@/shared/types/auth.types';
+import { UserRole } from '@/shared/types/auth.types';
 
 /**
  * Fetch user role from database
@@ -40,7 +39,7 @@ async function fetchUserRole(address: string): Promise<UserRole> {
   const isSA = isSuperAdmin(address as `0x${string}`);
   if (isSA) {
     console.log('[AuthProvider] ✅ SuperAdmin detected');
-    return UserRoleEnum.SUPERADMIN;
+    return UserRole.SUPERADMIN;
   }
 
   // 2. Try database
@@ -68,7 +67,7 @@ async function fetchUserRole(address: string): Promise<UserRole> {
 
   // 4. Default
   console.log('[AuthProvider] ⚠️ Defaulting to PATIENT');
-  return UserRoleEnum.PATIENT;
+  return UserRole.PATIENT;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -84,15 +83,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setTestAddress,
   } = useAuthStore();
 
-  // Wagmi wallet state
-  const { address, isConnected } = useAccount();
+  // USE-CASE LAYER: Stable wallet connection with debouncing
+  const { address, isStableConnected, hasChanged } = useWalletConnection({
+    debug: process.env.NODE_ENV === 'development',
+  });
 
   // Prevent duplicate role fetches
   const lastFetchedAddress = useRef<string | null>(null);
 
-  // Effect 1: Sync wallet connection
+  // Effect 1: Sync wallet connection (only when state actually changes)
   useEffect(() => {
-    if (isConnected && address) {
+    if (!hasChanged) return;
+
+    if (isStableConnected && address) {
       console.log('[AuthProvider] 💰 Wallet connected:', address);
       setWalletConnected(address);
 
@@ -105,7 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setWalletDisconnected();
       lastFetchedAddress.current = null;
     }
-  }, [address, isConnected, setWalletConnected, setWalletDisconnected, setTestAddress]);
+  }, [hasChanged, isStableConnected, address, setWalletConnected, setWalletDisconnected, setTestAddress]);
 
   // Effect 2: Sync Human Passport verification
   const isTestAddress = useAuthStore((state) => state.isTestAddress);
@@ -117,14 +120,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     error: passportError,
   } = useHumanPassport({
     address,
-    enabled: isConnected && !isTestAddress,
+    enabled: isStableConnected && !isTestAddress,
   });
 
   useEffect(() => {
     setVerificationLoading(passportLoading);
   }, [passportLoading, setVerificationLoading]);
 
+  // Track last verification state to prevent infinite loops
+  const lastVerificationState = useRef<{ isVerified: boolean; humanId: string | null }>({
+    isVerified: false,
+    humanId: null,
+  });
+
   useEffect(() => {
+    // Skip if verification state hasn't changed
+    if (
+      lastVerificationState.current.isVerified === isVerified &&
+      lastVerificationState.current.humanId === passportHumanId
+    ) {
+      return;
+    }
+
+    lastVerificationState.current = { isVerified, humanId: passportHumanId };
+
     if (isTestAddress) {
       // Test addresses bypass verification
       setVerified('test-bypass');
@@ -134,16 +153,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (isVerified && passportHumanId) {
       console.log('[AuthProvider] ✅ Human verified:', passportHumanId);
       setVerified(passportHumanId);
-    } else {
+    } else if (!passportLoading) {
+      // Only setUnverified when not loading to avoid flickering
       setUnverified();
     }
-  }, [isVerified, passportHumanId, isTestAddress, setVerified, setUnverified]);
+  }, [isVerified, passportHumanId, isTestAddress, passportLoading, setVerified, setUnverified]);
 
   // Effect 3: Fetch and sync role
   useEffect(() => {
-    if (!isConnected || !address) {
+    if (!isStableConnected || !address) {
       console.log('[AuthProvider] 🎭 Not connected, setting GUEST');
-      setRole(UserRoleEnum.GUEST);
+      setRole(UserRole.GUEST);
       lastFetchedAddress.current = null;
       return;
     }
@@ -170,7 +190,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .catch((error) => {
         console.error('[AuthProvider] ❌ Role fetch error:', error);
         if (isMounted) {
-          setRole(UserRoleEnum.PATIENT);
+          setRole(UserRole.PATIENT);
         }
       })
       .finally(() => {
@@ -182,18 +202,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       isMounted = false;
     };
-  }, [address, isConnected, setRole, setRoleLoading]);
-
-  // Debug log
-  const currentState = useAuthStore((state) => ({
-    address: state.address,
-    role: state.role,
-    isConnected: state.isConnected,
-    isVerified: state.isVerified,
-    isLoading: state.isLoading,
-  }));
-
-  console.log('[AuthProvider] State:', currentState);
+  }, [address, isStableConnected, setRole, setRoleLoading]);
 
   return <>{children}</>;
 }

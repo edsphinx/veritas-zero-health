@@ -1,84 +1,84 @@
 /**
- * useAuth Hook
+ * useAuth Hook (NextAuth version)
  *
- * USE-CASE LAYER: Consumes Zustand auth store.
- * No more AuthContext - direct Zustand consumption for better performance.
- *
- * Clean Architecture:
- * - Hooks consume stores (use-case layer)
- * - Stores hold state (state layer)
- * - Services handle infrastructure (infrastructure layer)
- *
- * @example
- * ```tsx
- * function ProtectedPage() {
- *   const { isAuthenticated, isVerified, role, hasPermission } = useAuth();
- *
- *   if (!isAuthenticated) return <ConnectWallet />;
- *   if (!isVerified) return <VerifyIdentity />;
- *
- *   return <Dashboard />;
- * }
- * ```
+ * Clean replacement for the old custom auth hook.
+ * Uses NextAuth session management.
  */
 
-'use client';
+"use client";
 
-import { useAuthStore, selectIsAuthenticated, selectHasPermission, selectHasRole, selectHasAllPermissions, selectIsLoadingAny } from '@/shared/stores/authStore';
-import type { UserRole, Permission } from '@/shared/types/auth.types';
+import { useSession } from "next-auth/react";
+import { useMemo } from "react";
+import { UserRole, Permission } from "@/shared/types/auth.types";
 
 /**
- * Main auth hook - replaces old AuthContext
+ * Main auth hook using NextAuth
  */
 export function useAuth() {
-  // Subscribe to store
-  const address = useAuthStore((state) => state.address);
-  const isConnected = useAuthStore((state) => state.isConnected);
-  const isVerified = useAuthStore((state) => state.isVerified);
-  const humanId = useAuthStore((state) => state.humanId);
-  const role = useAuthStore((state) => state.role);
-  const permissions = useAuthStore((state) => state.permissions);
-  const isTestAddress = useAuthStore((state) => state.isTestAddress);
-  const error = useAuthStore((state) => state.error);
-
-  // Loading states
-  const isLoading = useAuthStore(selectIsLoadingAny);
-  const roleLoading = useAuthStore((state) => state.roleLoading);
-  const verificationLoading = useAuthStore((state) => state.verificationLoading);
+  const { data: session, status } = useSession();
+  const isLoading = status === "loading";
 
   // Derived state
-  const isAuthenticated = useAuthStore(selectIsAuthenticated);
+  const user = session?.user;
+  const isAuthenticated = !!user && !!user.address;
+  const isConnected = isAuthenticated;
+
+  // Debug log
+  console.log('[useAuth] Current state:', {
+    hasSession: !!session,
+    hasUser: !!user,
+    address: user?.address,
+    role: user?.role,
+    isAuthenticated,
+    isLoading,
+  });
 
   // Helper functions
-  const hasPermission = (permission: Permission): boolean => {
-    return permissions.includes(permission);
-  };
+  const hasPermission = useMemo(() => {
+    return (permission: Permission): boolean => {
+      if (!user) return false;
 
-  const hasRole = (roles: UserRole | UserRole[]): boolean => {
-    const roleArray = Array.isArray(roles) ? roles : [roles];
-    return roleArray.includes(role);
-  };
+      // Get permissions for user's role
+      const rolePermissions = getRolePermissions(user.role as UserRole);
+      return rolePermissions.includes(permission);
+    };
+  }, [user]);
 
-  const hasAllPermissions = (requiredPermissions: Permission[]): boolean => {
-    return requiredPermissions.every(p => permissions.includes(p));
-  };
+  const hasRole = useMemo(() => {
+    return (roles: UserRole | UserRole[]): boolean => {
+      if (!user) return false;
+
+      const roleArray = Array.isArray(roles) ? roles : [roles];
+      return roleArray.includes(user.role as UserRole);
+    };
+  }, [user]);
+
+  const hasAllPermissions = useMemo(() => {
+    return (requiredPermissions: Permission[]): boolean => {
+      if (!user) return false;
+
+      const rolePermissions = getRolePermissions(user.role as UserRole);
+      return requiredPermissions.every(p => rolePermissions.includes(p));
+    };
+  }, [user]);
 
   return {
+    // Session data
+    session,
+    user,
+
     // State
-    address,
+    address: user?.address,
     isConnected,
     isAuthenticated,
-    isVerified,
-    humanId,
-    role,
-    permissions,
-    isTestAddress,
-    error,
+    isVerified: user?.isVerified ?? false,
+    humanityScore: user?.humanityScore,
+    role: (user?.role as UserRole) || UserRole.GUEST,
+    displayName: user?.displayName,
+    avatar: user?.avatar,
 
     // Loading
     isLoading,
-    roleLoading,
-    verificationLoading,
 
     // Helpers
     hasPermission,
@@ -88,7 +88,7 @@ export function useAuth() {
 }
 
 /**
- * Hook to check if current route is accessible
+ * Hook to check route access (NextAuth version)
  */
 export function useRouteAccess(protection: {
   requireAuth?: boolean;
@@ -105,70 +105,104 @@ export function useRouteAccess(protection: {
     requiredPermissions = [],
   } = protection;
 
-  console.log('[useRouteAccess] 🔐 Checking access with:', {
-    requireAuth,
-    requireVerification,
-    allowedRoles,
-    requiredPermissions,
-    currentRole: auth.role,
-    isConnected: auth.isConnected,
-    isVerified: auth.isVerified,
-    isLoading: auth.isLoading,
-  });
-
   // Check authentication
   if (requireAuth && !auth.isConnected) {
-    console.log('[useRouteAccess] ❌ Access denied: not connected');
     return {
       canAccess: false,
-      reason: 'not_connected',
-      redirectTo: '/',
+      reason: "not_connected" as const,
+      redirectTo: "/",
     };
   }
 
   // Check verification
   if (requireVerification && !auth.isVerified) {
-    console.log('[useRouteAccess] ❌ Access denied: not verified');
     return {
       canAccess: false,
-      reason: 'not_verified',
-      redirectTo: '/onboarding',
+      reason: "not_verified" as const,
+      redirectTo: "/onboarding",
     };
   }
 
   // Check roles
-  if (allowedRoles.length > 0) {
-    const hasRole = auth.hasRole(allowedRoles);
-    console.log('[useRouteAccess] Role check:', {
-      hasRole,
-      currentRole: auth.role,
-      allowedRoles,
-    });
-
-    if (!hasRole) {
-      console.log('[useRouteAccess] ❌ Access denied: insufficient role');
-      return {
-        canAccess: false,
-        reason: 'insufficient_role',
-        redirectTo: '/',
-      };
-    }
+  if (allowedRoles.length > 0 && !auth.hasRole(allowedRoles)) {
+    return {
+      canAccess: false,
+      reason: "insufficient_role" as const,
+      redirectTo: "/",
+    };
   }
 
   // Check permissions
   if (requiredPermissions.length > 0 && !auth.hasAllPermissions(requiredPermissions)) {
-    console.log('[useRouteAccess] ❌ Access denied: insufficient permissions');
     return {
       canAccess: false,
-      reason: 'insufficient_permissions',
-      redirectTo: '/',
+      reason: "insufficient_permissions" as const,
+      redirectTo: "/",
     };
   }
 
-  console.log('[useRouteAccess] ✅ Access granted');
   return {
     canAccess: true,
     reason: null,
     redirectTo: null,
   };
+}
+
+// Helper: Get permissions for a role
+function getRolePermissions(role: UserRole): Permission[] {
+  switch (role) {
+    case UserRole.PATIENT:
+      return [
+        Permission.VIEW_OWN_RECORDS,
+        Permission.MANAGE_OWN_DATA,
+        Permission.APPLY_TO_TRIALS,
+      ];
+
+    case UserRole.RESEARCHER:
+      return [
+        Permission.CREATE_STUDIES,
+        Permission.MANAGE_STUDIES,
+        Permission.VIEW_APPLICATIONS,
+        Permission.VIEW_ANALYTICS,
+      ];
+
+    case UserRole.CLINIC:
+      return [
+        Permission.VIEW_PATIENTS,
+        Permission.CREATE_RECORDS,
+        Permission.SCHEDULE_APPOINTMENTS,
+      ];
+
+    case UserRole.SPONSOR:
+      return [
+        Permission.FUND_STUDIES,
+        Permission.VIEW_FUNDED_STUDIES,
+        Permission.MANAGE_FUNDING,
+        Permission.VIEW_ANALYTICS,
+      ];
+
+    case UserRole.ADMIN:
+      return [
+        Permission.MANAGE_USERS,
+        Permission.MANAGE_STUDIES,
+        Permission.SYSTEM_CONFIG,
+        Permission.VIEW_ANALYTICS,
+        Permission.MANAGE_CONTRACTS,
+      ];
+
+    case UserRole.SUPERADMIN:
+      return [
+        Permission.SYSTEM_ADMIN,
+        Permission.ASSIGN_ROLES,
+        Permission.MANAGE_USERS,
+        Permission.MANAGE_CONTRACTS,
+        Permission.SYSTEM_CONFIG,
+        Permission.VIEW_ANALYTICS,
+        Permission.MANAGE_ADMINS,
+      ];
+
+    case UserRole.GUEST:
+    default:
+      return [];
+  }
 }
