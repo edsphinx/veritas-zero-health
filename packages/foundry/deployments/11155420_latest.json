@@ -1,16 +1,16 @@
 {
-  "accountFactory": "0x546992ed4BeF8Db89B5343feaDBCEf24b9E2B2b8",
-  "ageVerifier": "0x93623910B0E16716965c6cD0F3e5D3710EF98603",
+  "accountFactory": "0xBa1656Cd85dA92f03FEC5DA1CaD7dbcD1aC8C325",
+  "ageVerifier": "0x0000000000000000000000000000000000000000",
   "chainId": 11155420,
-  "eligibilityVerifier": "0xBeA49A5Fb5aB638B95098a835F45484285DA16C5",
-  "enrollmentData": "0xa84Cf56A6F767417609eA657345971A7c5880C9D",
-  "healthIdentity": "0x54b2Dc133cC10dCe7628eEe2101F31Ed6AD82b06",
+  "eligibilityVerifier": "0x1BBc9BD3b5b5a2ECB7d99b8b933F866A16bb7B29",
+  "enrollmentData": "0xf95480A2B6a11C699F6e31752Bfe3733F0Ef02bE",
+  "healthIdentity": "0x5185e863a0852AF8440be928Ca277a45A75264aD",
   "humanPassport": "0xe53C60F8069C2f0c3a84F9B3DB5cf56f3100ba56",
   "network": "Optimism Sepolia",
-  "participationSBT": "0xe81dda64c3901beD6C9fFD224d703d8D50e5f1Ab",
-  "providerRegistry": "0xAD68036898fc4209b061361426171aD13eFfAcf3",
-  "researchEscrow": "0x326335137a685D55410537aaACF4dBF249B053C7",
-  "studyRegistry": "0xdc87ae7eA15ED190feE7e83ad0F54B53201680a0",
-  "timestamp": 1760421336,
-  "vaultFactory": "0x2E31598db3dea303B585b1F85305d239C83a8533"
+  "participationSBT": "0x69ce11d92b6132AF5eE6e30FabA4Ca67e54e9Ad9",
+  "providerRegistry": "0x20d4A1C5c0A9EAB2A9669d99Ef94eB08F89685b2",
+  "researchEscrow": "0xcDa8C6647082Ac99aFa56C6E0393468A5FBbb646",
+  "studyRegistry": "0xdE656c4907928470681e53A884c4770Fc461C0Dd",
+  "timestamp": 1760521750,
+  "vaultFactory": "0x42265d8f40E7B22e39370cd4763E415F0e69f385"
 }

@@ -1,16 +1,16 @@
 {
-  "accountFactory": "0xf968E708a00f78729Dcf1c46325FB215bF3927f6",
-  "ageVerifier": "0x2E5B3b417087f1c19Ff6B804baEaA6CB8C7561fB",
+  "accountFactory": "0x067c804bb006836469379D4A2A69a81803bd1F45",
+  "ageVerifier": "0x0000000000000000000000000000000000000000",
   "chainId": 31337,
-  "eligibilityVerifier": "0xF9c01EB82F2f60d59eD0Ad8C3613d79d642Ea1D2",
-  "enrollmentData": "0x546992ed4BeF8Db89B5343feaDBCEf24b9E2B2b8",
-  "healthIdentity": "0x4b522F9B0a5A16A26b909a4F62220a5e71c91adB",
-  "humanPassport": "0x0540017f66790FdaaDFE2c84b50935012bCA3B5e",
+  "eligibilityVerifier": "0x5621d0B4D8043524Ac5837918D6a95b1050eF228",
+  "enrollmentData": "0xF1078fD568Ad76E49E6F88D1fF485402a086976b",
+  "healthIdentity": "0x49B8E3b089d4ebf9F37B1dA9B839Ec013C2cD8c9",
+  "humanPassport": "0x33b1B5Aa9Aa4Da83a332F0bC5cAC6A903FDE5d92",
   "network": "Localhost",
-  "participationSBT": "0x54b2Dc133cC10dCe7628eEe2101F31Ed6AD82b06",
-  "providerRegistry": "0xeBB25B01faEe3CAa2E6E3f9d71Dc65CC667aba7f",
-  "researchEscrow": "0x68cd4591a0309474056E8c27F61071E610392917",
-  "studyRegistry": "0xAD68036898fc4209b061361426171aD13eFfAcf3",
-  "timestamp": 1760419562,
-  "vaultFactory": "0x93623910B0E16716965c6cD0F3e5D3710EF98603"
+  "participationSBT": "0x04fc820176617A99AE134904935Bc854b2e51628",
+  "providerRegistry": "0x19A1c09fE3399C4Daaa2C98b936a8E460fC5Eaa4",
+  "researchEscrow": "0x45009DD3aBBE29Db54fc5D893CeAa98a624882DF",
+  "studyRegistry": "0x2c4b93b614DdbfAF0807e8F4Ca982e9f9c2e2Aa4",
+  "timestamp": 1760519871,
+  "vaultFactory": "0x4e85DC48a70DA1298489d5B6FC2492767d98f384"
 }
