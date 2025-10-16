@@ -10,7 +10,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAccount } from 'wagmi';
 import { motion } from 'framer-motion';
 import {
   Search,
@@ -23,17 +22,13 @@ import {
 
 import { StudyList } from '@/components/trials';
 import { HumanVerificationBadge } from '@/components/auth/HumanVerificationBadge';
-import { useHumanPassport } from '@/shared/hooks/useHumanPassport';
+import { useAuth } from '@/shared/hooks/useAuth';
 import { StudyStatus } from '@/shared/hooks/useStudy';
 import { cn } from '@/shared/lib/utils';
 
 export default function StudiesPage() {
   const router = useRouter();
-  const { address, isConnected } = useAccount();
-  const { isVerified, isLoading: passportLoading } = useHumanPassport({
-    address,
-    enabled: !!address,
-  });
+  const { address, isConnected, isVerified } = useAuth();
 
   const [regionFilter, setRegionFilter] = useState<string>('');
 
