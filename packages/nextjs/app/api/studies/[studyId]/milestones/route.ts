@@ -36,7 +36,8 @@ export async function GET(
 
     return NextResponse.json({
       success: true,
-      milestones: milestones.map(m => ({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      milestones: milestones.map((m: any) => ({
         id: m.id,
         milestoneId: m.milestoneId,
         milestoneType: m.milestoneType,
