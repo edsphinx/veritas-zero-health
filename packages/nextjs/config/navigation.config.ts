@@ -107,6 +107,46 @@ export const clinicNavigation: NavItem[] = [
 ];
 
 /**
+ * Sponsor Portal Navigation
+ */
+export const sponsorNavigation: NavItem[] = [
+  {
+    label: 'Dashboard',
+    href: '/sponsor',
+    icon: 'LayoutDashboard',
+    roles: [UserRole.SPONSOR],
+  },
+  {
+    label: 'Funded Studies',
+    href: '/sponsor/studies',
+    icon: 'Beaker',
+    roles: [UserRole.SPONSOR],
+    permissions: [Permission.VIEW_FUNDED_STUDIES],
+  },
+  {
+    label: 'Fund Study',
+    href: '/sponsor/fund',
+    icon: 'DollarSign',
+    roles: [UserRole.SPONSOR],
+    permissions: [Permission.FUND_STUDIES],
+    badge: 'New',
+  },
+  {
+    label: 'Funding History',
+    href: '/sponsor/history',
+    icon: 'History',
+    roles: [UserRole.SPONSOR],
+    permissions: [Permission.MANAGE_FUNDING],
+  },
+  {
+    label: 'Analytics',
+    href: '/sponsor/analytics',
+    icon: 'BarChart3',
+    roles: [UserRole.SPONSOR],
+  },
+];
+
+/**
  * Researcher Portal Navigation
  */
 export const researcherNavigation: NavItem[] = [
@@ -203,6 +243,94 @@ export const adminNavigation: NavItem[] = [
 ];
 
 /**
+ * SuperAdmin Portal Navigation
+ */
+export const superAdminNavigation: NavItem[] = [
+  {
+    label: 'Dashboard',
+    href: '/superadmin',
+    icon: 'LayoutDashboard',
+    roles: [UserRole.SUPERADMIN],
+  },
+  {
+    label: 'Role Management',
+    href: '/superadmin/roles',
+    icon: 'UserCog',
+    roles: [UserRole.SUPERADMIN],
+    permissions: [Permission.ASSIGN_ROLES],
+    badge: 'Core',
+  },
+  {
+    label: 'Users & Wallets',
+    href: '/superadmin/users',
+    icon: 'Users',
+    roles: [UserRole.SUPERADMIN],
+    permissions: [Permission.MANAGE_USERS],
+  },
+  {
+    label: 'Contracts',
+    href: '/superadmin/contracts',
+    icon: 'FileCode',
+    roles: [UserRole.SUPERADMIN],
+    permissions: [Permission.MANAGE_CONTRACTS],
+    children: [
+      {
+        label: 'Health Identity SBT',
+        href: '/superadmin/contracts/health-identity',
+        icon: 'Shield',
+      },
+      {
+        label: 'Studies & Escrow',
+        href: '/superadmin/contracts/studies',
+        icon: 'Beaker',
+      },
+      {
+        label: 'Deployed Contracts',
+        href: '/superadmin/contracts/deployed',
+        icon: 'Database',
+      },
+    ],
+  },
+  {
+    label: 'System Config',
+    href: '/superadmin/system',
+    icon: 'Settings',
+    roles: [UserRole.SUPERADMIN],
+    permissions: [Permission.SYSTEM_ADMIN],
+    children: [
+      {
+        label: 'Network Settings',
+        href: '/superadmin/system/network',
+        icon: 'Network',
+      },
+      {
+        label: 'Environment',
+        href: '/superadmin/system/environment',
+        icon: 'Server',
+      },
+      {
+        label: 'Permissions',
+        href: '/superadmin/system/permissions',
+        icon: 'Key',
+      },
+    ],
+  },
+  {
+    label: 'Analytics',
+    href: '/superadmin/analytics',
+    icon: 'BarChart3',
+    roles: [UserRole.SUPERADMIN],
+    permissions: [Permission.VIEW_ANALYTICS],
+  },
+  {
+    label: 'Audit Logs',
+    href: '/superadmin/logs',
+    icon: 'ScrollText',
+    roles: [UserRole.SUPERADMIN],
+  },
+];
+
+/**
  * Footer Navigation
  */
 export const footerNavigation: NavItem[] = [
@@ -245,8 +373,12 @@ export function getNavigationForRole(role: UserRole): NavItem[] {
       return clinicNavigation;
     case UserRole.RESEARCHER:
       return researcherNavigation;
+    case UserRole.SPONSOR:
+      return sponsorNavigation;
     case UserRole.ADMIN:
       return adminNavigation;
+    case UserRole.SUPERADMIN:
+      return superAdminNavigation;
     case UserRole.GUEST:
     default:
       return mainNavigation;
@@ -276,9 +408,21 @@ export const portalNavigation: NavItem[] = [
     roles: [UserRole.RESEARCHER],
   },
   {
+    label: 'Sponsor Portal',
+    href: '/sponsor',
+    icon: 'DollarSign',
+    roles: [UserRole.SPONSOR],
+  },
+  {
     label: 'Admin Portal',
     href: '/admin',
     icon: 'Shield',
     roles: [UserRole.ADMIN],
+  },
+  {
+    label: 'SuperAdmin Portal',
+    href: '/superadmin',
+    icon: 'ShieldAlert',
+    roles: [UserRole.SUPERADMIN],
   },
 ];
