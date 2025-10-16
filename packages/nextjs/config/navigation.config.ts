@@ -172,7 +172,7 @@ export const researcherNavigation: NavItem[] = [
   },
   {
     label: 'Create Study',
-    href: '/researcher/studies/create',
+    href: '/researcher/create-study',
     icon: 'Plus',
     roles: [UserRole.RESEARCHER],
     permissions: [Permission.CREATE_STUDIES],

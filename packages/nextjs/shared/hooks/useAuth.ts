@@ -1,8 +1,13 @@
 /**
  * useAuth Hook
  *
- * Consumes the global AuthContext provided by AuthProvider.
- * This hook only retrieves the context - all auth logic is in AuthProvider.
+ * USE-CASE LAYER: Consumes Zustand auth store.
+ * No more AuthContext - direct Zustand consumption for better performance.
+ *
+ * Clean Architecture:
+ * - Hooks consume stores (use-case layer)
+ * - Stores hold state (state layer)
+ * - Services handle infrastructure (infrastructure layer)
  *
  * @example
  * ```tsx
@@ -19,15 +24,68 @@
 
 'use client';
 
-import { useAuth } from '@/shared/providers/AuthProvider';
-import type {
-  UserRole,
-  Permission,
-} from '@/shared/types/auth.types';
+import { useAuthStore, selectIsAuthenticated, selectHasPermission, selectHasRole, selectHasAllPermissions, selectIsLoadingAny } from '@/shared/stores/authStore';
+import type { UserRole, Permission } from '@/shared/types/auth.types';
 
-// Re-export the useAuth hook from AuthProvider
-// All auth logic is centralized in AuthProvider to avoid multiple competing instances
-export { useAuth };
+/**
+ * Main auth hook - replaces old AuthContext
+ */
+export function useAuth() {
+  // Subscribe to store
+  const address = useAuthStore((state) => state.address);
+  const isConnected = useAuthStore((state) => state.isConnected);
+  const isVerified = useAuthStore((state) => state.isVerified);
+  const humanId = useAuthStore((state) => state.humanId);
+  const role = useAuthStore((state) => state.role);
+  const permissions = useAuthStore((state) => state.permissions);
+  const isTestAddress = useAuthStore((state) => state.isTestAddress);
+  const error = useAuthStore((state) => state.error);
+
+  // Loading states
+  const isLoading = useAuthStore(selectIsLoadingAny);
+  const roleLoading = useAuthStore((state) => state.roleLoading);
+  const verificationLoading = useAuthStore((state) => state.verificationLoading);
+
+  // Derived state
+  const isAuthenticated = useAuthStore(selectIsAuthenticated);
+
+  // Helper functions
+  const hasPermission = (permission: Permission): boolean => {
+    return permissions.includes(permission);
+  };
+
+  const hasRole = (roles: UserRole | UserRole[]): boolean => {
+    const roleArray = Array.isArray(roles) ? roles : [roles];
+    return roleArray.includes(role);
+  };
+
+  const hasAllPermissions = (requiredPermissions: Permission[]): boolean => {
+    return requiredPermissions.every(p => permissions.includes(p));
+  };
+
+  return {
+    // State
+    address,
+    isConnected,
+    isAuthenticated,
+    isVerified,
+    humanId,
+    role,
+    permissions,
+    isTestAddress,
+    error,
+
+    // Loading
+    isLoading,
+    roleLoading,
+    verificationLoading,
+
+    // Helpers
+    hasPermission,
+    hasRole,
+    hasAllPermissions,
+  };
+}
 
 /**
  * Hook to check if current route is accessible

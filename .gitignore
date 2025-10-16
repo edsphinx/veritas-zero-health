@@ -31,3 +31,5 @@ dist
 package-lock.json
 
 .private
+
+target/

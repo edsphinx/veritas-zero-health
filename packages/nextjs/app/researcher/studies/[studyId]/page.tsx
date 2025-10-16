@@ -53,8 +53,11 @@ export default function ResearcherStudyDetailPage() {
   const [study, setStudy] = useState<Study | null>(null);
   const [applicants, setApplicants] = useState<Applicant[]>([]);
 
+  // Validate studyId is numeric (not "create" or other non-numeric routes)
+  const isValidStudyId = studyId && /^\d+$/.test(studyId);
+
   // Use real blockchain hooks
-  const studyIdBigInt = studyId ? BigInt(studyId) : undefined;
+  const studyIdBigInt = isValidStudyId ? BigInt(studyId) : undefined;
   const { study: studyOnChain, isLoading: studyLoading } = useStudy(studyIdBigInt);
   const { count: verifiedCount, isLoading: countLoading, refetch } = useVerifiedApplicantsCount(studyIdBigInt);
 
@@ -118,16 +121,49 @@ export default function ResearcherStudyDetailPage() {
     return colors[status] || 'bg-gray-100 text-gray-800';
   };
 
+  // Invalid studyId (like "create")
+  if (!isValidStudyId) {
+    return (
+      <ResearcherLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center max-w-md">
+            <AlertCircle className="h-16 w-16 text-yellow-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold mb-2">Invalid Study ID</h2>
+            <p className="text-gray-600 mb-4">
+              The study ID must be a number. If you're trying to create a study, use the button below.
+            </p>
+            <div className="flex gap-3 justify-center">
+              <Link
+                href="/researcher/create-study"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold"
+              >
+                Create Study
+              </Link>
+              <Link
+                href="/researcher/studies"
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 font-semibold"
+              >
+                Back to Studies
+              </Link>
+            </div>
+          </div>
+        </div>
+      </ResearcherLayout>
+    );
+  }
+
   if (!isConnected) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center max-w-md">
-          <h2 className="text-3xl font-bold mb-4">Connect Your Wallet</h2>
-          <p className="text-muted-foreground">
-            Please connect your wallet to access the researcher dashboard
-          </p>
+      <ResearcherLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center max-w-md">
+            <h2 className="text-3xl font-bold mb-4">Connect Your Wallet</h2>
+            <p className="text-muted-foreground">
+              Please connect your wallet to access the researcher dashboard
+            </p>
+          </div>
         </div>
-      </div>
+      </ResearcherLayout>
     );
   }
 

@@ -50,7 +50,7 @@ export function useHumanPassport(options: UseHumanPassportOptions = {}) {
     },
     enabled: enabled && !!address,
     staleTime: 60 * 1000, // Cache for 1 minute
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false, // FIXED: Prevent heavy refresh on tab switch
   });
 
   // Mutation: Verify passport
