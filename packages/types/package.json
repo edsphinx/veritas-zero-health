@@ -1,0 +1,35 @@
+{
+  "name": "@veritas/types",
+  "version": "0.1.0",
+  "description": "Shared TypeScript types for Veritas Zero Health (Next.js + Browser Extension)",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./health": {
+      "types": "./dist/health.d.ts",
+      "default": "./dist/health.js"
+    },
+    "./zk": {
+      "types": "./dist/zk-proof.d.ts",
+      "default": "./dist/zk-proof.js"
+    },
+    "./nillion": {
+      "types": "./dist/nillion.d.ts",
+      "default": "./dist/nillion.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3"
+  },
+  "packageManager": "pnpm@9.15.0"
+}
