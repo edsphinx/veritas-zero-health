@@ -13,7 +13,9 @@ export enum UserRole {
   PATIENT = 'patient',
   CLINIC = 'clinic',
   RESEARCHER = 'researcher',
+  SPONSOR = 'sponsor',
   ADMIN = 'admin',
+  SUPERADMIN = 'superadmin',
   GUEST = 'guest',
 }
 
@@ -36,10 +38,21 @@ export enum Permission {
   VIEW_APPLICATIONS = 'view_applications',
   MANAGE_STUDIES = 'manage_studies',
 
+  // Sponsor permissions
+  FUND_STUDIES = 'fund_studies',
+  VIEW_FUNDED_STUDIES = 'view_funded_studies',
+  MANAGE_FUNDING = 'manage_funding',
+
   // Admin permissions
   MANAGE_USERS = 'manage_users',
   VIEW_ANALYTICS = 'view_analytics',
   SYSTEM_CONFIG = 'system_config',
+
+  // SuperAdmin permissions
+  ASSIGN_ROLES = 'assign_roles',
+  MANAGE_CONTRACTS = 'manage_contracts',
+  SYSTEM_ADMIN = 'system_admin',
+  MANAGE_ADMINS = 'manage_admins',
 }
 
 /**
@@ -61,8 +74,18 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIEW_APPLICATIONS,
     Permission.MANAGE_STUDIES,
   ],
+  [UserRole.SPONSOR]: [
+    Permission.FUND_STUDIES,
+    Permission.VIEW_FUNDED_STUDIES,
+    Permission.MANAGE_FUNDING,
+  ],
   [UserRole.ADMIN]: [
-    // Admin has all permissions
+    Permission.MANAGE_USERS,
+    Permission.VIEW_ANALYTICS,
+    Permission.SYSTEM_CONFIG,
+  ],
+  [UserRole.SUPERADMIN]: [
+    // SuperAdmin has all permissions
     ...Object.values(Permission),
   ],
   [UserRole.GUEST]: [],
