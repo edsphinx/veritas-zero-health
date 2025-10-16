@@ -1,24 +1,54 @@
 /**
  * useStudies Hook
  *
- * React hook for fetching multiple clinical studies from StudyRegistry.
- * Implements pagination, filtering, and sorting.
+ * React hook for fetching multiple clinical studies from indexed database.
+ * Much faster than querying blockchain for each study.
+ * Implements filtering and sorting.
  */
 
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { useStudy, useTotalStudies, Study, StudyStatus } from './useStudy';
 
-// Re-export for convenience
-export { StudyStatus, type Study };
+/**
+ * Study status enum
+ */
+export enum StudyStatus {
+  Created = 'Created',
+  Funding = 'Funding',
+  Active = 'Active',
+  Paused = 'Paused',
+  Completed = 'Completed',
+  Cancelled = 'Cancelled',
+}
+
+/**
+ * Indexed study from database
+ */
+export interface Study {
+  id: string;
+  registryId: number;
+  escrowId: number;
+  title: string;
+  description: string;
+  researcherAddress: string;
+  status: string;
+  chainId: number;
+  escrowTxHash: string;
+  registryTxHash: string;
+  criteriaTxHash: string;
+  escrowBlockNumber: string; // BigInt as string
+  registryBlockNumber: string; // BigInt as string
+  createdAt: Date;
+  updatedAt: Date;
+  maxParticipants?: number; // Optional for backward compatibility
+}
 
 /**
  * Filter options for studies
  */
 export interface StudyFilters {
-  status?: StudyStatus; // Filter by status
-  region?: string; // Filter by region (case-insensitive substring match)
+  status?: string; // Filter by status
   researcher?: string; // Filter by researcher address
 }
 
@@ -26,26 +56,25 @@ export interface StudyFilters {
  * Sort options for studies
  */
 export interface StudySortOptions {
-  field: 'studyId' | 'status';
+  field: 'registryId' | 'status' | 'createdAt';
   order: 'asc' | 'desc';
 }
 
 /**
- * Hook to fetch all studies with pagination and filtering
+ * Hook to fetch all studies from indexed database
  *
- * Note: This hook fetches studies individually since the contract doesn't have
- * a batch fetch function. For large numbers of studies, consider using The Graph
- * or implementing a batch fetch in the contract.
+ * Fetches studies from our Prisma database indexer for fast access.
+ * Studies are indexed when created via /api/studies/index.
  *
  * @param filters - Optional filters to apply
  * @param sort - Optional sort configuration
- * @returns Studies array, loading state, and pagination controls
+ * @returns Studies array, loading state, and counts
  *
  * @example
  * ```typescript
- * const { studies, isLoading, totalCount } = useStudies({
- *   filters: { status: StudyStatus.Recruiting },
- *   sort: { field: 'studyId', order: 'desc' }
+ * const { studies, loading, totalCount } = useStudies({
+ *   filters: { status: 'Active' },
+ *   sort: { field: 'registryId', order: 'desc' }
  * });
  * ```
  */
@@ -55,76 +84,60 @@ export function useStudies(options?: {
   limit?: number;
   offset?: number;
 }) {
-  const { totalStudies, isLoading: totalLoading } = useTotalStudies();
   const [studies, setStudies] = useState<Study[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  // Fetch all studies
+  // Fetch all studies from database
   useEffect(() => {
-    if (totalStudies === undefined) return;
-
     const fetchStudies = async () => {
-      setIsLoading(true);
+      setLoading(true);
       setError(null);
 
       try {
-        const total = Number(totalStudies);
-
-        // Handle case when there are no studies
-        if (total === 0) {
-          setStudies([]);
-          setIsLoading(false);
-          return;
+        // Build query params
+        const params = new URLSearchParams();
+        if (options?.filters?.researcher) {
+          params.append('researcher', options.filters.researcher);
+        }
+        if (options?.filters?.status) {
+          params.append('status', options.filters.status);
         }
 
-        const fetchPromises: Promise<Study | null>[] = [];
+        const response = await fetch(`/api/studies?${params.toString()}`);
 
-        // Fetch all studies (studyId starts at 1)
-        for (let i = 1; i <= total; i++) {
-          fetchPromises.push(
-            fetch(`/api/studies/${i}`)
-              .then(res => res.json())
-              .catch(() => null)
-          );
+        if (!response.ok) {
+          throw new Error('Failed to fetch studies');
         }
 
-        const results = await Promise.all(fetchPromises);
-        const validStudies = results.filter((s): s is Study => s !== null);
+        const result = await response.json();
 
-        setStudies(validStudies);
+        if (result.success) {
+          // Convert date strings to Date objects
+          const studiesWithDates = result.data.map((s: any) => ({
+            ...s,
+            createdAt: new Date(s.createdAt),
+            updatedAt: new Date(s.updatedAt),
+          }));
+
+          setStudies(studiesWithDates);
+        } else {
+          throw new Error(result.error || 'Failed to fetch studies');
+        }
       } catch (err) {
+        console.error('[useStudies] Error:', err);
         setError(err instanceof Error ? err : new Error('Failed to fetch studies'));
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
 
     fetchStudies();
-  }, [totalStudies]);
+  }, [options?.filters?.researcher, options?.filters?.status]);
 
-  // Apply filters, sorting, and pagination
+  // Apply client-side sorting and pagination
   const processedStudies = useMemo(() => {
     let result = [...studies];
-
-    // Apply filters
-    if (options?.filters) {
-      const { status, region, researcher } = options.filters;
-
-      if (status !== undefined) {
-        result = result.filter(s => s.status === status);
-      }
-
-      if (region) {
-        const regionLower = region.toLowerCase();
-        result = result.filter(s => s.region.toLowerCase().includes(regionLower));
-      }
-
-      if (researcher) {
-        const researcherLower = researcher.toLowerCase();
-        result = result.filter(s => s.researcher.toLowerCase() === researcherLower);
-      }
-    }
 
     // Apply sorting
     if (options?.sort) {
@@ -133,10 +146,22 @@ export function useStudies(options?: {
         const aVal = a[field];
         const bVal = b[field];
 
-        if (typeof aVal === 'bigint' && typeof bVal === 'bigint') {
+        if (field === 'registryId') {
           return order === 'asc'
-            ? Number(aVal - bVal)
-            : Number(bVal - aVal);
+            ? aVal - bVal
+            : bVal - aVal;
+        }
+
+        if (field === 'createdAt') {
+          return order === 'asc'
+            ? aVal.getTime() - bVal.getTime()
+            : bVal.getTime() - aVal.getTime();
+        }
+
+        if (field === 'status') {
+          return order === 'asc'
+            ? String(aVal).localeCompare(String(bVal))
+            : String(bVal).localeCompare(String(aVal));
         }
 
         return 0;
@@ -153,33 +178,36 @@ export function useStudies(options?: {
     }
 
     return result;
-  }, [studies, options]);
+  }, [studies, options?.sort, options?.offset, options?.limit]);
 
   return {
     studies: processedStudies,
     totalCount: studies.length,
     filteredCount: processedStudies.length,
-    isLoading: totalLoading || isLoading,
+    loading,
     error,
+    refetch: () => {
+      setStudies([]);
+    },
   };
 }
 
 /**
- * Hook to fetch recruiting studies only
+ * Hook to fetch active studies only
  *
- * Convenience hook that filters for recruiting studies.
+ * Convenience hook that filters for active studies.
  *
  * @example
  * ```typescript
- * const { studies, isLoading } = useRecruitingStudies();
+ * const { studies, loading } = useActiveStudies();
  * ```
  */
-export function useRecruitingStudies(options?: {
+export function useActiveStudies(options?: {
   sort?: StudySortOptions;
   limit?: number;
 }) {
   return useStudies({
-    filters: { status: StudyStatus.Recruiting },
+    filters: { status: 'Active' },
     sort: options?.sort,
     limit: options?.limit,
   });
@@ -193,30 +221,17 @@ export function useRecruitingStudies(options?: {
  *
  * @example
  * ```typescript
- * const { studies, isLoading } = useStudiesByResearcher(address);
+ * const { studies, loading } = useStudiesByResearcher(address);
  * ```
  */
 export function useStudiesByResearcher(researcher: string | undefined) {
   return useStudies({
     filters: researcher ? { researcher } : undefined,
-    sort: { field: 'studyId', order: 'desc' },
+    sort: { field: 'registryId', order: 'desc' },
   });
 }
 
 /**
- * Hook to search studies by region
- *
- * @param region - Region search term
- * @returns Studies matching the region
- *
- * @example
- * ```typescript
- * const { studies, isLoading } = useStudiesByRegion('North America');
- * ```
+ * @deprecated Use useActiveStudies instead. Kept for backward compatibility.
  */
-export function useStudiesByRegion(region: string | undefined) {
-  return useStudies({
-    filters: region ? { region } : undefined,
-    sort: { field: 'studyId', order: 'desc' },
-  });
-}
+export const useRecruitingStudies = useActiveStudies;
