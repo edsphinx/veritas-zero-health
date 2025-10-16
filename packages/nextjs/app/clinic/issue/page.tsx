@@ -12,7 +12,6 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useAccount } from 'wagmi';
 import {
   Award,
   User,
@@ -26,6 +25,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { ClinicLayout } from '@/components/layout';
+import { useAuth } from '@/shared/hooks/useAuth';
 
 // --- Types ---
 
@@ -51,7 +51,7 @@ interface VoucherResponse {
 // --- Component ---
 
 export default function IssueHealthIdentitySBT() {
-  const { address: connectedAddress } = useAccount();
+  const { address: connectedAddress } = useAuth();
 
   // Form state
   const [patientAddress, setPatientAddress] = useState('');

@@ -1,72 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useAccount } from 'wagmi';
 import Link from 'next/link';
-import { FlaskConical, Users, CheckCircle, Clock } from 'lucide-react';
+import { FlaskConical, Users, Clock } from 'lucide-react';
 import { ClinicLayout } from '@/components/layout';
-
-interface Study {
-  id: number;
-  title: string;
-  description: string;
-  status: string;
-  participantCount: number;
-  maxParticipants: number;
-  milestones: { id: number; status: string }[];
-}
+import { useAuth } from '@/shared/hooks/useAuth';
+import { useStudies } from '@/shared/hooks/useStudies';
 
 export default function ClinicStudiesPage() {
-  const { address, isConnected } = useAccount();
-  const [studies, setStudies] = useState<Study[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { isConnected } = useAuth();
+  const { studies, loading } = useStudies();
 
-  useEffect(() => {
-    loadStudies();
-  }, []);
-
-  const loadStudies = async () => {
-    try {
-      setLoading(true);
-
-      // TODO: Fetch from ResearchFundingEscrow contract
-      // For now, mock data
-      const mockStudies: Study[] = [
-        {
-          id: 1,
-          title: 'Type 2 Diabetes Treatment Study',
-          description:
-            '12-month study testing new medication for Type 2 Diabetes.',
-          status: 'Active',
-          participantCount: 3,
-          maxParticipants: 40,
-          milestones: [
-            { id: 1, status: 'Pending' },
-            { id: 2, status: 'Pending' },
-            { id: 3, status: 'Pending' },
-          ],
-        },
-        {
-          id: 2,
-          title: 'Hypertension Medication Trial',
-          description: 'Testing new blood pressure medication with minimal side effects.',
-          status: 'Active',
-          participantCount: 2,
-          maxParticipants: 50,
-          milestones: [
-            { id: 4, status: 'Pending' },
-            { id: 5, status: 'Pending' },
-          ],
-        },
-      ];
-
-      setStudies(mockStudies);
-    } catch (error) {
-      console.error('Error loading studies:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Filter for active or funding studies (clinics can refer patients to these)
+  const availableStudies = studies.filter(
+    study => study.status === 'Active' || study.status === 'Funding'
+  );
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
@@ -109,14 +56,14 @@ export default function ClinicStudiesPage() {
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           <p className="mt-4 text-gray-600">Loading studies...</p>
         </div>
-      ) : studies.length === 0 ? (
+      ) : availableStudies.length === 0 ? (
         <div className="text-center py-12 bg-gray-50 rounded-lg">
           <FlaskConical className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600">No studies assigned to your clinic</p>
+          <p className="text-gray-600">No active studies available</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {studies.map((study) => (
+          {availableStudies.map((study) => (
             <div
               key={study.id}
               className="bg-white rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow"
@@ -147,11 +94,11 @@ export default function ClinicStudiesPage() {
                     <div className="flex items-center gap-2 mb-1">
                       <Users className="h-4 w-4 text-blue-600" />
                       <p className="text-xs text-blue-600 font-semibold">
-                        Participants
+                        Max Participants
                       </p>
                     </div>
                     <p className="text-2xl font-bold text-blue-900">
-                      {study.participantCount}
+                      {study.maxParticipants || 0}
                     </p>
                   </div>
 
@@ -159,21 +106,21 @@ export default function ClinicStudiesPage() {
                     <div className="flex items-center gap-2 mb-1">
                       <Clock className="h-4 w-4 text-purple-600" />
                       <p className="text-xs text-purple-600 font-semibold">
-                        Milestones
+                        Created
                       </p>
                     </div>
-                    <p className="text-2xl font-bold text-purple-900">
-                      {study.milestones.length}
+                    <p className="text-sm font-bold text-purple-900">
+                      {new Date(study.createdAt).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
 
                 {/* Actions */}
                 <Link
-                  href={`/clinic/studies/${study.id}`}
+                  href={`/clinic/studies/${study.registryId}`}
                   className="block w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors text-center"
                 >
-                  Manage Study
+                  View Study Details
                 </Link>
               </div>
             </div>

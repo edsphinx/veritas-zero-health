@@ -13,6 +13,7 @@ import {
   Calendar,
   Award,
   ArrowRight,
+  Beaker,
 } from 'lucide-react';
 import { ClinicLayout } from '@/components/layout';
 
@@ -61,6 +62,13 @@ export default function ClinicDashboard() {
             description="Manage records"
             href="/clinic/records"
             delay={0.4}
+          />
+          <QuickActionCard
+            icon={<Beaker className="h-6 w-6" />}
+            title="Studies"
+            description="View clinical studies"
+            href="/clinic/studies"
+            delay={0.5}
           />
         </div>
 
