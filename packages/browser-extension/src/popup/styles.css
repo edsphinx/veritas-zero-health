@@ -20,39 +20,85 @@ body {
   flex-direction: column;
 }
 
-/* Header */
+/* Header - Modern Clean Design */
 .header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  padding: 20px;
-  text-align: center;
+  padding: 12px 14px;
+}
+
+.header-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .header h1 {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
-  margin-bottom: 5px;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.header-did-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.did-text {
+  font-size: 10px;
+  font-family: 'Monaco', 'Courier New', monospace;
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: -0.3px;
+}
+
+.copy-icon-btn {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  opacity: 0.9;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.copy-icon-btn:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.1);
 }
 
 .tagline {
-  font-size: 12px;
-  opacity: 0.9;
+  display: none;
 }
 
 .status {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: rgba(255, 255, 255, 0.2);
-  padding: 4px 12px;
+  gap: 4px;
+  padding: 4px 8px;
   border-radius: 12px;
-  font-size: 12px;
-  margin-top: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
 }
 
 .status-dot {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   background: #4ade80;
   border-radius: 50%;
   animation: pulse 2s infinite;
@@ -98,33 +144,33 @@ body {
   background: rgba(255, 255, 255, 0.3);
 }
 
-/* DID Card */
+/* DID Card - Compact */
 .did-card {
   background: white;
-  margin: 16px;
-  padding: 16px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin: 8px 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
 .did-label {
-  font-size: 12px;
+  font-size: 9px;
   color: #6b7280;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 8px;
+  letter-spacing: 0.3px;
+  margin-bottom: 4px;
 }
 
 .did-value {
-  font-size: 11px;
+  font-size: 10px;
   font-family: 'Courier New', monospace;
   color: #111827;
   background: #f3f4f6;
-  padding: 8px;
-  border-radius: 6px;
+  padding: 6px;
+  border-radius: 4px;
   word-break: break-all;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .copy-button {
@@ -132,10 +178,10 @@ body {
   background: #667eea;
   color: white;
   border: none;
-  padding: 8px;
-  border-radius: 6px;
+  padding: 6px;
+  border-radius: 4px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 500;
   transition: background 0.2s;
 }
@@ -858,215 +904,153 @@ body {
   transform: translateY(-2px);
 }
 
-/* Human Wallet Card */
+/* Human Wallet Card - Ultra Compact */
 .human-wallet-card {
   background: white;
-  margin: 16px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  margin: 8px 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .human-wallet-card.loading {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40px;
+  padding: 20px;
 }
 
-/* Wallet Section */
-.wallet-section {
-  padding: 16px;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.wallet-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 8px;
-}
-
-.wallet-icon {
-  flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 10px;
+/* Unified Row - Human Passport (left) | Connected Wallet (right) */
+.unified-row {
   display: flex;
   align-items: center;
-  justify-content: center;
-  color: white;
+  gap: 8px;
 }
 
-.wallet-info {
+.unified-section {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.wallet-label {
-  font-size: 11px;
+.unified-label {
+  font-size: 9px;
   font-weight: 600;
   color: #6b7280;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 4px;
+  letter-spacing: 0.3px;
 }
 
-.wallet-address {
-  font-size: 16px;
+.unified-value {
+  font-size: 12px;
   font-weight: 700;
   color: #111827;
   font-family: 'Monaco', 'Courier New', monospace;
 }
 
-.wallet-disconnect-btn {
-  flex-shrink: 0;
-  width: 28px;
-  height: 28px;
-  background: #fee2e2;
-  border: none;
-  border-radius: 6px;
-  color: #dc2626;
+.unified-separator {
   font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s;
+  color: #d1d5db;
+  font-weight: 300;
+  align-self: center;
 }
 
-.wallet-disconnect-btn:hover {
-  background: #fecaca;
-  transform: scale(1.1);
+.unified-status {
+  font-size: 11px;
+  font-weight: 600;
 }
 
+.unified-status.verified {
+  color: #059669;
+}
+
+.unified-status.unverified {
+  color: #d97706;
+}
+
+/* Disconnect Button - Includes method tag */
 .wallet-disconnect-btn-full {
   width: 100%;
-  margin-top: 12px;
-  padding: 10px 16px;
+  padding: 8px 10px;
   background: #fee2e2;
   border: 1px solid #fecaca;
-  border-radius: 8px;
+  border-radius: 6px;
   color: #dc2626;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
 }
 
 .wallet-disconnect-btn-full:hover {
   background: #fecaca;
   border-color: #fca5a5;
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.15);
 }
 
-.wallet-method {
-  font-size: 12px;
-  color: #6b7280;
-  padding: 6px 12px;
-  background: #f3f4f6;
-  border-radius: 6px;
-  display: inline-block;
-  margin-top: 8px;
+.disconnect-method {
+  font-size: 9px;
+  background: rgba(220, 38, 38, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 700;
 }
 
-/* Passport Section */
-.passport-section {
-  padding: 16px;
-}
-
-.passport-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.passport-icon {
-  flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-}
-
-.passport-info {
-  flex: 1;
-}
-
-.passport-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: #6b7280;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 4px;
-}
-
-.passport-status {
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.status-verified {
-  color: #059669;
-}
-
-.status-unverified {
-  color: #d97706;
-}
-
-/* Passport Score */
+/* Passport Score - Compact */
 .passport-score {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 16px;
+  gap: 10px;
+  padding: 8px 10px;
   background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-  border-radius: 10px;
+  border-radius: 6px;
 }
 
 .score-circle {
   flex-shrink: 0;
-  width: 80px;
-  height: 80px;
+  width: 48px;
+  height: 48px;
   background: white;
   border-radius: 50%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
 .score-circle .score-value {
-  font-size: 24px;
+  font-size: 16px;
   font-weight: 700;
   color: #059669;
   line-height: 1;
 }
 
 .score-circle .score-label {
-  font-size: 10px;
+  font-size: 8px;
   color: #6b7280;
-  margin-top: 4px;
+  margin-top: 2px;
   font-weight: 600;
 }
 
 .score-details {
   flex: 1;
+  min-width: 0;
 }
 
 .score-detail-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 6px 0;
+  padding: 3px 0;
   border-bottom: 1px solid rgba(16, 185, 129, 0.2);
 }
 
@@ -1075,13 +1059,13 @@ body {
 }
 
 .score-detail-item .detail-label {
-  font-size: 11px;
+  font-size: 9px;
   font-weight: 600;
   color: #374151;
 }
 
 .score-detail-item .detail-value {
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 600;
   color: #111827;
 }
@@ -1094,37 +1078,37 @@ body {
   color: #059669 !important;
 }
 
-/* Passport CTA */
-.passport-cta {
+/* Passport CTA - Compact */
+.passport-cta-compact {
   text-align: center;
-  padding: 16px;
+  padding: 10px;
   background: #fef3c7;
-  border-radius: 10px;
+  border-radius: 6px;
 }
 
-.passport-cta p {
-  font-size: 13px;
+.passport-cta-compact p {
+  font-size: 11px;
   color: #78350f;
-  margin-bottom: 12px;
+  margin: 0 0 8px 0;
 }
 
 .passport-verify-link {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
+  gap: 4px;
+  padding: 6px 12px;
   background: white;
   color: #d97706;
   text-decoration: none;
-  border-radius: 8px;
-  font-size: 13px;
+  border-radius: 6px;
+  font-size: 11px;
   font-weight: 600;
   transition: all 0.2s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .passport-verify-link:hover {
   background: #fef3c7;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }

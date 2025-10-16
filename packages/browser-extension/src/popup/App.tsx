@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
+import toast, { Toaster } from 'react-hot-toast';
 import './styles.css';
 import { PassportVerificationCard } from '../components/PassportVerification';
 import { PoweredBy } from '../components/PoweredBy';
@@ -223,7 +224,7 @@ function App() {
 
   async function handleCreateDID() {
     if (!password || password.length < 8) {
-      alert('Password must be at least 8 characters');
+      toast.error('Password must be at least 8 characters');
       return;
     }
 
@@ -239,11 +240,12 @@ function App() {
         setView('wallet-connect');
         setPassword('');
         await loadActivityLog();
+        toast.success('DID created successfully!');
       } else {
-        alert('Error creating DID: ' + response.error);
+        toast.error('Error creating DID: ' + response.error);
       }
     } catch (error) {
-      alert('Error: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      toast.error('Error: ' + (error instanceof Error ? error.message : 'Unknown error'));
     } finally {
       setLoading(false);
     }
@@ -350,7 +352,7 @@ function App() {
       window.close();
     } catch (error) {
       console.error('Error connecting wallet:', error);
-      alert('Error opening web app: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      toast.error('Error opening web app: ' + (error instanceof Error ? error.message : 'Unknown error'));
     } finally {
       setLoading(false);
     }
@@ -411,7 +413,7 @@ function App() {
 
   async function handleClaimSBT() {
     if (!voucherData || !ethAddress) {
-      alert('Missing voucher data or wallet address');
+      toast.error('Missing voucher data or wallet address');
       return;
     }
 
@@ -443,14 +445,14 @@ function App() {
           }
         });
 
-        alert(`✅ Success! Health Identity SBT claimed!\n\nToken ID: ${result.tokenId}\nTx: ${result.txHash?.slice(0, 10)}...`);
+        toast.success(`Health Identity SBT claimed! Token ID: ${result.tokenId}`, { duration: 5000 });
         setView('main');
         await loadActivityLog();
       } else {
-        alert(`❌ Failed to claim SBT:\n\n${result.error}`);
+        toast.error(`Failed to claim SBT: ${result.error}`);
       }
     } catch (error) {
-      alert('Error claiming SBT: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      toast.error('Error claiming SBT: ' + (error instanceof Error ? error.message : 'Unknown error'));
     } finally {
       setLoading(false);
     }
@@ -473,27 +475,33 @@ function App() {
             <h2>Welcome!</h2>
             <p>Create your Decentralized Identifier (DID) to get started.</p>
 
-            <div className="form-group">
-              <label>Choose a Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter password (min 8 characters)"
-                className="input"
-              />
-              <p className="hint">
-                This password encrypts your private key. Don't forget it!
-              </p>
-            </div>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              handleCreateDID();
+            }}>
+              <div className="form-group">
+                <label>Choose a Password</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter password (min 8 characters)"
+                  className="input"
+                  autoFocus
+                />
+                <p className="hint">
+                  This password encrypts your private key. Don't forget it!
+                </p>
+              </div>
 
-            <button
-              onClick={handleCreateDID}
-              disabled={loading || password.length < 8}
-              className="button button-primary"
-            >
-              {loading ? 'Creating...' : 'Create DID'}
-            </button>
+              <button
+                type="submit"
+                disabled={loading || password.length < 8}
+                className="button button-primary"
+              >
+                {loading ? 'Creating...' : 'Create DID'}
+              </button>
+            </form>
           </div>
 
           <div className="info">
@@ -757,10 +765,32 @@ function App() {
   return (
     <div className="container">
       <div className="header">
-        <h1>🏥 DASHI</h1>
-        <div className="status">
-          <span className="status-dot"></span>
-          Active
+        <div className="header-content">
+          <div className="header-row">
+            <h1>🏥 DASHI</h1>
+            <div className="status">
+              <span className="status-dot"></span>
+              Active
+            </div>
+          </div>
+          <div className="header-did-row">
+            <span className="did-text" title={did?.id}>
+              {did?.id.slice(0, 25)}...
+            </span>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(did?.id || '');
+                toast.success('DID copied to clipboard!');
+              }}
+              className="copy-icon-btn"
+              title="Copy DID"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -771,20 +801,6 @@ function App() {
           onDisconnect={handleDisconnectWallet}
         />
       )}
-
-      <div className="did-card">
-        <div className="did-label">Your DID</div>
-        <div className="did-value">{did?.id}</div>
-        <button
-          onClick={() => {
-            navigator.clipboard.writeText(did?.id || '');
-            alert('DID copied to clipboard!');
-          }}
-          className="copy-button"
-        >
-          📋 Copy
-        </button>
-      </div>
 
       <div className="menu">
         {isVerified && ethAddress && (
@@ -840,6 +856,34 @@ function App() {
       </div>
 
       <PoweredBy />
+
+      {/* Toast notifications */}
+      <Toaster
+        position="bottom-center"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: '#fff',
+            color: '#111827',
+            borderRadius: '8px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            fontSize: '13px',
+            fontWeight: '500',
+          },
+          success: {
+            iconTheme: {
+              primary: '#10b981',
+              secondary: '#fff',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
     </div>
   );
 }
