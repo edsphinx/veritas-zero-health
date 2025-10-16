@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 /**
  * GET /api/studies/[studyId]/criteria
  *
- * Returns the eligibility criteria for a specific study.
+ * Returns the eligibility criteria for a specific study from the database.
  * Used by the browser extension to fetch study requirements before generating ZK proofs.
  */
 export async function GET(
@@ -15,43 +18,55 @@ export async function GET(
 
     console.log(`📋 Fetching criteria for study #${studyId}`);
 
-    // TODO: Fetch from StudyRegistry contract on Optimism Sepolia
-    // For MVP, return mock criteria
-
-    // Mock criteria based on studyId
-    const mockCriteria: Record<string, any> = {
-      '1': {
-        minAge: 18,
-        maxAge: 65,
-        requiredDiagnoses: [],
-        biomarkerRanges: {},
+    // Find the study with its criteria
+    const study = await prisma.study.findUnique({
+      where: { id: studyId },
+      include: {
+        criteria: true,
       },
-      '2': {
-        minAge: 21,
-        maxAge: 55,
-        requiredDiagnoses: ['E11.9'], // Type 2 diabetes
-        biomarkerRanges: {
-          'HbA1c': { min: 6.5, max: 10.0, unit: '%' }
+    });
+
+    if (!study) {
+      return NextResponse.json(
+        { success: false, error: 'Study not found' },
+        { status: 404 }
+      );
+    }
+
+    // If no criteria indexed yet, return default
+    if (!study.criteria) {
+      console.log(`⚠️ No criteria indexed for study #${studyId}, returning defaults`);
+      return NextResponse.json({
+        success: true,
+        criteria: {
+          minAge: 18,
+          maxAge: 120,
+          eligibilityCodeHash: '0',
+          requiredDiagnoses: [],
+          biomarkerRanges: {},
         },
-      },
-      '3': {
-        minAge: 40,
-        maxAge: 75,
-        requiredDiagnoses: ['I10'], // Hypertension
-        biomarkerRanges: {},
-      },
-    };
+        studyId,
+        message: 'No criteria indexed yet, using defaults'
+      });
+    }
 
-    const criteria = mockCriteria[studyId] || {
-      minAge: 18,
-      maxAge: 120,
-      requiredDiagnoses: [],
-      biomarkerRanges: {},
-    };
+    console.log(`✅ Found criteria for study #${studyId}:`, {
+      minAge: study.criteria.minAge,
+      maxAge: study.criteria.maxAge,
+      codeHash: study.criteria.eligibilityCodeHash
+    });
 
     return NextResponse.json({
       success: true,
-      criteria,
+      criteria: {
+        minAge: study.criteria.minAge,
+        maxAge: study.criteria.maxAge,
+        eligibilityCodeHash: study.criteria.eligibilityCodeHash,
+        requiredDiagnoses: [], // TODO: Parse from eligibilityCodeHash if needed
+        biomarkerRanges: {}, // TODO: Parse from eligibilityCodeHash if needed
+        transactionHash: study.criteria.transactionHash,
+        blockNumber: study.criteria.blockNumber.toString(),
+      },
       studyId,
     });
 

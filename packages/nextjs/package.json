@@ -7,7 +7,7 @@
     "check-types": "tsc --noEmit --incremental",
     "dev": "next dev",
     "format": "prettier --write . '!(node_modules|.next|contracts)/**/*'",
-    "lint": "next lint",
+    "lint": "eslint . --ext .ts,.tsx --max-warnings 0",
     "serve": "next start",
     "start": "next dev",
     "nillion:compile-script": "tsc scripts/create-nillion-collections.ts --outDir scripts --module esnext --moduleResolution bundler --target es2022 --esModuleInterop --skipLibCheck",
@@ -69,6 +69,8 @@
     "zustand": "^5.0.8"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.37.0",
     "@tailwindcss/postcss": "^4.1.14",
     "@types/node": "24.7.0",
     "@types/qrcode": "^1.5.5",
