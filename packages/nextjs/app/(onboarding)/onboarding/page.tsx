@@ -14,9 +14,9 @@ import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, ArrowRight, Shield, Wallet as WalletIcon, RefreshCw } from 'lucide-react';
-import { WalletConnectButton } from '@/components/WalletConnect';
-import { HumanPassportButton } from '@/presentation/components/features/auth/HumanPassportButton';
-import { HumanVerificationBadge } from '@/presentation/components/features/auth/HumanVerificationBadge';
+import { WalletConnectButton } from '@/components/wallet/WalletConnect';
+import { HumanPassportButton } from '@/components/auth/HumanPassportButton';
+import { HumanVerificationBadge } from '@/components/auth/HumanVerificationBadge';
 import { useHumanPassport } from '@/shared/hooks/useHumanPassport';
 import { cn } from '@/shared/lib/utils';
 
@@ -419,18 +419,18 @@ export default function OnboardingPage() {
 
                 <div className="flex flex-col sm:flex-row gap-3">
                   <motion.a
-                    href="/trials"
+                    href="/studies"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="flex-1 rounded-lg bg-primary text-primary-foreground px-6 py-3 font-medium hover:bg-primary/90 transition-colors"
+                    className="flex-1 rounded-lg bg-primary text-primary-foreground px-6 py-3 font-medium hover:bg-primary/90 transition-colors text-center"
                   >
-                    Browse Clinical Trials
+                    Browse Clinical Studies
                   </motion.a>
                   <motion.a
-                    href="/dashboard"
+                    href="/patient"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="flex-1 rounded-lg border border-border bg-card px-6 py-3 font-medium hover:bg-accent transition-colors"
+                    className="flex-1 rounded-lg border border-border bg-card px-6 py-3 font-medium hover:bg-accent transition-colors text-center"
                   >
                     Go to Dashboard
                   </motion.a>

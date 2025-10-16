@@ -12,10 +12,40 @@ import {
   ArrowRight,
   CheckCircle2,
   Sparkles,
+  DollarSign,
 } from 'lucide-react';
-import { AppHeader, AppFooter } from '@/presentation/components/layout';
+import { AppHeader, AppFooter } from '@/components/layout';
+import { useAuth } from '@/shared/hooks/useAuth';
+import { UserRole } from '@/shared/types/auth.types';
 
 export default function Home() {
+  const auth = useAuth();
+
+  // Determine primary CTA based on user role
+  const getPrimaryCTA = () => {
+    if (!auth.isAuthenticated) {
+      return { label: 'Get Started', href: '/onboarding' };
+    }
+
+    switch (auth.role) {
+      case UserRole.PATIENT:
+        return { label: 'Go to Dashboard', href: '/patient' };
+      case UserRole.CLINIC:
+        return { label: 'Go to Dashboard', href: '/clinic' };
+      case UserRole.RESEARCHER:
+        return { label: 'Go to Dashboard', href: '/researcher' };
+      case UserRole.SPONSOR:
+        return { label: 'Go to Dashboard', href: '/sponsor' };
+      case UserRole.ADMIN:
+        return { label: 'Go to Dashboard', href: '/admin' };
+      case UserRole.SUPERADMIN:
+        return { label: 'Go to Dashboard', href: '/superadmin' };
+      default:
+        return { label: 'Get Started', href: '/onboarding' };
+    }
+  };
+
+  const primaryCTA = getPrimaryCTA();
   return (
     <>
       <AppHeader />
@@ -61,18 +91,18 @@ export default function Home() {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
               <Link
-                href="/onboarding"
+                href={primaryCTA.href}
                 className="group px-8 py-4 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 font-semibold text-lg"
               >
-                Get Started
+                {primaryCTA.label}
                 <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link
-                href="/trials"
+                href="/studies"
                 className="px-8 py-4 bg-muted text-foreground rounded-xl hover:bg-muted/80 transition-all border border-border flex items-center gap-2 font-medium text-lg"
               >
                 <FlaskConical className="h-5 w-5" />
-                Browse Trials
+                Browse Studies
               </Link>
             </div>
 
@@ -118,7 +148,7 @@ export default function Home() {
             <FeatureCard
               icon={<Shield className="h-8 w-8" />}
               title="Zero-Knowledge Proofs"
-              description="Prove eligibility for clinical trials without revealing your actual medical data. Your privacy is mathematically guaranteed."
+              description="Prove eligibility for clinical studies without revealing your actual medical data. Your privacy is mathematically guaranteed."
               delay={0.1}
             />
             <FeatureCard
@@ -155,27 +185,34 @@ export default function Home() {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
             <PortalCard
               icon={<Users className="h-10 w-10 text-primary" />}
               title="Patient Portal"
-              description="Create your DASHI identity, store medical records privately, and apply to clinical trials."
+              description="Create your DASHI identity, store medical records privately, and apply to clinical studies."
               href="/patient"
               delay={0.1}
             />
             <PortalCard
               icon={<FlaskConical className="h-10 w-10 text-secondary" />}
               title="Researcher Portal"
-              description="Create studies, verify patient eligibility through ZK proofs, and manage trial data."
+              description="Create studies, verify patient eligibility through ZK proofs, and manage study data."
               href="/researcher"
               delay={0.2}
+            />
+            <PortalCard
+              icon={<DollarSign className="h-10 w-10 text-success" />}
+              title="Sponsor Portal"
+              description="Fund research studies, track funding allocation, and monitor study progress."
+              href="/sponsor"
+              delay={0.3}
             />
             <PortalCard
               icon={<Building2 className="h-10 w-10 text-accent" />}
               title="Clinic Portal"
               description="Issue verifiable medical credentials, update patient records, manage appointments."
               href="/clinic"
-              delay={0.3}
+              delay={0.4}
             />
           </div>
         </div>

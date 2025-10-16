@@ -1,8 +1,9 @@
 /**
- * Trials Page
+ * Studies Page (Public View)
  *
- * Main page for browsing and applying to clinical trials.
+ * Main page for browsing and applying to clinical studies.
  * Shows recruiting studies with filtering, search, and quick apply.
+ * Public view - accessible to all users (with/without wallet).
  */
 
 'use client';
@@ -26,7 +27,7 @@ import { useHumanPassport } from '@/shared/hooks/useHumanPassport';
 import { StudyStatus } from '@/shared/hooks/useStudy';
 import { cn } from '@/shared/lib/utils';
 
-export default function TrialsPage() {
+export default function StudiesPage() {
   const router = useRouter();
   const { address, isConnected } = useAccount();
   const { isVerified, isLoading: passportLoading } = useHumanPassport({
@@ -51,7 +52,7 @@ export default function TrialsPage() {
     }
 
     // Navigate to study details page
-    router.push(`/trials/${studyId.toString()}`);
+    router.push(`/patient/studies/${studyId.toString()}`);
   };
 
   return (
@@ -72,14 +73,14 @@ export default function TrialsPage() {
               className="inline-flex items-center gap-2 rounded-full bg-primary/10 border border-primary/20 px-4 py-2 text-sm font-medium text-primary mb-4"
             >
               <Sparkles className="h-4 w-4" />
-              <span>Anonymous & Verifiable Clinical Trials</span>
+              <span>Anonymous & Verifiable Clinical Studies</span>
             </motion.div>
 
             <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
-              Find Your Clinical Trial
+              Find Your Clinical Study
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Browse active clinical trials and apply anonymously using zero-knowledge
+              Browse active clinical studies and apply anonymously using zero-knowledge
               proofs. Your privacy is guaranteed.
             </p>
           </div>
@@ -104,7 +105,7 @@ export default function TrialsPage() {
                       </h3>
                       <p className="text-sm text-green-600/80 mb-3">
                         You&apos;re verified with Human Passport. You can now apply to
-                        clinical trials anonymously.
+                        clinical studies anonymously.
                       </p>
                       <HumanVerificationBadge address={address} />
                     </div>
@@ -121,7 +122,7 @@ export default function TrialsPage() {
                         Verification Required
                       </h3>
                       <p className="text-sm text-amber-600/80 mb-4">
-                        Complete Human Passport verification to apply to clinical trials.
+                        Complete Human Passport verification to apply to clinical studies.
                       </p>
                       <button
                         onClick={() => router.push('/onboarding')}
@@ -153,7 +154,7 @@ export default function TrialsPage() {
                     Connect Your Wallet
                   </h3>
                   <p className="text-sm text-blue-600/80 mb-4">
-                    Connect your wallet to view personalized trial recommendations and
+                    Connect your wallet to view personalized study recommendations and
                     apply anonymously.
                   </p>
                   <button
