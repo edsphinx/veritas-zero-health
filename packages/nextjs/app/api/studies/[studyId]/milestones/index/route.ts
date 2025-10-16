@@ -152,7 +152,8 @@ export async function POST(
       where: { studyId: study.id },
     });
 
-    const totalFunding = allMilestones.reduce((sum, milestone) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const totalFunding = allMilestones.reduce((sum: number, milestone: any) => {
       return sum + parseFloat(milestone.rewardAmount.toString());
     }, 0);
 

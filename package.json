@@ -36,7 +36,7 @@
     "postinstall": "husky install",
     "ipfs": "pnpm --filter @veritas/nextjs ipfs",
     "lint": "pnpm next:lint && pnpm foundry:lint",
-    "next:build": "pnpm --filter @veritas/nextjs build",
+    "next:build": "pnpm --filter @veritas/types build && pnpm --filter @veritas/nextjs build",
     "next:check-types": "pnpm --filter @veritas/nextjs check-types",
     "next:format": "pnpm --filter @veritas/nextjs format",
     "next:lint": "pnpm --filter @veritas/nextjs lint",
