@@ -1,5 +1,0 @@
-{
-  "buildCommand": "pnpm --filter @veritas/nextjs build",
-  "installCommand": "pnpm install",
-  "framework": "nextjs"
-}
