@@ -52,7 +52,7 @@ export interface EligibilityCriteria {
  */
 export function useStudy(studyId: bigint | undefined) {
   const { data, isLoading, error } = useVzhReadContract({
-    contractName: 'StudyRegistryImpl',
+    contractName: 'StudyRegistry',
     functionName: 'getStudyDetails',
     args: studyId ? [studyId] : undefined,
     enabled: !!studyId,
@@ -73,7 +73,7 @@ export function useStudy(studyId: bigint | undefined) {
  */
 export function useStudyCriteria(studyId: bigint | undefined) {
   const { data, isLoading, error } = useVzhReadContract({
-    contractName: 'StudyRegistryImpl',
+    contractName: 'StudyRegistry',
     functionName: 'getStudyCriteria',
     args: studyId ? [studyId] : undefined,
     enabled: !!studyId,
@@ -94,7 +94,7 @@ export function useStudyCriteria(studyId: bigint | undefined) {
  */
 export function useVerifiedApplicantsCount(studyId: bigint | undefined) {
   const { data, isLoading, error, refetch } = useVzhReadContract({
-    contractName: 'StudyRegistryImpl',
+    contractName: 'StudyRegistry',
     functionName: 'getVerifiedApplicantsCount',
     args: studyId ? [studyId] : undefined,
     enabled: !!studyId,
@@ -117,7 +117,7 @@ export function useVerifiedApplicantsCount(studyId: bigint | undefined) {
  */
 export function useHasApplied(studyId: bigint | undefined, address: string | undefined) {
   const { data, isLoading, error, refetch } = useVzhReadContract({
-    contractName: 'StudyRegistryImpl',
+    contractName: 'StudyRegistry',
     functionName: 'hasAddressApplied',
     args: studyId && address ? [studyId, address] : undefined,
     enabled: !!studyId && !!address,
@@ -138,7 +138,7 @@ export function useHasApplied(studyId: bigint | undefined, address: string | und
  */
 export function useTotalStudies() {
   const { data, isLoading, error, refetch } = useVzhReadContract({
-    contractName: 'StudyRegistryImpl',
+    contractName: 'StudyRegistry',
     functionName: 'getTotalStudies',
   });
 

@@ -267,7 +267,11 @@ export class CheckEligibilityUseCase {
       }
 
       // Get most recent result
-      const latest = relevantBiomarkers.sort((a, b) => b.timestamp - a.timestamp)[0];
+      const latest = relevantBiomarkers.sort((a, b) => {
+        const aTime = a.timestamp ?? a.createdAt ?? 0;
+        const bTime = b.timestamp ?? b.createdAt ?? 0;
+        return bTime - aTime;
+      })[0];
       const value = latest.values[testName]?.value;
 
       if (value === undefined) {

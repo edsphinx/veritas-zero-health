@@ -70,6 +70,14 @@ export function useStudies(options?: {
 
       try {
         const total = Number(totalStudies);
+
+        // Handle case when there are no studies
+        if (total === 0) {
+          setStudies([]);
+          setIsLoading(false);
+          return;
+        }
+
         const fetchPromises: Promise<Study | null>[] = [];
 
         // Fetch all studies (studyId starts at 1)

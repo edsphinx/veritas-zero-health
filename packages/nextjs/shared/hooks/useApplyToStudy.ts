@@ -51,7 +51,7 @@ export function useApplyToStudy() {
     error,
     hash,
   } = useVzhWriteContract({
-    contractName: 'StudyRegistryImpl',
+    contractName: 'StudyRegistry',
   });
 
   const apply = useCallback(
@@ -97,7 +97,7 @@ export function usePublishStudy() {
     error,
     hash,
   } = useVzhWriteContract({
-    contractName: 'StudyRegistryImpl',
+    contractName: 'StudyRegistry',
   });
 
   const publishStudy = useCallback(
@@ -147,7 +147,7 @@ export function useSetStudyCriteria() {
     error,
     hash,
   } = useVzhWriteContract({
-    contractName: 'StudyRegistryImpl',
+    contractName: 'StudyRegistry',
   });
 
   const setCriteria = useCallback(
@@ -197,7 +197,7 @@ export function useCloseRecruitment() {
     error,
     hash,
   } = useVzhWriteContract({
-    contractName: 'StudyRegistryImpl',
+    contractName: 'StudyRegistry',
   });
 
   const closeRecruitment = useCallback(
