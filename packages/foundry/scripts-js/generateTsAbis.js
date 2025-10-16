@@ -96,13 +96,34 @@ function getArtifactOfContract(contractName) {
     `out/${contractName}.sol`
   );
 
-  if (!existsSync(current_path_to_artifacts)) return null;
+  if (!existsSync(current_path_to_artifacts)) {
+    console.warn(`⚠️  Artifact directory not found for ${contractName}`);
+    return null;
+  }
 
-  const artifactJson = JSON.parse(
-    readFileSync(`${current_path_to_artifacts}/${contractName}.json`)
-  );
+  // Try to find the JSON file - it might have a different name than the contract
+  try {
+    // First try the expected name
+    const expectedPath = `${current_path_to_artifacts}/${contractName}.json`;
+    if (existsSync(expectedPath)) {
+      return JSON.parse(readFileSync(expectedPath));
+    }
 
-  return artifactJson;
+    // If not found, look for any JSON file in the directory
+    const files = readdirSync(current_path_to_artifacts);
+    const jsonFile = files.find(f => f.endsWith('.json'));
+
+    if (jsonFile) {
+      console.log(`📝 Using ${jsonFile} for ${contractName}`);
+      return JSON.parse(readFileSync(`${current_path_to_artifacts}/${jsonFile}`));
+    }
+
+    console.warn(`⚠️  No JSON artifact found for ${contractName}`);
+    return null;
+  } catch (error) {
+    console.warn(`⚠️  Error reading artifact for ${contractName}:`, error.message);
+    return null;
+  }
 }
 
 function getInheritedFromContracts(artifact) {
@@ -195,6 +216,8 @@ function processAllDeployments(broadcastPath) {
         deploymentScript: deployment.deploymentScript,
         deployedOnBlock: deployment?.deployedOnBlock && Number(BigInt(deployment.deployedOnBlock)),
       };
+    } else {
+      console.warn(`⚠️  Skipping ${contractName} on chain ${chainId} - artifact not found`);
     }
   });
 
@@ -218,22 +241,67 @@ async function main() {
     deployments[chain] = deploymentObject;
   });
 
-  // Process all deployments from all script folders
-  const allGeneratedContracts = processAllDeployments(
-    current_path_to_broadcast
-  );
+  let allGeneratedContracts = {};
 
-  // Update contract keys based on deployments if they exist
-  Object.entries(allGeneratedContracts).forEach(([chainId, contracts]) => {
-    Object.entries(contracts).forEach(([contractName, contractData]) => {
-      const deployedName = deployments[chainId]?.[contractData.address];
-      if (deployedName) {
-        // If we have a deployment name, use it instead of the contract name
-        allGeneratedContracts[chainId][deployedName] = contractData;
-        delete allGeneratedContracts[chainId][contractName];
+  // If broadcast folder doesn't exist, generate from deployments folder
+  if (!existsSync(current_path_to_broadcast)) {
+    console.log("⚠️  No broadcast folder found, generating from deployments folder");
+
+    // Process deployments directly
+    Object.entries(deployments).forEach(([fileName, deploymentData]) => {
+      const chainId = deploymentData.chainId || fileName.split('_')[0];
+
+      if (!allGeneratedContracts[chainId]) {
+        allGeneratedContracts[chainId] = {};
       }
+
+      // Map contract addresses to their names
+      Object.entries(deploymentData).forEach(([key, value]) => {
+        if (key === 'chainId' || key === 'network' || key === 'timestamp') return;
+
+        // Key is the contract name (e.g., "studyRegistry", "ageVerifier")
+        // Value is the address
+        const contractName = key;
+        const address = value;
+
+        // Try to find the artifact - try common contract name patterns
+        const possibleNames = [
+          contractName,
+          contractName.charAt(0).toUpperCase() + contractName.slice(1),
+          contractName.replace(/([A-Z])/g, '_$1').replace(/^_/, ''),
+        ];
+
+        let artifact = null;
+        for (const name of possibleNames) {
+          artifact = getArtifactOfContract(name);
+          if (artifact) break;
+        }
+
+        if (artifact) {
+          allGeneratedContracts[chainId][contractName] = {
+            address: address,
+            abi: artifact.abi,
+            inheritedFunctions: getInheritedFunctions(artifact),
+          };
+        }
+      });
     });
-  });
+  } else {
+    // Process all deployments from all script folders (original logic)
+    allGeneratedContracts = processAllDeployments(current_path_to_broadcast);
+
+    // Update contract keys based on deployments if they exist
+    Object.entries(allGeneratedContracts).forEach(([chainId, contracts]) => {
+      Object.entries(contracts).forEach(([contractName, contractData]) => {
+        const deployedName = deployments[chainId]?.[contractData.address];
+        if (deployedName) {
+          // If we have a deployment name, use it instead of the contract name
+          allGeneratedContracts[chainId][deployedName] = contractData;
+          delete allGeneratedContracts[chainId][contractName];
+        }
+      });
+    });
+  }
 
   const NEXTJS_TARGET_DIR = "../nextjs/contracts/";
 
@@ -272,7 +340,7 @@ async function main() {
 
   writeFileSync(
     `${NEXTJS_TARGET_DIR}deployedContracts.ts`,
-    await format(fileTemplate("~~/utils/scaffold-eth/contract"), {
+    await format(fileTemplate("./types"), {
       parser: "typescript",
     })
   );
