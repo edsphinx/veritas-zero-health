@@ -436,8 +436,12 @@ export class NillionClient {
     // Sort
     if (options.sortBy) {
       result.sort((a, b) => {
-        const aVal = options.sortBy === 'date' ? new Date(a.date).getTime() : a.timestamp;
-        const bVal = options.sortBy === 'date' ? new Date(b.date).getTime() : b.timestamp;
+        const aVal = options.sortBy === 'date'
+          ? new Date(a.date).getTime()
+          : (a.timestamp ?? a.createdAt ?? 0);
+        const bVal = options.sortBy === 'date'
+          ? new Date(b.date).getTime()
+          : (b.timestamp ?? b.createdAt ?? 0);
 
         return options.sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
       });
