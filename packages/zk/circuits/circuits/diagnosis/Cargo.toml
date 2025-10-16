@@ -1,0 +1,23 @@
+[package]
+name = "diagnosis-membership-circuit"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+default = ["frontend-halo2"]
+frontend-halo2 = ["dep:halo2_proofs"]
+
+[dependencies]
+halo2_proofs = { workspace = true, optional = true }
+halo2curves = { workspace = true }
+plonkish_backend = { workspace = true }
+poseidon = { workspace = true }
+
+serde = { workspace = true }
+serde_json = { workspace = true }
+bincode = { workspace = true }
+rand = { workspace = true }
+thiserror = { workspace = true }
+itertools = { workspace = true }
+ff = { workspace = true }
+group = { workspace = true }
