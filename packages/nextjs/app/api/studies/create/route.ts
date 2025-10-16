@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
             minAge: body.minAge,
             maxAge: body.maxAge,
             certifiedProviders: body.certifiedProviders || [body.creatorAddress],
-            eligibilityCodeHash: 0n, // TODO: Generate from medicalCriteria
+            eligibilityCodeHash: "0", // TODO: Generate from medicalCriteria (will be converted to BigInt on frontend)
           },
           metadata: {
             creatorAddress: body.creatorAddress,
