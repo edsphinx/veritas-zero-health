@@ -12,12 +12,11 @@ async function addTotalFundingColumn() {
     console.log('Adding totalFunding column to studies table...');
 
     // Check if column exists
-    const result = await prisma.$queryRaw`
+    const result = (await prisma.$queryRaw`
       SELECT column_name
       FROM information_schema.columns
       WHERE table_name = 'studies' AND column_name = 'totalFunding'
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ` as any[];
+    `) as any[]; // eslint-disable-line @typescript-eslint/no-explicit-any
 
     if (result.length > 0) {
       console.log('✓ totalFunding column already exists');

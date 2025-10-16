@@ -6,6 +6,7 @@
 
 export interface GenericContract {
   address: `0x${string}`;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   abi: readonly any[];
   inheritedFunctions?: Record<string, string>;
   deployedOnBlock?: number;

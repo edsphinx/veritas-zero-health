@@ -43,7 +43,7 @@ export async function getSponsorProfile(
   const contract = getResearchFundingEscrowContract(chainId);
   if (!contract) return null;
 
-  const publicClient = getPublicClient(chainId);
+  const _publicClient = getPublicClient(chainId);
 
   try {
     // Would call contract methods to get sponsor data
@@ -70,7 +70,7 @@ export async function getSponsorFundingHistory(
   const contract = getResearchFundingEscrowContract(chainId);
   if (!contract) return [];
 
-  const publicClient = getPublicClient(chainId);
+  const _publicClient = getPublicClient(chainId);
 
   try {
     // Would query events or contract methods
@@ -91,7 +91,7 @@ export async function getSponsorTotalFunding(
   const contract = getResearchFundingEscrowContract(chainId);
   if (!contract) return BigInt(0);
 
-  const publicClient = getPublicClient(chainId);
+  const _publicClient = getPublicClient(chainId);
 
   try {
     // Would call contract method

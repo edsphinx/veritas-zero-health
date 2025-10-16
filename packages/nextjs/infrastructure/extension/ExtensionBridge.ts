@@ -10,7 +10,7 @@
  * @see packages/browser-extension/src/content/content-script.ts
  */
 
-import { HealthDataPermission, PermissionGrant } from '@/shared/types/health.types';
+import { HealthDataPermission } from '@/shared/types/health.types';
 
 /**
  * Type definitions for window.Veritas API
@@ -20,6 +20,7 @@ declare global {
     Veritas?: {
       requestDID(): Promise<string>;
       requestPermission(permissions: string[]): Promise<PermissionResponse>;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       requestData(dataType: string): Promise<any>;
       isInstalled(): boolean;
       version: string;
@@ -244,6 +245,7 @@ export class ExtensionBridge {
    * const biomarkers = await bridge.requestData('biomarkers');
    * ```
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async requestData(dataType: string): Promise<any> {
     this.ensureInitialized();
 

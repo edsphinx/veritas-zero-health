@@ -32,7 +32,7 @@ export async function getResearcherProfile(
   const contract = getStudyRegistryContract(chainId);
   if (!contract) return null;
 
-  const publicClient = getPublicClient(chainId);
+  const _publicClient = getPublicClient(chainId);
 
   try {
     // This would call actual contract methods
@@ -59,7 +59,7 @@ export async function isVerifiedResearcher(
   const contract = getStudyRegistryContract(chainId);
   if (!contract) return false;
 
-  const publicClient = getPublicClient(chainId);
+  const _publicClient = getPublicClient(chainId);
 
   try {
     // Would call contract method like: contract.isVerifiedResearcher(address)
@@ -81,7 +81,7 @@ export async function getResearcherStudies(
   const contract = getStudyRegistryContract(chainId);
   if (!contract) return [];
 
-  const publicClient = getPublicClient(chainId);
+  const _publicClient = getPublicClient(chainId);
 
   try {
     // Would call contract method to get researcher's studies

@@ -23,7 +23,7 @@ const normalizeAddress = (address: string): string => {
     const checksumAddress = getAddress(extractedAddress);
     splitAddress[splitAddress.length - 1] = checksumAddress;
     return splitAddress.join(':');
-  } catch (error) {
+  } catch {
     return address;
   }
 };

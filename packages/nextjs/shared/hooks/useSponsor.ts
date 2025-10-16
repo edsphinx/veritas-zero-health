@@ -62,6 +62,7 @@ export function useSponsor() {
         if (isMounted) {
           if (result.success && result.data) {
             // Convert BigInt strings back to BigInt
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const depositsWithBigInt = result.data.deposits.map((d: any) => ({
               ...d,
               amount: BigInt(d.amount),

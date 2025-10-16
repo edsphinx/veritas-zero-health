@@ -126,6 +126,7 @@ async function main() {
     const writeResult = await client.createStandardData({
       body: {
         collection: COLLECTION_DIAGNOSES,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         data: [writePayload as any],
       },
     });
@@ -149,13 +150,14 @@ async function main() {
 
       // Try to decrypt the data
       try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const recordData = record.data as any;
         const encryptedData = recordData?.['%allot'] || recordData;
         const decryptedData = typeof encryptedData === 'string'
           ? JSON.parse(encryptedData)
           : encryptedData;
         console.log(`   Decrypted data:`, decryptedData);
-      } catch (parseError) {
+      } catch {
         console.log(`   Raw data:`, record.data);
       }
     }

@@ -27,7 +27,6 @@ import {
   ExtensionBridge,
   getExtensionBridge,
   ExtensionNotInstalledError,
-  ExtensionTimeoutError,
 } from '@/infrastructure/extension/ExtensionBridge';
 
 export interface UseExtensionReturn {

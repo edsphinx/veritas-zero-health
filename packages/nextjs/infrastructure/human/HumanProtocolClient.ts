@@ -54,6 +54,7 @@ export interface PassportScoreResponse {
 
 export interface PassportStamp {
   version: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   credential: any; // Verifiable credential data
 }
 
@@ -250,7 +251,7 @@ export class HumanProtocolClient {
       try {
         const stampsResult = await this.getPassportStamps(address);
         stamps = stampsResult.stamps;
-      } catch (error) {
+      } catch {
         console.warn('[Passport] Stamps endpoint not available, continuing without stamps');
         stamps = undefined;
       }

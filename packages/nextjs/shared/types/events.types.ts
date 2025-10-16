@@ -7,7 +7,6 @@
 
 import type { Address } from 'viem';
 import type { HealthRecordType } from '@veritas/types/health';
-import type { EnrollmentStatus } from './enrollment.types';
 
 // ==================== EVENT CATEGORIES ====================
 
@@ -55,6 +54,7 @@ export interface BaseEvent {
   source: string;
 
   /** Event payload (category-specific data) */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload: Record<string, any>;
 
   /** Related user address (if applicable) */
@@ -64,6 +64,7 @@ export interface BaseEvent {
   txHash?: `0x${string}`;
 
   /** Event metadata */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: Record<string, any>;
 }
 
@@ -471,6 +472,7 @@ export interface ErrorOccurredEvent extends SystemEvent {
   payload: {
     error: string;
     stack?: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     context?: Record<string, any>;
   };
 }
@@ -581,6 +583,7 @@ export interface EventFilter {
 export function createEvent<T extends BaseEvent>(
   category: EventCategory,
   type: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload: Record<string, any>,
   options: Partial<BaseEvent> = {}
 ): T {

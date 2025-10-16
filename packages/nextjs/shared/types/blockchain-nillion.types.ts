@@ -329,6 +329,7 @@ export interface IssueHealthDataRequest {
   patientAddress: Address;
   patientDID: string;
   dataType: HealthRecordType;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: any; // Encrypted health record data
   clinicSignature: `0x${string}`;
 }

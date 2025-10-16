@@ -107,6 +107,7 @@ export class PrismaStudyRepository implements IStudyRepository {
   /**
    * Convert Prisma model to domain entity
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private toDomain(prismaStudy: any): Study {
     return {
       id: prismaStudy.id,

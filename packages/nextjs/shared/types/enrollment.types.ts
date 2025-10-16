@@ -535,6 +535,7 @@ export interface UpdateEnrollmentStatusRequest {
   enrollmentId: string;
   newStatus: EnrollmentStatus;
   reason?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: Record<string, any>;
 }
 

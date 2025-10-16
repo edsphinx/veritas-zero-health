@@ -5,8 +5,10 @@
  * This configuration enables Tailwind CSS in the build process.
  */
 
-export default {
+const config = {
   plugins: {
     '@tailwindcss/postcss': {},
   },
 };
+
+export default config;

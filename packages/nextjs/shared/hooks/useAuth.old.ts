@@ -24,7 +24,7 @@
 
 'use client';
 
-import { useAuthStore, selectIsAuthenticated, selectHasPermission, selectHasRole, selectHasAllPermissions, selectIsLoadingAny } from '@/shared/stores/authStore';
+import { useAuthStore, selectIsAuthenticated, selectIsLoadingAny } from '@/shared/stores/authStore';
 import type { UserRole, Permission } from '@/shared/types/auth.types';
 
 /**

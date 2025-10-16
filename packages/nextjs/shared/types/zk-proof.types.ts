@@ -110,6 +110,7 @@ export interface CircuitInput {
   circuit: string;
 
   /** Input data (format depends on circuit) */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   inputs: AgeRangeCircuitInput | EligibilityCodeCircuitInput | Record<string, any>;
 }
 
@@ -343,6 +344,7 @@ export interface ProofValidationResult {
 /**
  * Type guard for Groth16 proof
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isGroth16Proof(proof: any): proof is Groth16Proof {
   return (
     typeof proof === 'object' &&
@@ -360,6 +362,7 @@ export function isGroth16Proof(proof: any): proof is Groth16Proof {
 /**
  * Type guard for Halo2 proof
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isHalo2Proof(proof: any): proof is Halo2Proof {
   return (
     typeof proof === 'object' &&

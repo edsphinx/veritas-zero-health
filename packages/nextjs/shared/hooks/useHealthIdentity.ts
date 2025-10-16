@@ -99,6 +99,7 @@ export function useHealthIdentity(
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [address, chainId, enabled]);
 
   return {

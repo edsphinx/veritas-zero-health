@@ -35,6 +35,7 @@ import type {
 /**
  * Helper: Validate health record structure
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function validateHealthRecord(type: HealthRecordType, data: any): boolean {
   if (!data || typeof data !== 'object') return false;
   if (!data.date || !data.timestamp) return false;

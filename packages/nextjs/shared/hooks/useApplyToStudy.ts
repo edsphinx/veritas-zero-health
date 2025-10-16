@@ -42,7 +42,6 @@ export function useApplyToStudy() {
   const { address } = useAccount();
 
   const {
-    write,
     writeAsync,
     isPending,
     isConfirming,

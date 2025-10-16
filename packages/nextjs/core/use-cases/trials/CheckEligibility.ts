@@ -12,7 +12,6 @@ import type { NillionClient } from '@/infrastructure/nillion/NillionClient';
 import type {
   Diagnosis,
   Biomarker,
-  Vital,
   Medication,
 } from '@/shared/types/health.types';
 

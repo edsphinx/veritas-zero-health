@@ -12,7 +12,6 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type {
-  VerificationResult,
   HumanVerificationState,
 } from '@/shared/types/human.types';
 
@@ -118,7 +117,7 @@ export function useHumanPassport(options: UseHumanPassportOptions = {}) {
  * Useful for onboarding flows that require both steps
  */
 export function useHumanVerification() {
-  const queryClient = useQueryClient();
+  const _queryClient = useQueryClient();
 
   // Check wallet connection first
   const walletQuery = useQuery({

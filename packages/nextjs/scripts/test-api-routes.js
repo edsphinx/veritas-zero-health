@@ -79,7 +79,7 @@ async function main() {
             const error = await deleteResponse.text();
             throw new Error(`Delete failed: ${deleteResponse.status} - ${error}`);
         }
-        const deleteResult = await deleteResponse.json();
+        const _deleteResult = await deleteResponse.json();
         console.log('✅ Data deleted successfully');
         console.log();
         // Summary

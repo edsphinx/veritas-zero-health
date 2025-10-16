@@ -130,7 +130,7 @@ export function useNillion(options: UseNillionOptions = {}): UseNillionReturn {
         const did = await client.getUserDID();
         setUserDID(did);
         setHasDID(true);
-      } catch (err) {
+      } catch {
         // DID might not exist yet
         setHasDID(false);
       }

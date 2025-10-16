@@ -155,7 +155,7 @@ const getRolePermissions = (role: UserRole): Permission[] => {
 export const useAuthStore = create<AuthStore>()(
   devtools(
     persist(
-      (set, get) => ({
+      (set, _get) => ({
         // Initial state
         ...initialState,
 

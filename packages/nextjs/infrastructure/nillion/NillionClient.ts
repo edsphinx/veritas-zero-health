@@ -17,7 +17,6 @@
 import {
   ExtensionBridge,
   getExtensionBridge,
-  ExtensionNotInstalledError,
   PermissionDeniedError,
 } from '../extension/ExtensionBridge';
 

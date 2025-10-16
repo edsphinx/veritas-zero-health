@@ -24,6 +24,7 @@ export interface HealthIdentity {
  */
 export interface HealthIdentitySBTConfig {
   address: Address;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   abi: readonly any[];
   chainId: number;
 }

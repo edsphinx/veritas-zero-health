@@ -114,9 +114,8 @@ export class ApplyToTrialUseCase {
       }
 
       // Step 3: Generate ZK proof of eligibility
-      let proofResult: ProofGenerationResult;
       try {
-        proofResult = await this.generateEligibilityProof(request);
+        await this.generateEligibilityProof(request);
       } catch (error) {
         return {
           success: false,
@@ -243,7 +242,7 @@ export class ApplyToTrialUseCase {
    * meets the study criteria without revealing actual health data.
    */
   private async generateEligibilityProof(
-    request: ApplyToTrialRequest
+    _request: ApplyToTrialRequest
   ): Promise<ProofGenerationResult> {
     // TODO: Implement actual proof generation via extension
     // This would involve:

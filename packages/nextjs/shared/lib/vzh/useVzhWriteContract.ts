@@ -71,8 +71,10 @@ export function useVzhWriteContract({ contractName }: UseVzhWriteContractParams)
 
     return writeContract({
       address,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       abi: abi as any,
       functionName,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       args: args as any,
     });
   };
@@ -93,8 +95,10 @@ export function useVzhWriteContract({ contractName }: UseVzhWriteContractParams)
 
     return writeContractAsync({
       address,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       abi: abi as any,
       functionName,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       args: args as any,
     });
   };

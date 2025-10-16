@@ -134,7 +134,7 @@ async function main() {
                     : encryptedData;
                 console.log(`   Decrypted data:`, decryptedData);
             }
-            catch (parseError) {
+            catch {
                 console.log(`   Raw data:`, record.data);
             }
         }

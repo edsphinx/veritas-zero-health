@@ -34,6 +34,7 @@ export function getContractAddress(
   const chainContracts = deployedContracts[chainId as keyof typeof deployedContracts];
   if (!chainContracts) return undefined;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const contract = chainContracts[contractName as keyof typeof chainContracts] as any;
   return contract?.address as `0x${string}` | undefined;
 }
@@ -41,6 +42,7 @@ export function getContractAddress(
 /**
  * Get contract ABI
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function getContractABI(contractName: ContractName): readonly any[] {
   // Get from any chain since ABI is the same
   const firstChainId = Object.keys(deployedContracts)[0] as unknown as keyof typeof deployedContracts;
@@ -48,6 +50,7 @@ export function getContractABI(contractName: ContractName): readonly any[] {
 
   if (!chainContracts) return [];
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const contract = chainContracts[contractName as keyof typeof chainContracts] as any;
   return contract?.abi || [];
 }

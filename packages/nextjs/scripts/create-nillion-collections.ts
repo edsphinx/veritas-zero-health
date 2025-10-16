@@ -339,6 +339,7 @@ async function main() {
           _id: collectionId,
           type: 'standard',
           name: config.name,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           schema: config.schema as any,
         });
 

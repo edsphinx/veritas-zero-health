@@ -198,10 +198,10 @@ export async function createStudyOnChain(
  * Submit anonymous application with ZK proof
  */
 export async function submitAnonymousApplication(
-  params: AnonymousApplicationParams
+  _params: AnonymousApplicationParams
 ): Promise<ApplicationResult> {
   const chainId = getDefaultChainId();
-  const publicClient = getPublicClient(chainId);
+  const _publicClient = getPublicClient(chainId);
   const registryContract = getStudyRegistryContract(chainId);
 
   if (!registryContract) {
@@ -218,6 +218,7 @@ export async function submitAnonymousApplication(
 /**
  * Get study by ID from registry
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function getStudyFromChain(studyId: bigint): Promise<any> {
   const chainId = getDefaultChainId();
   const publicClient = getPublicClient(chainId);
@@ -240,6 +241,7 @@ export async function getStudyFromChain(studyId: bigint): Promise<any> {
 /**
  * Get eligibility criteria for a study
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function getStudyCriteriaFromChain(studyId: bigint): Promise<any> {
   const chainId = getDefaultChainId();
   const publicClient = getPublicClient(chainId);

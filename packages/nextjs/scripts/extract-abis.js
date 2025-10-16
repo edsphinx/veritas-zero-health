@@ -7,8 +7,8 @@
  * for use in the VZH library
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
 const FOUNDRY_OUT = path.resolve(__dirname, '../../../foundry/out');
 const OUTPUT_FILE = path.resolve(__dirname, '../shared/lib/vzh/generated-abis.ts');

@@ -13,7 +13,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type {
   WalletConnectionMethod,
-  WalletConnectionResult,
   HumanWalletState,
 } from '@/shared/types/human.types';
 

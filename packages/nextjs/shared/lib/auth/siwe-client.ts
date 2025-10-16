@@ -65,6 +65,7 @@ export async function signInWithEthereum({
 
     console.log("[SIWE] Sign-in successful!");
     return { success: true };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error("[SIWE] Sign in failed:", error);
     return { success: false, error: error.message || "Failed to sign in" };

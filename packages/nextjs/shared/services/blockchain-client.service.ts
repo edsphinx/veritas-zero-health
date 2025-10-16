@@ -13,7 +13,6 @@ import {
   type WalletClient,
   type Account,
   type Chain,
-  type Transport,
 } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { optimismSepolia, optimism, sepolia, mainnet } from 'viem/chains';

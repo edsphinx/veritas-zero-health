@@ -62,6 +62,7 @@ interface StoreResult {
  * Retrieve operation result
  */
 interface RetrieveResult {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   records: any[];
   count: number;
 }
@@ -177,6 +178,7 @@ export class NillionServerClient {
    * @param data - Health data to encrypt and store
    * @returns Record ID
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async storeRecord(type: HealthRecordType, userId: string, data: any): Promise<StoreResult> {
     await this.ensureInitialized();
 
@@ -204,6 +206,7 @@ export class NillionServerClient {
       await this.client!.createStandardData({
         body: {
           collection: collectionId,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           data: [payload as any],
         },
       });
@@ -249,6 +252,7 @@ export class NillionServerClient {
       });
 
       // Parse encrypted data (response.data is the array)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const records = (response.data || []).map((record: any) => {
         try {
           // Decrypt and parse data field
@@ -266,6 +270,7 @@ export class NillionServerClient {
           console.warn(`Failed to parse record ${record._id}:`, parseError);
           return null;
         }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       }).filter((record: any) => record !== null);
 
       console.log(`✅ Retrieved ${records.length} ${type} records`);
@@ -314,9 +319,10 @@ export class NillionServerClient {
    * @param userId - User's DID
    * @returns Map of record type to records
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async getAllRecords(userId: string): Promise<Map<HealthRecordType, any[]>> {
     await this.ensureInitialized();
-
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const allRecords = new Map<HealthRecordType, any[]>();
     const types: HealthRecordType[] = ['diagnoses', 'biomarkers', 'vitals', 'medications', 'allergies'];
 

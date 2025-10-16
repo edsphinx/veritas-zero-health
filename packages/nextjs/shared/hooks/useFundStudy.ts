@@ -22,7 +22,9 @@ import type { Study } from '@veritas/types';
 export interface UseFundStudyConfig {
   mockUSDCAddress: Address;
   escrowAddress: Address;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   escrowABI: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   erc20ABI: any;
   userAddress?: Address;
 }
@@ -61,6 +63,7 @@ export function useFundStudy(config: UseFundStudyConfig): UseFundStudyReturn {
   const [currentAmount, setCurrentAmount] = useState<string>('');
 
   // Instantiate use case
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const fundStudyUseCase = new FundStudy();
 
   // Read MockUSDC balance
@@ -92,7 +95,7 @@ export function useFundStudy(config: UseFundStudyConfig): UseFundStudyReturn {
 
   // Wait for transactions
   const {
-    isLoading: isApprovePending,
+    isLoading: _isApprovePending,
     isSuccess: isApproveSuccess,
     isError: isApproveError,
     error: approveError
@@ -101,7 +104,7 @@ export function useFundStudy(config: UseFundStudyConfig): UseFundStudyReturn {
   });
 
   const {
-    isLoading: isFundPending,
+    isLoading: _isFundPending,
     isSuccess: isFundSuccess,
     isError: isFundError,
     error: fundError,
