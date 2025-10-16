@@ -1,0 +1,18 @@
+{
+  "name": "@se-2/circom",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "compile": "circom circuits/eligibility_code.circom --r1cs --wasm --sym -o build -l node_modules",
+    "test": "echo \"Test circuit compilation\" && yarn compile"
+  },
+  "dependencies": {
+    "circomlib": "^2.0.5",
+    "circomlibjs": "^0.1.7",
+    "snarkjs": "^0.7.5"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "description": "Circom circuits for Veritas Zero Health"
+}
