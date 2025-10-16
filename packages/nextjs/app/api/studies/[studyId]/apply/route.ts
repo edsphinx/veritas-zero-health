@@ -67,32 +67,53 @@ export async function POST(
 
     console.log(`🔗 Submitting proof to StudyRegistry at ${studyRegistryAddress}`);
 
-    // TODO: Call StudyRegistry.submitAnonymousApplication(studyId, proof)
-    // For MVP, simulate the call
+    // StudyRegistry ABI for submitAnonymousApplication
+    const STUDY_REGISTRY_ABI = [
+      {
+        inputs: [
+          { name: '_studyId', type: 'uint256' },
+          { name: '_ageProof', type: 'bytes' },
+        ],
+        name: 'submitAnonymousApplication',
+        outputs: [],
+        stateMutability: 'nonpayable',
+        type: 'function',
+      },
+    ] as const;
 
-    // Simulate on-chain verification
-    const simulatedSuccess = true; // In production, this comes from contract call
+    try {
+      // Call submitAnonymousApplication on StudyRegistry
+      const hash = await walletClient.writeContract({
+        address: studyRegistryAddress as `0x${string}`,
+        abi: STUDY_REGISTRY_ABI,
+        functionName: 'submitAnonymousApplication',
+        args: [BigInt(studyId), proof as `0x${string}`],
+      });
 
-    if (simulatedSuccess) {
+      // Wait for transaction confirmation
+      const receipt = await publicClient.waitForTransactionReceipt({ hash });
+
       console.log(`✅ ZK proof verified and application submitted for study #${studyId}`);
-
-      // TODO: Store application in database for tracking
-      // TODO: Emit event for frontend to pick up
+      console.log(`  - Transaction hash: ${hash}`);
+      console.log(`  - Block: ${receipt.blockNumber}`);
 
       return NextResponse.json({
         success: true,
         studyId,
         message: 'Application submitted successfully',
         verifiedOnChain: true,
-        // txHash: txHash, // Include once we make real contract call
+        transactionHash: hash,
+        blockNumber: receipt.blockNumber.toString(),
       });
-    } else {
+    } catch (contractError: any) {
       console.log(`❌ ZK proof verification failed for study #${studyId}`);
+      console.error('Contract error:', contractError);
 
       return NextResponse.json(
         {
           success: false,
-          error: 'Proof verification failed',
+          error: 'Proof verification failed on-chain',
+          details: contractError?.message || 'Unknown error',
         },
         { status: 400 }
       );
