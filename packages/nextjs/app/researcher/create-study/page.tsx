@@ -145,7 +145,7 @@ export default function CreateStudyPage() {
       const { studyParams } = validationResult.data;
 
       // Transaction 1: Create study in escrow
-      setTxStatus({ step: 1, message: 'Transaction 1/3: Creating escrow...' });
+      setTxStatus({ step: 1, message: 'Transaction 1/4: Creating escrow...' });
 
       const escrowHash = await walletClient.writeContract({
         address: escrowContract.address as `0x${string}`,
@@ -166,7 +166,7 @@ export default function CreateStudyPage() {
         : null;
 
       // Transaction 2: Publish to registry
-      setTxStatus({ step: 2, message: 'Transaction 2/3: Publishing to registry...' });
+      setTxStatus({ step: 2, message: 'Transaction 2/4: Publishing to registry...' });
 
       const registryHash = await walletClient.writeContract({
         address: registryContract.address as `0x${string}`,
@@ -186,7 +186,7 @@ export default function CreateStudyPage() {
         : null;
 
       // Transaction 3: Set eligibility criteria
-      setTxStatus({ step: 3, message: 'Transaction 3/3: Setting eligibility criteria...' });
+      setTxStatus({ step: 3, message: 'Transaction 3/4: Setting eligibility criteria...' });
 
       const criteriaHash = await walletClient.writeContract({
         address: registryContract.address as `0x${string}`,
@@ -200,8 +200,50 @@ export default function CreateStudyPage() {
         ],
       });
 
-      setTxStatus({ step: 3, message: 'Waiting for final confirmation...', hash: criteriaHash });
+      setTxStatus({ step: 3, message: 'Waiting for confirmation...', hash: criteriaHash });
       const criteriaReceipt = await publicClient.waitForTransactionReceipt({ hash: criteriaHash });
+
+      // Transaction 4: Add Milestones
+      setTxStatus({ step: 4, message: `Adding ${formData.requiredAppointments} milestones...` });
+
+      const rewardPerAppointment = Math.floor(
+        (Number(formData.paymentPerParticipant) / formData.requiredAppointments) * 1e6 // Convert to USDC (6 decimals)
+      );
+
+      const milestoneTxHashes: string[] = [];
+      const milestoneTypes = ['Initial Visit', 'Follow-up Visit', 'Follow-up Visit', 'Follow-up Visit', 'Study Completion'];
+
+      for (let i = 0; i < formData.requiredAppointments; i++) {
+        const milestoneIndex = i + 1;
+        const milestoneType = i === 0 ? 0 : (i === formData.requiredAppointments - 1 ? 3 : 2);
+        const description = milestoneTypes[Math.min(i, milestoneTypes.length - 1)];
+
+        setTxStatus({
+          step: 4,
+          message: `Adding milestone ${milestoneIndex}/${formData.requiredAppointments}: ${description}...`
+        });
+
+        const milestoneHash = await walletClient.writeContract({
+          address: escrowContract.address as `0x${string}`,
+          abi: escrowContract.abi,
+          functionName: 'addMilestone',
+          args: [
+            BigInt(escrowStudyId!),
+            milestoneType,
+            description,
+            BigInt(rewardPerAppointment),
+          ],
+        });
+
+        setTxStatus({
+          step: 4,
+          message: `Waiting for milestone ${milestoneIndex}/${formData.requiredAppointments} confirmation...`,
+          hash: milestoneHash
+        });
+
+        await publicClient.waitForTransactionReceipt({ hash: milestoneHash });
+        milestoneTxHashes.push(milestoneHash);
+      }
 
       // Success! Show toast immediately with Etherscan link
       toast.success('Study Created Successfully!', {
@@ -219,9 +261,10 @@ export default function CreateStudyPage() {
       });
 
       // Index the study in our database for fast lookups (non-blocking)
-      setTxStatus({ step: 4, message: 'Indexing study and redirecting...' });
+      setTxStatus({ step: 5, message: 'Indexing study data...' });
 
       try {
+        // 1. Index the study
         const indexResponse = await fetch('/api/studies/index', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -244,12 +287,79 @@ export default function CreateStudyPage() {
 
         if (!indexResult.success) {
           console.warn('[Study Creation] Failed to index study:', indexResult.error);
-          // Don't fail the whole flow if indexing fails - study is already on-chain
-        } else {
-          console.log('[Study Creation] Study indexed successfully:', indexResult.data);
+          throw new Error('Failed to index study');
         }
+
+        const studyId = indexResult.data.id;
+        console.log('[Study Creation] Study indexed successfully:', indexResult.data);
+
+        // 2. Index study criteria
+        setTxStatus({ step: 5, message: 'Indexing eligibility criteria...' });
+
+        const eligibilityCodeHash = studyParams.eligibilityCodeHash;
+
+        const criteriaIndexResponse = await fetch(`/api/studies/${studyId}/criteria/index`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            escrowId: escrowStudyId!,
+            minAge: formData.minAge,
+            maxAge: formData.maxAge,
+            eligibilityCodeHash,
+            transactionHash: criteriaHash,
+            blockNumber: criteriaReceipt.blockNumber.toString(),
+          }),
+        });
+
+        const criteriaIndexResult = await criteriaIndexResponse.json();
+
+        if (!criteriaIndexResult.success) {
+          console.warn('[Study Creation] Failed to index criteria:', criteriaIndexResult.error);
+        } else {
+          console.log('[Study Creation] Criteria indexed successfully');
+        }
+
+        // 3. Index milestones
+        setTxStatus({ step: 5, message: 'Indexing milestones...' });
+
+        const milestoneData = await Promise.all(
+          milestoneTxHashes.map(async (txHash, index) => {
+            const receipt = await publicClient.getTransactionReceipt({
+              hash: txHash as `0x${string}`
+            });
+            const milestoneType = index === 0 ? 0 : (index === formData.requiredAppointments - 1 ? 3 : 2);
+            const description = milestoneTypes[Math.min(index, milestoneTypes.length - 1)];
+
+            return {
+              milestoneId: index,
+              milestoneType,
+              description,
+              rewardAmount: rewardPerAppointment.toString(),
+              transactionHash: txHash,
+              blockNumber: receipt.blockNumber.toString(),
+            };
+          })
+        );
+
+        const milestonesIndexResponse = await fetch(`/api/studies/${studyId}/milestones/index`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            escrowId: escrowStudyId!,
+            milestones: milestoneData,
+          }),
+        });
+
+        const milestonesIndexResult = await milestonesIndexResponse.json();
+
+        if (!milestonesIndexResult.success) {
+          console.warn('[Study Creation] Failed to index milestones:', milestonesIndexResult.error);
+        } else {
+          console.log('[Study Creation] Milestones indexed successfully:', milestonesIndexResult.milestones?.length);
+        }
+
       } catch (indexError) {
-        console.error('[Study Creation] Error indexing study:', indexError);
+        console.error('[Study Creation] Error indexing data:', indexError);
         // Continue anyway - study exists on blockchain
       }
 
@@ -271,6 +381,16 @@ export default function CreateStudyPage() {
         minAge: 18,
         maxAge: 65,
         requiresAgeProof: true,
+        requiredDiagnoses: [],
+        excludedDiagnoses: [],
+        requiredBiomarkers: [],
+        requiredVitals: [],
+        medicalAllergies: [],
+        requiredMedications: [],
+        excludedMedications: [],
+        minBMI: '',
+        maxBMI: '',
+        smokingStatus: 'any',
       });
 
     } catch (error: any) {
@@ -311,15 +431,15 @@ export default function CreateStudyPage() {
                 <div className="flex justify-center">
                   <div className="relative">
                     <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
-                      {txStatus.step === 4 ? (
+                      {txStatus.step === 5 ? (
                         <CheckCircle2 className="h-10 w-10 text-success animate-bounce" />
                       ) : (
                         <Loader2 className="h-10 w-10 text-primary animate-spin" />
                       )}
                     </div>
-                    {txStatus.step <= 3 && (
+                    {txStatus.step <= 4 && (
                       <div className="absolute -top-1 -right-1 bg-primary text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
-                        {txStatus.step}/3
+                        {txStatus.step}/4
                       </div>
                     )}
                   </div>
@@ -328,7 +448,7 @@ export default function CreateStudyPage() {
                 {/* Status Message */}
                 <div>
                   <h3 className="text-xl font-bold mb-2">
-                    {txStatus.step === 4 ? 'Study Created Successfully!' : 'Creating Study...'}
+                    {txStatus.step === 5 ? 'Study Created Successfully!' : 'Creating Study...'}
                   </h3>
                   <p className="text-muted-foreground">{txStatus.message}</p>
                 </div>
@@ -355,6 +475,7 @@ export default function CreateStudyPage() {
                     { step: 1, label: 'Create Escrow' },
                     { step: 2, label: 'Publish to Registry' },
                     { step: 3, label: 'Set Criteria' },
+                    { step: 4, label: 'Add Milestones' },
                   ].map((item) => (
                     <div
                       key={item.step}
@@ -378,7 +499,7 @@ export default function CreateStudyPage() {
                   ))}
                 </div>
 
-                {txStatus.step === 4 && (
+                {txStatus.step === 5 && (
                   <div className="pt-2 space-y-2">
                     <p className="text-sm text-success font-medium">
                       ✓ All transactions confirmed
