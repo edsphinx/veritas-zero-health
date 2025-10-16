@@ -10,7 +10,7 @@ import {
   AlertCircle,
   Loader2,
   CheckCircle,
-  Clock,
+  Clock as _Clock,
   DollarSign,
   ExternalLink,
   FileCode,
@@ -18,6 +18,8 @@ import {
 import { ResearcherLayout } from '@/components/layout';
 import { useStudy, useVerifiedApplicantsCount } from '@/shared/hooks/useStudy';
 import { useAuth } from '@/shared/hooks/useAuth';
+import { MedicalCriteriaDisplay } from '@/components/trials/MedicalCriteriaDisplay';
+import type { Study, StudyCriteria } from '@veritas/types';
 
 interface Milestone {
   id: number;
@@ -27,25 +29,16 @@ interface Milestone {
   status: string;
 }
 
-interface Study {
-  id: number;
-  title: string;
-  description: string;
+// Extended Study interface for this page's mock/API data
+interface StudyWithMockData extends Omit<Study, 'id' | 'createdAt' | 'milestones'> {
+  id: number; // Mock uses number instead of UUID string
   sponsor: string;
-  status: string;
   totalFunding: string;
   remainingFunding: string;
   participantCount: number;
   maxParticipants: number;
   milestones: Milestone[];
-  // Blockchain data
-  registryId?: number;
-  escrowId?: number;
-  chainId?: number;
-  escrowTxHash?: string;
-  registryTxHash?: string;
-  criteriaTxHash?: string;
-  researcherAddress?: string;
+  criteria?: StudyCriteria | null;
 }
 
 interface Applicant {
@@ -57,10 +50,10 @@ interface Applicant {
 
 export default function ResearcherStudyDetailPage() {
   const params = useParams();
-  const { address, isConnected } = useAuth();
+  const { address: _address, isConnected } = useAuth();
   const studyId = params?.studyId as string;
 
-  const [study, setStudy] = useState<Study | null>(null);
+  const [study, setStudy] = useState<StudyWithMockData | null>(null);
   const [applicants, setApplicants] = useState<Applicant[]>([]);
 
   // Validate studyId is numeric (not "create" or other non-numeric routes)
@@ -68,7 +61,7 @@ export default function ResearcherStudyDetailPage() {
 
   // Use real blockchain hooks
   const studyIdBigInt = isValidStudyId ? BigInt(studyId) : undefined;
-  const { study: studyOnChain, isLoading: studyLoading } = useStudy(studyIdBigInt);
+  const { study: _studyOnChain, isLoading: studyLoading } = useStudy(studyIdBigInt);
   const { count: verifiedCount, isLoading: countLoading, refetch } = useVerifiedApplicantsCount(studyIdBigInt);
 
   const loading = studyLoading || countLoading;
@@ -78,7 +71,7 @@ export default function ResearcherStudyDetailPage() {
     if (studyId) {
       loadStudyData();
     }
-  }, [studyId]);
+  }, [studyId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadStudyData = async () => {
     try {
@@ -86,7 +79,17 @@ export default function ResearcherStudyDetailPage() {
       const studyResponse = await fetch(`/api/studies/${studyId}`);
       if (studyResponse.ok) {
         const studyData = await studyResponse.json();
-        setStudy(studyData);
+        if (studyData.success && studyData.data) {
+          // Add default values for fields that don&apos;t come from API
+          setStudy({
+            ...studyData.data,
+            totalFunding: studyData.data.totalFunding || '0',
+            remainingFunding: studyData.data.remainingFunding || '0',
+            participantCount: studyData.data.participantCount || 0,
+            maxParticipants: studyData.data.maxParticipants || 0,
+            sponsor: studyData.data.sponsor || 'Not funded yet',
+          });
+        }
       }
 
       // Fetch real applicants from blockchain events
@@ -95,7 +98,7 @@ export default function ResearcherStudyDetailPage() {
         const applicationsData = await applicationsResponse.json();
         if (applicationsData.success && applicationsData.applications) {
           // Map blockchain data to UI format
-          const applicantsList: Applicant[] = applicationsData.applications.map((app: any, index: number) => ({
+          const applicantsList: Applicant[] = applicationsData.applications.map((app: { timestamp: string; [key: string]: unknown }, _index: number) => ({
             applicantNumber: app.applicantNumber,
             appliedAt: app.appliedAt,
             verifiedProof: app.verifiedProof,
@@ -116,8 +119,8 @@ export default function ResearcherStudyDetailPage() {
     }
   }, [studyIdBigInt, refetch]);
 
-  const calculateTotalReward = () => {
-    if (!study) return 0;
+  const _calculateTotalReward = () => {
+    if (!study || !study.milestones) return 0;
     return study.milestones.reduce((sum, m) => sum + Number(m.rewardAmount), 0);
   };
 
@@ -140,7 +143,7 @@ export default function ResearcherStudyDetailPage() {
             <AlertCircle className="h-16 w-16 text-yellow-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold mb-2">Invalid Study ID</h2>
             <p className="text-gray-600 mb-4">
-              The study ID must be a number. If you're trying to create a study, use the button below.
+              The study ID must be a number. If you&apos;re trying to create a study, use the button below.
             </p>
             <div className="flex gap-3 justify-center">
               <Link
@@ -192,23 +195,26 @@ export default function ResearcherStudyDetailPage() {
 
   if (!study) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center max-w-md">
-          <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold mb-2">Study Not Found</h2>
-          <Link
-            href="/researcher/studies"
-            className="text-blue-600 hover:text-blue-700 font-semibold"
-          >
-            ← Back to Studies
-          </Link>
+      <ResearcherLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center max-w-md">
+            <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold mb-2">Study Not Found</h2>
+            <Link
+              href="/researcher/studies"
+              className="text-blue-600 hover:text-blue-700 font-semibold"
+            >
+              ← Back to Studies
+            </Link>
+          </div>
         </div>
-      </div>
+      </ResearcherLayout>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-8">
+    <ResearcherLayout>
+      <div className="max-w-7xl mx-auto p-8">
       {/* Back Button */}
       <Link
         href="/researcher/studies"
@@ -242,7 +248,7 @@ export default function ResearcherStudyDetailPage() {
             <DollarSign className="h-5 w-5 text-green-600 mb-2" />
             <p className="text-sm text-green-600 mb-1">Total Funding</p>
             <p className="text-2xl font-bold text-green-900">
-              ${study.totalFunding}
+              ${study.totalFunding} USDC
             </p>
           </div>
 
@@ -266,7 +272,7 @@ export default function ResearcherStudyDetailPage() {
             <DollarSign className="h-5 w-5 text-orange-600 mb-2" />
             <p className="text-sm text-orange-600 mb-1">Remaining Budget</p>
             <p className="text-2xl font-bold text-orange-900">
-              ${study.remainingFunding}
+              ${study.remainingFunding} USDC
             </p>
           </div>
         </div>
@@ -442,11 +448,23 @@ export default function ResearcherStudyDetailPage() {
         </div>
       )}
 
+      {/* Eligibility Criteria Display */}
+      {study.criteria && (
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 mb-6">
+          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+            <Shield className="h-6 w-6 text-primary" />
+            Eligibility Criteria
+          </h2>
+          <MedicalCriteriaDisplay criteria={study.criteria} />
+        </div>
+      )}
+
       {/* Milestones Overview */}
-      <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 mb-6">
-        <h2 className="text-2xl font-bold mb-4">Study Milestones</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {study.milestones.map((milestone, index) => (
+      {study.milestones && study.milestones.length > 0 && (
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 mb-6">
+          <h2 className="text-2xl font-bold mb-4">Study Milestones</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {study.milestones.map((milestone, index) => (
             <div
               key={milestone.id}
               className="border border-gray-200 rounded-lg p-4"
@@ -466,9 +484,10 @@ export default function ResearcherStudyDetailPage() {
                 </div>
               </div>
             </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Anonymous Applicants */}
       <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
@@ -580,6 +599,7 @@ export default function ResearcherStudyDetailPage() {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </ResearcherLayout>
   );
 }

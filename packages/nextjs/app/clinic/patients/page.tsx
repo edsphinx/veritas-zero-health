@@ -66,7 +66,7 @@ const MOCK_PATIENTS: Patient[] = [
 // --- Component ---
 
 export default function ClinicPatientsPage() {
-  const [patients, setPatients] = useState<Patient[]>(MOCK_PATIENTS);
+  const [patients] = useState<Patient[]>(MOCK_PATIENTS);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'sbt' | 'no-sbt'>('all');
 
@@ -181,7 +181,7 @@ export default function ClinicPatientsPage() {
               <Filter className="h-5 w-5 text-muted-foreground" />
               <select
                 value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value as any)}
+                onChange={(e) => setFilterStatus(e.target.value as 'all' | 'sbt' | 'no-sbt')}
                 className="px-4 py-2 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
               >
                 <option value="all">All Patients</option>
@@ -314,7 +314,7 @@ export default function ClinicPatientsPage() {
           <h3 className="font-semibold mb-2">About Health Identity SBTs</h3>
           <p className="text-sm text-muted-foreground">
             Health Identity Soulbound Tokens (SBTs) are non-transferable credentials that link a
-            patient's wallet address to their encrypted medical data in Nillion. Patients claim
+            patient&apos;s wallet address to their encrypted medical data in Nillion. Patients claim
             these SBTs by scanning a QR code you generate, ensuring they maintain full control over
             their health identity.
           </p>

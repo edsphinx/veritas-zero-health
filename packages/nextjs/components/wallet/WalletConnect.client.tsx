@@ -59,6 +59,7 @@ export function WalletConnectButtonClient() {
     };
 
     handleAutoSignIn();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConnected, address, chainId, session]);
 
   const handleSignOut = async () => {

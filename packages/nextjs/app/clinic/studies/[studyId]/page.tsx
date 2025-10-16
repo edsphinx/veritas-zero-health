@@ -5,15 +5,16 @@ import { useAccount } from 'wagmi';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import {
-import { ClinicLayout } from '@/components/layout';
   ArrowLeft,
-  Check,
+  Check as _Check,
   CheckCircle,
   Clock,
   Loader2,
   UserPlus,
   AlertCircle,
 } from 'lucide-react';
+import { ClinicLayout } from '@/components/layout';
+import type { Study as _Study } from '@veritas/types';
 
 interface Milestone {
   id: number;
@@ -31,8 +32,10 @@ interface Participant {
   active: boolean;
 }
 
-interface Study {
-  id: number;
+// Extended Study interface for this page's mock data
+// Note: This is mock data structure, not the canonical Study type from @veritas/types
+interface StudyWithMockData {
+  id: number; // Mock uses number instead of UUID string
   title: string;
   description: string;
   status: string;
@@ -46,7 +49,7 @@ export default function ClinicStudyDetailPage() {
   const { address, isConnected } = useAccount();
   const studyId = params?.studyId as string;
 
-  const [study, setStudy] = useState<Study | null>(null);
+  const [study, setStudy] = useState<StudyWithMockData | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -59,7 +62,7 @@ export default function ClinicStudyDetailPage() {
     if (studyId) {
       loadStudyData();
     }
-  }, [studyId]);
+  }, [studyId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadStudyData = async () => {
     try {
@@ -127,9 +130,9 @@ export default function ClinicStudyDetailPage() {
       } else {
         alert(`Failed to enroll participant: ${result.details}`);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error enrolling participant:', error);
-      alert(`Error: ${error.message}`);
+      alert(`Error: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setActionLoading(null);
     }
@@ -161,9 +164,9 @@ export default function ClinicStudyDetailPage() {
       } else {
         alert(`Failed to complete milestone: ${result.details}`);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error completing milestone:', error);
-      alert(`Error: ${error.message}`);
+      alert(`Error: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setActionLoading(null);
     }
@@ -172,49 +175,53 @@ export default function ClinicStudyDetailPage() {
   if (!isConnected) {
     return (
       <ClinicLayout>
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center max-w-md">
-          <h2 className="text-3xl font-bold mb-4">Connect Your Wallet</h2>
-          <p className="text-muted-foreground">
-            Please connect your wallet to access the clinic dashboard
-          </p>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center max-w-md">
+            <h2 className="text-3xl font-bold mb-4">Connect Your Wallet</h2>
+            <p className="text-muted-foreground">
+              Please connect your wallet to access the clinic dashboard
+            </p>
+          </div>
         </div>
-      </div>
+      </ClinicLayout>
     );
   }
 
   if (loading) {
     return (
       <ClinicLayout>
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading study data...</p>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
+            <p className="text-muted-foreground">Loading study data...</p>
+          </div>
         </div>
-      </div>
+      </ClinicLayout>
     );
   }
 
   if (!study) {
     return (
       <ClinicLayout>
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center max-w-md">
-          <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold mb-2">Study Not Found</h2>
-          <Link
-            href="/clinic/studies"
-            className="text-blue-600 hover:text-blue-700 font-semibold"
-          >
-            ← Back to Studies
-          </Link>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center max-w-md">
+            <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold mb-2">Study Not Found</h2>
+            <Link
+              href="/clinic/studies"
+              className="text-blue-600 hover:text-blue-700 font-semibold"
+            >
+              ← Back to Studies
+            </Link>
+          </div>
         </div>
-      </div>
+      </ClinicLayout>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-8">
+    <ClinicLayout>
+      <div className="max-w-7xl mx-auto p-8">
       {/* Back Button */}
       <Link
         href="/clinic/studies"
@@ -388,10 +395,10 @@ export default function ClinicStudyDetailPage() {
                 </div>
               </div>
             ))}
-            </div>
-    </ClinicLayout>
+          </div>
         )}
       </div>
-    </div>
+      </div>
+    </ClinicLayout>
   );
 }

@@ -33,10 +33,10 @@ const publicClient = createPublicClient({
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { studyId: string } }
+  { params }: { params: Promise<{ studyId: string }> }
 ) {
   try {
-    const { studyId } = params;
+    const { studyId } = await params;
     const body = await request.json();
     const { escrowId, milestones } = body;
 
@@ -110,7 +110,7 @@ export async function POST(
       }
 
       // Check if milestone already indexed
-      const existingMilestone = await prisma.milestone.findUnique({
+      const existingMilestone = await prisma.studyMilestone.findUnique({
         where: {
           escrowId_milestoneId: {
             escrowId: Number(escrowId),
@@ -125,16 +125,19 @@ export async function POST(
         continue;
       }
 
+      // Convert rewardAmount from base units (with 6 decimals) to USDC
+      // Example: "10000000" -> "10.00"
+      const rewardAmountInUSDC = (Number(rewardAmount) / 1_000_000).toFixed(2);
+
       // Index the milestone
-      const indexed = await prisma.milestone.create({
+      const indexed = await prisma.studyMilestone.create({
         data: {
           studyId: study.id,
           escrowId: Number(escrowId),
           milestoneId: Number(milestoneId),
           milestoneType: Number(milestoneType),
           description,
-          rewardAmount: BigInt(rewardAmount),
-          status: 'Active',
+          rewardAmount: rewardAmountInUSDC,
           chainId: optimismSepolia.id,
           transactionHash,
           blockNumber: BigInt(blockNumber),
@@ -144,9 +147,24 @@ export async function POST(
       indexedMilestones.push(indexed);
     }
 
+    // Calculate and update totalFunding after indexing milestones
+    const allMilestones = await prisma.studyMilestone.findMany({
+      where: { studyId: study.id },
+    });
+
+    const totalFunding = allMilestones.reduce((sum, milestone) => {
+      return sum + parseFloat(milestone.rewardAmount.toString());
+    }, 0);
+
+    await prisma.study.update({
+      where: { id: study.id },
+      data: { totalFunding: totalFunding.toFixed(2) },
+    });
+
     return NextResponse.json({
       success: true,
       message: `Successfully indexed ${indexedMilestones.length} milestones`,
+      totalFunding: totalFunding.toFixed(2),
       milestones: indexedMilestones.map(m => ({
         id: m.id,
         milestoneId: m.milestoneId,

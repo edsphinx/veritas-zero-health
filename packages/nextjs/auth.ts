@@ -7,7 +7,6 @@
 
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { PrismaAdapter } from '@auth/prisma-adapter';
 import { PrismaClient } from '@prisma/client';
 import {
   type SIWESession,
@@ -46,7 +45,6 @@ if (!projectId) {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
   secret: nextAuthSecret,
 
   session: {
@@ -69,7 +67,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           placeholder: '0x0',
         },
       },
-      async authorize(credentials) {
+      async authorize(credentials, _req) {
         try {
           if (!credentials?.message) {
             throw new Error('Message is undefined');
@@ -78,8 +76,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           const { message, signature } = credentials;
 
           // Extract address and chainId from SIWE message
-          const address = getAddressFromMessage(message);
-          const chainId = getChainIdFromMessage(message);
+          const address = getAddressFromMessage(message as string);
+          const chainId = getChainIdFromMessage(message as string);
 
           console.log(`[NextAuth] Verifying SIWE for address: ${address}, chain: ${chainId}`);
 
@@ -91,7 +89,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           });
 
           const isValid = await publicClient.verifyMessage({
-            message,
+            message: message as string,
             address: address as `0x${string}`,
             signature: signature as `0x${string}`,
           });
@@ -127,15 +125,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             });
           }
 
-          // Return in format chainId:address for token.sub
+          // Return in format eip155:chainId:address for token.sub (CAIP-10 format)
           return {
-            id: `${chainId}:${user.address}`,
+            id: `eip155:${chainId}:${user.address}`,
             address: user.address,
             role: user.role,
             isVerified: user.isVerified,
-            humanityScore: user.humanityScore,
-            displayName: user.displayName,
-            avatar: user.avatar,
+            humanityScore: user.humanityScore ?? undefined,
+            displayName: user.displayName ?? undefined,
+            avatar: user.avatar ?? undefined,
           };
         } catch (error) {
           console.error('[NextAuth] ❌ Authorization error:', error);
@@ -166,9 +164,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return session;
       }
 
-      // Parse chainId:address from token.sub
-      const [, chainId, address] = token.sub.split(':');
-      if (chainId && address) {
+      // Parse eip155:chainId:address from token.sub (CAIP-10 format)
+      const parts = token.sub.split(':');
+      if (parts.length === 3) {
+        const [, chainId, address] = parts; // Ignore 'eip155' prefix
         session.address = address;
         session.chainId = parseInt(chainId, 10);
 
@@ -181,7 +180,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           humanityScore: token.humanityScore as number | undefined,
           displayName: token.displayName as string | undefined,
           avatar: token.avatar as string | undefined,
-        };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any;
 
         console.log(`[NextAuth] Session for ${address} with role: ${token.role}`);
       }
@@ -197,10 +197,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
   events: {
     async signIn({ user }) {
-      console.log(`[NextAuth] ✅ User signed in: ${user.address}`);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      console.log(`[NextAuth] ✅ User signed in: ${(user as any).address}`);
     },
-    async signOut({ token }) {
-      console.log(`[NextAuth] 👋 User signed out: ${token.address}`);
+    async signOut(message) {
+      if ('token' in message && message.token) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        console.log(`[NextAuth] 👋 User signed out: ${(message.token as any)?.address}`);
+      }
     },
   },
 

@@ -12,7 +12,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
-  Search,
   Filter,
   Sparkles,
   Shield,
@@ -23,8 +22,7 @@ import {
 import { StudyList } from '@/components/trials';
 import { HumanVerificationBadge } from '@/components/auth/HumanVerificationBadge';
 import { useAuth } from '@/shared/hooks/useAuth';
-import { StudyStatus } from '@/shared/hooks/useStudy';
-import { cn } from '@/shared/lib/utils';
+import { StudyStatus } from '@veritas/types';
 
 export default function StudiesPage() {
   const router = useRouter();
@@ -102,7 +100,7 @@ export default function StudiesPage() {
                         You&apos;re verified with Human Passport. You can now apply to
                         clinical studies anonymously.
                       </p>
-                      <HumanVerificationBadge address={address} />
+                      <HumanVerificationBadge address={address as `0x${string}` | undefined} />
                     </div>
                   </div>
                 </div>
@@ -195,8 +193,7 @@ export default function StudiesPage() {
           className="max-w-7xl mx-auto"
         >
           <StudyList
-            statusFilter={StudyStatus.Recruiting}
-            regionFilter={regionFilter}
+            statusFilter={StudyStatus.Active}
             showApplyButton={true}
             onApplyClick={handleApplyClick}
           />

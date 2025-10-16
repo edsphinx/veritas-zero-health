@@ -11,10 +11,10 @@ const prisma = new PrismaClient();
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { studyId: string } }
+  { params }: { params: Promise<{ studyId: string }> }
 ) {
   try {
-    const { studyId } = params;
+    const { studyId } = await params;
 
     // Find the study to verify it exists
     const study = await prisma.study.findUnique({
@@ -29,7 +29,7 @@ export async function GET(
     }
 
     // Fetch milestones for this study, ordered by milestoneId
-    const milestones = await prisma.milestone.findMany({
+    const milestones = await prisma.studyMilestone.findMany({
       where: { studyId },
       orderBy: { milestoneId: 'asc' },
     });
@@ -42,7 +42,6 @@ export async function GET(
         milestoneType: m.milestoneType,
         description: m.description,
         rewardAmount: m.rewardAmount.toString(),
-        status: m.status,
         transactionHash: m.transactionHash,
         blockNumber: m.blockNumber.toString(),
         createdAt: m.createdAt.toISOString(),

@@ -8,9 +8,10 @@
 'use client';
 
 import { useVzhReadContract } from '@/shared/lib/vzh';
+import type { StudyDetailsFromContract, StudyCriteriaFromContract } from '@veritas/types';
 
 /**
- * Study status enum
+ * Study status enum (blockchain contract)
  */
 export enum StudyStatus {
   Recruiting = 0,
@@ -20,24 +21,17 @@ export enum StudyStatus {
 
 /**
  * Study details from contract
+ * @deprecated Use StudyDetailsFromContract from @veritas/types
  */
-export interface Study {
-  studyId: bigint;
-  researcher: string;
-  status: StudyStatus;
-  region: string;
-  compensationDetails: string;
-  criteriaURI: string;
-}
+export type Study = StudyDetailsFromContract;
 
 /**
  * Eligibility criteria for a study
+ * @deprecated Use StudyCriteriaFromContract from @veritas/types
  */
-export interface EligibilityCriteria {
-  minAge: number;
-  maxAge: number;
-  requiresAgeProof: boolean;
-}
+export type EligibilityCriteria = Omit<StudyCriteriaFromContract, 'eligibilityCodeHash'> & {
+  requiresAgeProof?: boolean;
+};
 
 /**
  * Hook to fetch study details

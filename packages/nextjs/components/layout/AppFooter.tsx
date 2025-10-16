@@ -72,7 +72,8 @@ export function AppFooter() {
             <h3 className="font-semibold mb-3 text-sm">Resources</h3>
             <ul className="space-y-2">
               {footerNavigation.slice(0, 4).map((item) => {
-                const Icon = item.icon ? (LucideIcons as any)[item.icon] : null;
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const IconComponent = item.icon ? (LucideIcons as any)[item.icon] : null;
                 return (
                   <li key={item.href}>
                     <Link
@@ -81,7 +82,7 @@ export function AppFooter() {
                       rel={item.external ? 'noopener noreferrer' : undefined}
                       className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      {Icon && <Icon className="h-3.5 w-3.5" />}
+                      {IconComponent && <IconComponent className="h-3.5 w-3.5" />}
                       <span>{item.label}</span>
                     </Link>
                   </li>

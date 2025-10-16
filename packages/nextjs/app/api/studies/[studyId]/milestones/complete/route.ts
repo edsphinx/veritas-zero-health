@@ -116,13 +116,13 @@ export async function POST(
       transactionHash: hash,
       blockNumber: receipt.blockNumber.toString(),
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error completing milestone:', error);
 
     return NextResponse.json(
       {
         error: 'Failed to complete milestone',
-        details: error?.message || 'Unknown error',
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

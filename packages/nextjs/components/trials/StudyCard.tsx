@@ -8,19 +8,20 @@
 
 'use client';
 
-import { motion } from 'framer-motion';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-  MapPin,
   Users,
-  DollarSign,
   Clock,
   Shield,
-  ExternalLink,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import Link from 'next/link';
 
-import { Study, StudyStatus } from '@/shared/hooks/useStudy';
+import { Study, StudyStatus } from '@/shared/hooks/useStudies';
+import { MedicalCriteriaDisplay } from './MedicalCriteriaDisplay';
 import { cn } from '@/shared/lib/utils';
 
 interface StudyCardProps {
@@ -51,14 +52,16 @@ export function StudyCard({
   showApplyButton = true,
   onApplyClick,
 }: StudyCardProps) {
-  const statusConfig = {
-    [StudyStatus.Recruiting]: {
+  const [showCriteria, setShowCriteria] = useState(false);
+
+  const statusConfig: Record<string, { color: string; label: string; bg: string; border: string }> = {
+    [StudyStatus.Active]: {
       label: 'Recruiting',
       color: 'text-green-600',
       bg: 'bg-green-600/10',
       border: 'border-green-600/20',
     },
-    [StudyStatus.Closed]: {
+    [StudyStatus.Paused]: {
       label: 'Closed',
       color: 'text-gray-600',
       bg: 'bg-gray-600/10',
@@ -70,12 +73,24 @@ export function StudyCard({
       bg: 'bg-blue-600/10',
       border: 'border-blue-600/20',
     },
+    [StudyStatus.Created]: {
+      label: 'Created',
+      color: 'text-yellow-600',
+      bg: 'bg-yellow-600/10',
+      border: 'border-yellow-600/20',
+    },
+    [StudyStatus.Funding]: {
+      label: 'Funding',
+      color: 'text-orange-600',
+      bg: 'bg-orange-600/10',
+      border: 'border-orange-600/20',
+    },
   };
 
-  const currentStatus = statusConfig[study.status] || statusConfig[StudyStatus.Recruiting];
+  const currentStatus = statusConfig[study.status] || statusConfig[StudyStatus.Active];
 
   // Truncate researcher address for display
-  const shortAddress = `${study.researcher.substring(0, 6)}...${study.researcher.substring(38)}`;
+  const shortAddress = `${study.researcherAddress.substring(0, 6)}...${study.researcherAddress.substring(38)}`;
 
   return (
     <motion.div
@@ -103,24 +118,22 @@ export function StudyCard({
         </span>
 
         <span className="text-xs text-muted-foreground">
-          Study #{study.studyId.toString()}
+          Study #{study.escrowId.toString()}
         </span>
       </div>
 
       {/* Study Info */}
       <div className="space-y-3 mb-4">
-        {/* Region */}
-        <div className="flex items-center gap-2 text-sm">
-          <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-          <span className="font-medium">{study.region}</span>
+        {/* Title */}
+        <div className="font-semibold text-lg line-clamp-2">
+          {study.title}
         </div>
 
-        {/* Compensation */}
-        {study.compensationDetails && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <DollarSign className="h-4 w-4 flex-shrink-0" />
-            <span className="line-clamp-1">{study.compensationDetails}</span>
-          </div>
+        {/* Description */}
+        {study.description && (
+          <p className="text-sm text-muted-foreground line-clamp-2">
+            {study.description}
+          </p>
         )}
 
         {/* Researcher */}
@@ -141,7 +154,7 @@ export function StudyCard({
           </span>
         </div>
 
-        {study.status === StudyStatus.Recruiting && (
+        {study.status === StudyStatus.Active && (
           <div className="flex items-center gap-1.5 text-xs text-green-600">
             <Clock className="h-3.5 w-3.5" />
             <span>Active</span>
@@ -149,45 +162,64 @@ export function StudyCard({
         )}
       </div>
 
+      {/* Eligibility Criteria Toggle */}
+      {study.criteria && (
+        <>
+          <button
+            onClick={() => setShowCriteria(!showCriteria)}
+            className="w-full flex items-center justify-between py-3 border-t border-border text-sm font-medium hover:text-primary transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              <span>Eligibility Criteria</span>
+            </div>
+            {showCriteria ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
+          </button>
+
+          <AnimatePresence>
+            {showCriteria && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <div className="pb-4">
+                  <MedicalCriteriaDisplay criteria={study.criteria} />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </>
+      )}
+
       {/* Actions */}
       <div className="flex items-center gap-3 mt-4">
         {/* View Details Link */}
         <Link
-          href={`/trials/${study.studyId.toString()}`}
+          href={`/studies/${study.escrowId.toString()}`}
           className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium hover:bg-accent transition-colors"
         >
           View Details
           <ChevronRight className="h-4 w-4" />
         </Link>
 
-        {/* Apply Button */}
-        {showApplyButton && study.status === StudyStatus.Recruiting && (
+        {/* Apply Button - Opens extension with deep link */}
+        {showApplyButton && study.status === 'Active' && (
           <button
-            onClick={() => onApplyClick?.(study.studyId)}
+            onClick={() => onApplyClick?.(BigInt(study.escrowId))}
             className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors shadow-sm hover:shadow-md"
           >
-            Apply Now
-            <ExternalLink className="h-4 w-4" />
+            Check Eligibility
+            <Shield className="h-4 w-4" />
           </button>
         )}
       </div>
-
-      {/* Criteria URI Indicator */}
-      {study.criteriaURI && (
-        <div className="mt-3 pt-3 border-t border-border">
-          <a
-            href={study.criteriaURI.startsWith('ipfs://')
-              ? `https://ipfs.io/ipfs/${study.criteriaURI.replace('ipfs://', '')}`
-              : study.criteriaURI}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ExternalLink className="h-3 w-3" />
-            View eligibility criteria
-          </a>
-        </div>
-      )}
     </motion.div>
   );
 }

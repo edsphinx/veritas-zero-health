@@ -105,7 +105,7 @@ export async function POST(
         transactionHash: hash,
         blockNumber: receipt.blockNumber.toString(),
       });
-    } catch (contractError: any) {
+    } catch (contractError: unknown) {
       console.log(`❌ ZK proof verification failed for study #${studyId}`);
       console.error('Contract error:', contractError);
 
@@ -113,7 +113,7 @@ export async function POST(
         {
           success: false,
           error: 'Proof verification failed on-chain',
-          details: contractError?.message || 'Unknown error',
+          details: contractError instanceof Error ? contractError.message : 'Unknown error',
         },
         { status: 400 }
       );

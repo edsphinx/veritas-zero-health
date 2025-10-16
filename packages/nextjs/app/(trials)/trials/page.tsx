@@ -1,8 +1,8 @@
 /**
- * Trials Page
+ * Studies Page
  *
- * Main page for browsing and applying to clinical trials.
- * Shows recruiting studies with filtering, search, and quick apply.
+ * Main page for browsing and applying to clinical studies.
+ * Shows active studies with filtering, search, and quick apply.
  */
 
 'use client';
@@ -13,7 +13,6 @@ import { useAccount } from 'wagmi';
 import { motion } from 'framer-motion';
 import {
   Search,
-  Filter,
   Sparkles,
   Shield,
   Lock,
@@ -23,21 +22,20 @@ import {
 import { StudyList } from '@/components/trials';
 import { HumanVerificationBadge } from '@/components/auth/HumanVerificationBadge';
 import { useHumanPassport } from '@/shared/hooks/useHumanPassport';
-import { StudyStatus } from '@/shared/hooks/useStudy';
-import { cn } from '@/shared/lib/utils';
+import { StudyStatus } from '@veritas/types';
 
-export default function TrialsPage() {
+export default function StudiesPage() {
   const router = useRouter();
   const { address, isConnected } = useAccount();
-  const { isVerified, isLoading: passportLoading } = useHumanPassport({
+  const { isVerified } = useHumanPassport({
     address,
     enabled: !!address,
   });
 
-  const [regionFilter, setRegionFilter] = useState<string>('');
+  const [_searchQuery, setSearchQuery] = useState<string>('');
 
-  // Handle apply button click
-  const handleApplyClick = (studyId: bigint) => {
+  // Handle check eligibility button click - Opens extension via deep link
+  const handleCheckEligibility = (studyId: bigint) => {
     if (!isConnected) {
       // Redirect to wallet connection
       router.push('/');
@@ -50,8 +48,17 @@ export default function TrialsPage() {
       return;
     }
 
-    // Navigate to study details page
-    router.push(`/trials/${studyId.toString()}`);
+    // Open extension via deep link
+    // Format: veritas-health://apply-study?studyId=1&chainId=11155420
+    const deepLink = `veritas-health://apply-study?studyId=${studyId.toString()}&chainId=11155420`;
+
+    // Try to open the deep link
+    window.location.href = deepLink;
+
+    // Fallback: show instructions if extension not installed
+    setTimeout(() => {
+      alert('Please make sure the Veritas Health browser extension is installed.');
+    }, 1000);
   };
 
   return (
@@ -76,10 +83,10 @@ export default function TrialsPage() {
             </motion.div>
 
             <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
-              Find Your Clinical Trial
+              Find Your Clinical Study
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Browse active clinical trials and apply anonymously using zero-knowledge
+              Browse active clinical studies and apply anonymously using zero-knowledge
               proofs. Your privacy is guaranteed.
             </p>
           </div>
@@ -104,7 +111,7 @@ export default function TrialsPage() {
                       </h3>
                       <p className="text-sm text-green-600/80 mb-3">
                         You&apos;re verified with Human Passport. You can now apply to
-                        clinical trials anonymously.
+                        clinical studies anonymously.
                       </p>
                       <HumanVerificationBadge address={address} />
                     </div>
@@ -121,7 +128,7 @@ export default function TrialsPage() {
                         Verification Required
                       </h3>
                       <p className="text-sm text-amber-600/80 mb-4">
-                        Complete Human Passport verification to apply to clinical trials.
+                        Complete Human Passport verification to apply to clinical studies.
                       </p>
                       <button
                         onClick={() => router.push('/onboarding')}
@@ -153,7 +160,7 @@ export default function TrialsPage() {
                     Connect Your Wallet
                   </h3>
                   <p className="text-sm text-blue-600/80 mb-4">
-                    Connect your wallet to view personalized trial recommendations and
+                    Connect your wallet to view personalized study recommendations and
                     apply anonymously.
                   </p>
                   <button
@@ -168,7 +175,7 @@ export default function TrialsPage() {
             </motion.div>
           )}
 
-          {/* Region Filter */}
+          {/* Search */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -176,15 +183,15 @@ export default function TrialsPage() {
             className="mb-6"
           >
             <label className="block text-sm font-medium mb-2">
-              Filter by Region (Optional)
+              Search Studies
             </label>
             <div className="relative">
-              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
                 type="text"
-                placeholder="e.g., North America, Europe, Asia..."
-                value={regionFilter}
-                onChange={(e) => setRegionFilter(e.target.value)}
+                placeholder="Search by title, description, or study ID..."
+                value={_searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full rounded-lg border border-border bg-card pl-10 pr-4 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               />
             </div>
@@ -199,10 +206,9 @@ export default function TrialsPage() {
           className="max-w-7xl mx-auto"
         >
           <StudyList
-            statusFilter={StudyStatus.Recruiting}
-            regionFilter={regionFilter}
+            statusFilter={StudyStatus.Active}
             showApplyButton={true}
-            onApplyClick={handleApplyClick}
+            onApplyClick={handleCheckEligibility}
           />
         </motion.div>
 

@@ -98,7 +98,7 @@ export function ApplyButton({
 
   const {
     apply,
-    isPending: isSubmitting,
+    isPending: _isSubmitting,
     isSuccess,
     isError,
     error: submitError,
@@ -108,6 +108,7 @@ export function ApplyButton({
   // Check prerequisites on mount and when dependencies change
   useEffect(() => {
     checkPrerequisites();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     isConnected,
     address,

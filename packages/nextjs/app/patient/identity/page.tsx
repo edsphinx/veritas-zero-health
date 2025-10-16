@@ -1,7 +1,7 @@
 /**
  * Patient Portal - Health Identity View
  *
- * Displays the patient's Health Identity SBT information using clean architecture.
+ * Displays the patient&apos;s Health Identity SBT information using clean architecture.
  * All blockchain operations are handled through the service layer.
  */
 
@@ -28,8 +28,8 @@ export default function PatientIdentityPage() {
   const [showClaimInstructions, setShowClaimInstructions] = useState(false);
 
   // Use clean hook that calls service layer
-  const { hasIdentity, identity, attestations, isLoading, refetch } = useHealthIdentity({
-    address,
+  const { hasIdentity, identity, attestations, isLoading, refetch: _refetch } = useHealthIdentity({
+    address: address as `0x${string}` | undefined,
     enabled: isConnected,
   });
 
@@ -102,7 +102,7 @@ export default function PatientIdentityPage() {
             <Award className="h-20 w-20 text-muted-foreground/50 mx-auto mb-6" />
             <h2 className="text-2xl font-semibold mb-2">No Health Identity SBT</h2>
             <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-              You haven't claimed your Health Identity Soulbound Token yet. Ask your medical
+              You haven&apos;t claimed your Health Identity Soulbound Token yet. Ask your medical
               provider to issue you a voucher, then scan the QR code with the DASHI extension.
             </p>
 
@@ -134,7 +134,7 @@ export default function PatientIdentityPage() {
                   </li>
                   <li className="flex gap-3">
                     <span className="font-semibold text-primary flex-shrink-0">3.</span>
-                    <span>Click "Scan QR Code" in the extension menu</span>
+                    <span>Click &quot;Scan QR Code&quot; in the extension menu</span>
                   </li>
                   <li className="flex gap-3">
                     <span className="font-semibold text-primary flex-shrink-0">4.</span>

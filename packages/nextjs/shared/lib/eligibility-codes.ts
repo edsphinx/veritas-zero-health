@@ -10,7 +10,8 @@
  * - Gas-efficient: compact circuit (12,594 gates)
  */
 
-import { buildPoseidon } from "circomlibjs";
+// @ts-expect-error - circomlibjs doesn't have TypeScript definitions
+import { buildPoseidon } from 'circomlibjs';
 
 /**
  * Patient medical data structure

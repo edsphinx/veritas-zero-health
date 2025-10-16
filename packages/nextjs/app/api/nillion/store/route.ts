@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
     await builder.createStandardData({
       body: {
         collection: collectionId,
-        data: [payload as any],
+        data: [payload as { _id: string; userId: string; timestamp: number; recordType: string; data: { '%allot': string } }],
       },
     });
 

@@ -7,7 +7,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/shared/lib/prisma';
-import { createStudyRepository } from '@/infrastructure/repositories/PrismaStudyRepository';
 
 /**
  * GET handler - Get study by escrowId

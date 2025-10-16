@@ -19,7 +19,7 @@ import {
   Microscope,
   ShieldAlert,
   Check,
-  X,
+  X as _X,
   AlertCircle,
   Loader2,
 } from 'lucide-react';
@@ -390,6 +390,11 @@ function RoleBadge({ role }: { role: UserRole }) {
       color: 'bg-muted/10 text-muted-foreground',
       icon: <User className="h-3 w-3" />,
       label: 'Guest',
+    },
+    [UserRole.SPONSOR]: {
+      color: 'bg-blue/10 text-blue-600',
+      icon: <Shield className="h-3 w-3" />,
+      label: 'Sponsor',
     },
   };
 

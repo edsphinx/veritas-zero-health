@@ -115,13 +115,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const {
     isVerified,
-    humanId: passportHumanId,
     isLoading: passportLoading,
-    error: passportError,
+    error: _passportError,
   } = useHumanPassport({
     address,
     enabled: isStableConnected && !isTestAddress,
   });
+
+  const passportHumanId = isVerified ? (address || null) : null;
 
   useEffect(() => {
     setVerificationLoading(passportLoading);

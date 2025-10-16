@@ -394,6 +394,11 @@ function RoleBadge({ role }: { role: UserRole }) {
       icon: <User className="h-3 w-3" />,
       label: 'Guest',
     },
+    [UserRole.SPONSOR]: {
+      color: 'bg-blue/10 text-blue-600',
+      icon: <Shield className="h-3 w-3" />,
+      label: 'Sponsor',
+    },
   };
 
   const config = roleConfig[role];

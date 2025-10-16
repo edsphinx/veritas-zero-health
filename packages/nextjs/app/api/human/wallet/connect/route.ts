@@ -8,13 +8,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createHumanProtocolClient } from '@/infrastructure/human/HumanProtocolClient';
 import type { ConnectWalletRequest } from '@/shared/types/human.types';
 
 export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as ConnectWalletRequest;
-    const { method, identifier } = body;
+    const { method } = body;
 
     // Validation
     if (!method) {

@@ -17,7 +17,7 @@ interface MedicalRecord {
 }
 
 export default function PatientRecordsPage() {
-  const { address, isConnected } = useAuth();
+  const { address: _address, isConnected } = useAuth();
   const [records, setRecords] = useState<MedicalRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasHealthIdentity, setHasHealthIdentity] = useState(false);
@@ -187,7 +187,7 @@ export default function PatientRecordsPage() {
     };
   };
 
-  const getTypeColor = (type: string) => {
+  const _getTypeColor = (type: string) => {
     const colors: Record<string, string> = {
       vital: 'bg-blue-100 text-blue-800 border-blue-200',
       diagnosis: 'bg-red-100 text-red-800 border-red-200',
@@ -198,7 +198,7 @@ export default function PatientRecordsPage() {
     return colors[type] || 'bg-gray-100 text-gray-800';
   };
 
-  const getTypeIcon = (type: string) => {
+  const _getTypeIcon = (type: string) => {
     return type.charAt(0).toUpperCase() + type.slice(1);
   };
 
@@ -259,7 +259,7 @@ export default function PatientRecordsPage() {
               End-to-End Encrypted Storage
             </h3>
             <p className="text-sm text-blue-800 leading-relaxed mb-3">
-              Your medical records are encrypted and stored on Nillion's decentralized network.
+              Your medical records are encrypted and stored on Nillion&apos;s decentralized network.
               Only you control access to this data. When applying to clinical trials, Zero-Knowledge
               Proofs are generated locally in your browser - your actual data never leaves your
               device.

@@ -7,9 +7,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createHumanProtocolClient } from '@/infrastructure/human/HumanProtocolClient';
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   try {
     // TODO: Implement Human Wallet status check
     // Human Wallet SDK is not yet integrated

@@ -55,6 +55,11 @@ export async function POST(request: NextRequest) {
       title: body.title,
       researcherAddress: body.researcherAddress,
       userAddress: session.address,
+      escrowTxHash: body.escrowTxHash,
+      registryTxHash: body.registryTxHash,
+      criteriaTxHash: body.criteriaTxHash,
+      escrowBlockNumber: body.escrowBlockNumber,
+      registryBlockNumber: body.registryBlockNumber,
     });
 
     // Verify the requester is the researcher
@@ -105,7 +110,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        studyId: result.data!.study.id,
+        id: result.data!.study.id, // Use 'id' for consistency
+        studyId: result.data!.study.id, // Keep for backwards compatibility
         registryId: result.data!.study.registryId,
         escrowId: result.data!.study.escrowId,
         message: result.data!.message,

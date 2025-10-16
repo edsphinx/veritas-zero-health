@@ -27,7 +27,9 @@
     "compile:add-superadmin": "tsc scripts/add-superadmin.ts --outDir scripts --module esnext --moduleResolution bundler --target es2022 --esModuleInterop --skipLibCheck",
     "add-superadmin": "pnpm compile:add-superadmin && node scripts/add-superadmin.js",
     "compile:clear-db": "tsc scripts/clear-database.ts --outDir scripts --module esnext --moduleResolution bundler --target es2022 --esModuleInterop --skipLibCheck",
-    "clear-db": "pnpm compile:clear-db && node scripts/clear-database.js"
+    "clear-db": "pnpm compile:clear-db && node scripts/clear-database.js",
+    "sync:blockchain": "pnpm tsx scripts/sync-blockchain-db.ts",
+    "sync:blockchain:dry-run": "pnpm tsx scripts/sync-blockchain-db.ts --dry-run"
   },
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"

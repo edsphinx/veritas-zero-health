@@ -164,6 +164,7 @@ export function AppHeader() {
  */
 function NavLink({ item, pathname }: { item: NavItem; pathname: string }) {
   const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const Icon = item.icon ? (LucideIcons as any)[item.icon] : null;
 
   return (
@@ -216,6 +217,7 @@ function PortalMenu({
     >
       <div className="p-2">
         {portals.map((portal) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const Icon = portal.icon ? (LucideIcons as any)[portal.icon] : null;
           return (
             <Link
@@ -257,6 +259,7 @@ function MobileMenu({
       <div className="py-4 space-y-1">
         {navigation.map((item) => {
           const isActive = pathname === item.href;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const Icon = item.icon ? (LucideIcons as any)[item.icon] : null;
 
           return (

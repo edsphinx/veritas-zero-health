@@ -40,7 +40,7 @@ interface AuditLog {
   user: string;
   details: string;
   ip?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 const MOCK_LOGS: AuditLog[] = [
@@ -410,7 +410,7 @@ function StatsCard({
 
 function LevelPill({
   label,
-  level,
+  level: _level,
   selected,
   onClick,
   count,

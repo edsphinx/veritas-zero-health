@@ -98,7 +98,7 @@ export default function ClinicStudiesPage() {
                       </p>
                     </div>
                     <p className="text-2xl font-bold text-blue-900">
-                      {study.maxParticipants || 0}
+                      {(study as { maxParticipants?: number }).maxParticipants || 0}
                     </p>
                   </div>
 

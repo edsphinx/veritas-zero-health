@@ -14,7 +14,7 @@
 
 import { useEffect, useState } from 'react';
 import { useExtension, useNillion } from '@/shared/hooks';
-import type { HealthDataPermission } from '@/shared/types/health.types';
+import type { HealthDataPermission, Diagnosis, Biomarker } from '@/shared/types';
 
 export function NillionDemo() {
   // Extension state
@@ -266,7 +266,7 @@ function StatusItem({ label, value }: { label: string; value: boolean | string }
 /**
  * Data Section Component
  */
-function DataSection({ title, count, data }: { title: string; count: number; data: any[] }) {
+function DataSection({ title, count, data }: { title: string; count: number; data: Diagnosis[] | Biomarker[] }) {
   const [expanded, setExpanded] = useState(false);
 
   return (

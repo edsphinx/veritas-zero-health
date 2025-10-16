@@ -146,13 +146,13 @@ export async function POST(
       milestoneIds,
       transactionHashes,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error adding milestones:', error);
 
     return NextResponse.json(
       {
         error: 'Failed to add milestones',
-        details: error?.message || 'Unknown error',
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

@@ -73,7 +73,7 @@ export default function FundStudyPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStudy, setSelectedStudy] = useState<Study | null>(null);
   const [fundingAmount, setFundingAmount] = useState('');
-  const [studyDetails, setStudyDetails] = useState<any>(null);
+  const [studyDetails, setStudyDetails] = useState<Study & { deposits?: { amount: string }[] } | null>(null);
 
   // Use the funding hook (encapsulates all business logic)
   const {
@@ -92,7 +92,7 @@ export default function FundStudyPage() {
 
   // Helper to format USDC amounts
   // NOTE: Milestone rewardAmount is already in display format (e.g., "100.00")
-  // We don't need to divide by 1_000_000 anymore
+  // We don&apos;t need to divide by 1_000_000 anymore
   const formatUSDC = (amount: string | number): string => {
     const numAmount = typeof amount === 'string' ? Number(amount) : amount;
     return numAmount.toFixed(2);
@@ -127,7 +127,7 @@ export default function FundStudyPage() {
   const getTotalRequired = (): number => {
     if (!studyDetails?.milestones) return 0;
     const total = studyDetails.milestones.reduce(
-      (sum: number, m: any) => sum + Number(m.rewardAmount),
+      (sum: number, m) => sum + Number(m.rewardAmount),
       0
     );
     return Number(formatUSDC(total));
@@ -135,10 +135,10 @@ export default function FundStudyPage() {
 
   // Calculate funding received so far from actual deposits
   const getFundingReceived = (): number => {
-    if (!studyDetails?.deposits || studyDetails.deposits.length === 0) return 0;
-    // Sum all deposits (already in display format from API)
+    if (!studyDetails || !studyDetails.deposits || studyDetails.deposits.length === 0) return 0;
+    // Sum all deposits (API returns amounts in micro-units so convert to display)
     const totalReceived = studyDetails.deposits.reduce(
-      (sum: number, d: any) => sum + Number(d.amount) / 1_000_000,
+      (sum: number, d: { amount: string }) => sum + Number(d.amount) / 1_000_000,
       0
     );
     return totalReceived;

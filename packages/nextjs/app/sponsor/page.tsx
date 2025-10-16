@@ -9,7 +9,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
@@ -29,7 +29,7 @@ import { useSponsor } from '@/shared/hooks/useSponsor';
 export default function SponsorDashboard() {
   const router = useRouter();
   const { studies, loading: studiesLoading } = useStudies();
-  const { totalFunded, activeStudiesCount, totalDeposits, deposits, loading: sponsorLoading } = useSponsor();
+  const { totalFunded, activeStudiesCount, totalDeposits, deposits: _deposits, loading: sponsorLoading } = useSponsor();
 
   const loading = studiesLoading || sponsorLoading;
 
@@ -38,7 +38,7 @@ export default function SponsorDashboard() {
     study.status === 'Created' || study.status === 'Funding'
   );
 
-  const fundedStudies = studies.filter(study =>
+  const _fundedStudies = studies.filter(study =>
     study.status === 'Active' || study.status === 'Completed'
   );
 
@@ -89,7 +89,7 @@ export default function SponsorDashboard() {
               <span className="text-2xl font-bold">{activeStudiesCount}</span>
             </div>
             <h3 className="font-semibold mb-1">Funded Studies</h3>
-            <p className="text-sm text-muted-foreground">Studies you've supported</p>
+            <p className="text-sm text-muted-foreground">Studies you&apos;ve supported</p>
           </div>
 
           <div className="rounded-xl border border-border bg-card p-6">
@@ -150,7 +150,7 @@ export default function SponsorDashboard() {
             </div>
             <h3 className="text-xl font-bold mb-2">My Funded Studies</h3>
             <p className="text-muted-foreground">
-              Track progress and impact of studies you've funded
+              Track progress and impact of studies you&apos;ve funded
             </p>
             <div className="mt-4 flex items-center gap-2 text-sm text-success font-medium">
               <Target className="h-4 w-4" />
@@ -214,7 +214,7 @@ export default function SponsorDashboard() {
                   </p>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Max Participants:</span>
-                    <span className="font-semibold">{study.maxParticipants || 0}</span>
+                    <span className="font-semibold">{(study as { maxParticipants?: number }).maxParticipants || 0}</span>
                   </div>
                 </motion.div>
               ))}

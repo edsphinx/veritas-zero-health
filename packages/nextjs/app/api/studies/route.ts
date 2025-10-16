@@ -7,7 +7,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/shared/lib/prisma';
-import { createStudyRepository } from '@/infrastructure/repositories/PrismaStudyRepository';
 
 /**
  * GET handler - Get all studies
@@ -19,16 +18,20 @@ export async function GET(request: NextRequest) {
     const researcherAddress = searchParams.get('researcher');
     const status = searchParams.get('status');
 
-    // Create repository
-    const studyRepository = createStudyRepository(prisma);
-
-    // Fetch studies based on filters
+    // Fetch studies based on filters (directly from Prisma with criteria included)
     let studies;
 
     if (researcherAddress) {
-      studies = await studyRepository.findByResearcher(researcherAddress);
+      studies = await prisma.study.findMany({
+        where: { researcherAddress },
+        include: { criteria: true },
+        orderBy: { createdAt: 'desc' },
+      });
     } else {
-      studies = await studyRepository.findAll();
+      studies = await prisma.study.findMany({
+        include: { criteria: true },
+        orderBy: { createdAt: 'desc' },
+      });
     }
 
     // Filter by status if provided
@@ -53,6 +56,11 @@ export async function GET(request: NextRequest) {
       registryBlockNumber: study.registryBlockNumber.toString(),
       createdAt: study.createdAt,
       updatedAt: study.updatedAt,
+      // Include criteria if available
+      criteria: study.criteria ? {
+        ...study.criteria,
+        blockNumber: study.criteria.blockNumber.toString(),
+      } : null,
     }));
 
     return NextResponse.json({

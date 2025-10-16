@@ -121,23 +121,24 @@ export async function GET(request: NextRequest) {
     });
 
     // Parse records
-    const records = (response.data || []).map((record: any) => {
+    const records = (response.data || [] as Array<Record<string, unknown>>).map((record: Record<string, unknown>) => {
       try {
-        const decryptedData = record.data?.['%allot'] || record.data;
+        const recordData = record.data as { '%allot'?: string } | string | undefined;
+        const decryptedData = (recordData && typeof recordData === 'object' && '%allot' in recordData) ? recordData['%allot'] : recordData;
         const parsedData = typeof decryptedData === 'string' ? JSON.parse(decryptedData) : decryptedData;
 
         return {
-          id: record._id,
-          userId: record.userId,
-          timestamp: record.timestamp,
-          type: record.recordType,
+          id: String(record._id),
+          userId: String(record.userId),
+          timestamp: Number(record.timestamp),
+          type: String(record.recordType),
           data: parsedData,
         };
       } catch (parseError) {
         console.warn(`Failed to parse record ${record._id}:`, parseError);
         return null;
       }
-    }).filter((record: any) => record !== null);
+    }).filter((record: { id: string; userId: string; timestamp: number; type: string; data: unknown } | null) => record !== null);
 
     // Return success response
     return NextResponse.json({

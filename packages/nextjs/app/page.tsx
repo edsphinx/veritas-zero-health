@@ -46,6 +46,21 @@ export default function Home() {
   };
 
   const primaryCTA = getPrimaryCTA();
+
+  // Handle primary CTA click
+  const handlePrimaryCTAClick = (e: React.MouseEvent) => {
+    // If not authenticated and trying to access onboarding, show alert
+    if (!auth.isAuthenticated && primaryCTA.href === '/onboarding') {
+      e.preventDefault();
+
+      alert(
+        `🔐 Wallet Connection Required\n\n` +
+        `Please connect your wallet first to get started.\n\n` +
+        `Click the "Connect Wallet" button in the top right corner.`
+      );
+      return;
+    }
+  };
   return (
     <>
       <AppHeader />
@@ -92,6 +107,7 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
               <Link
                 href={primaryCTA.href}
+                onClick={handlePrimaryCTAClick}
                 className="group px-8 py-4 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 font-semibold text-lg"
               >
                 {primaryCTA.label}
@@ -264,6 +280,22 @@ function PortalCard({
   href: string;
   delay: number;
 }) {
+  const auth = useAuth();
+
+  const handleClick = (e: React.MouseEvent) => {
+    // Check if user is authenticated before allowing navigation to protected portals
+    if (!auth.isAuthenticated && href !== '/studies') {
+      e.preventDefault();
+
+      alert(
+        `🔐 Wallet Connection Required\n\n` +
+        `Please connect your wallet to access the ${title}.\n\n` +
+        `Click the "Connect Wallet" button in the top right corner.`
+      );
+      return;
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -273,6 +305,7 @@ function PortalCard({
     >
       <Link
         href={href}
+        onClick={handleClick}
         className="block p-8 rounded-xl border border-border bg-card hover:border-primary/40 hover:shadow-lg transition-all group"
       >
         <div className="mb-4 rounded-lg bg-muted w-fit p-3">{icon}</div>

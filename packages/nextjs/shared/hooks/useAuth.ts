@@ -1,37 +1,50 @@
 /**
- * useAuth Hook (NextAuth version)
+ * useAuth Hook (Hybrid NextAuth + AppKit version)
  *
- * Clean replacement for the old custom auth hook.
- * Uses NextAuth session management.
+ * Combines NextAuth for session management with AppKit for wallet state.
+ * Uses official AppKit hooks to prevent sign loops and hydration issues.
  */
 
 "use client";
 
 import { useSession } from "next-auth/react";
+import { useAppKitAccount } from '@reown/appkit/react';
 import { useMemo } from "react";
 import { UserRole, Permission } from "@/shared/types/auth.types";
+import { useClientMounted } from "./useClientMounted";
 
 /**
- * Main auth hook using NextAuth
+ * Main auth hook using NextAuth + AppKit
  */
 export function useAuth() {
+  // Check if client mounted to prevent hydration mismatch
+  const mounted = useClientMounted();
+
+  // NextAuth for session/user data
   const { data: session, status } = useSession();
+
+  // AppKit for wallet connection state (only after mount!)
+  const { address: walletAddress, isConnected: walletConnected } = useAppKitAccount();
+
   const isLoading = status === "loading";
 
-  // Derived state
+  // Derived state - use wallet address from AppKit when mounted
   const user = session?.user;
-  const isAuthenticated = !!user && !!user.address;
-  const isConnected = isAuthenticated;
+  const address = mounted ? walletAddress as `0x${string}` | undefined : undefined;
+  const isConnected = mounted ? walletConnected : false;
+  const isAuthenticated = isConnected && !!user;
 
-  // Debug log
-  console.log('[useAuth] Current state:', {
-    hasSession: !!session,
-    hasUser: !!user,
-    address: user?.address,
-    role: user?.role,
-    isAuthenticated,
-    isLoading,
-  });
+  // Debug log (comment out in production)
+  // console.log('[useAuth] Current state:', {
+  //   hasSession: !!session,
+  //   hasUser: !!user,
+  //   walletAddress,
+  //   address,
+  //   role: user?.role,
+  //   isConnected,
+  //   isAuthenticated,
+  //   isLoading,
+  // });
 
   // Helper functions
   const hasPermission = useMemo(() => {
@@ -68,7 +81,7 @@ export function useAuth() {
     user,
 
     // State
-    address: user?.address,
+    address,
     isConnected,
     isAuthenticated,
     isVerified: user?.isVerified ?? false,

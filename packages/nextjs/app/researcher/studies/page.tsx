@@ -15,15 +15,15 @@ import Link from 'next/link';
 
 import { ResearcherLayout } from '@/components/layout';
 import { useStudiesByResearcher } from '@/shared/hooks/useStudies';
-import { cn } from '@/shared/lib/utils';
+import { cn as _cn } from '@/shared/lib/utils';
 import { useAuth } from '@/shared/hooks/useAuth';
 
 export default function ResearcherStudiesPage() {
-  const router = useRouter();
-  const { address, isConnected } = useAuth();
+  const _router = useRouter();
+  const { address } = useAuth();
 
   // Fetch studies created by this researcher
-  const { studies, isLoading, totalCount } = useStudiesByResearcher(address);
+  const { studies, loading, totalCount } = useStudiesByResearcher(address);
 
   // Calculate stats
   const activeStudies = studies.filter((s) => s.status === 'Active' || s.status === 'Created').length;
@@ -107,7 +107,7 @@ export default function ResearcherStudiesPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          {isLoading ? (
+          {loading ? (
             <div className="text-center py-16">
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
               <p className="text-muted-foreground">Loading your studies...</p>

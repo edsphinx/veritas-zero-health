@@ -9,12 +9,13 @@
 
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Filter, SlidersHorizontal, Grid, List as ListIcon } from 'lucide-react';
+import { Search, SlidersHorizontal, Grid, List as ListIcon } from 'lucide-react';
 
-import { useRecruitingStudies, StudyStatus } from '@/shared/hooks/useStudies';
+import { useStudies, StudyStatus } from '@/shared/hooks/useStudies';
 import { useVerifiedApplicantsCount } from '@/shared/hooks/useStudy';
 import { StudyCard, StudyCardSkeleton, EmptyStudyCard } from './StudyCard';
 import { cn } from '@/shared/lib/utils';
+import type { Study } from '@/shared/types';
 
 type ViewMode = 'grid' | 'list';
 type SortField = 'studyId' | 'status'; // Matches hook's accepted fields
@@ -22,7 +23,6 @@ type SortOrder = 'asc' | 'desc';
 
 interface StudyListProps {
   statusFilter?: StudyStatus;
-  regionFilter?: string;
   showApplyButton?: boolean;
   onApplyClick?: (studyId: bigint) => void;
   className?: string;
@@ -35,15 +35,14 @@ interface StudyListProps {
  * @example
  * ```tsx
  * <StudyList
- *   statusFilter={StudyStatus.Recruiting}
+ *   statusFilter={StudyStatus.Active}
  *   showApplyButton
- *   onApplyClick={(id) => router.push(`/trials/${id}/apply`)}
+ *   onApplyClick={(id) => router.push(`/studies/${id}/apply`)}
  * />
  * ```
  */
 export function StudyList({
-  statusFilter = StudyStatus.Recruiting,
-  regionFilter,
+  statusFilter = StudyStatus.Active,
   showApplyButton = true,
   onApplyClick,
   className,
@@ -51,40 +50,37 @@ export function StudyList({
 }: StudyListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [sortField, setSortField] = useState<SortField>('studyId');
+  const [sortField, setSortField] = useState<SortField>('status');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
   const [showFilters, setShowFilters] = useState(false);
 
-  // Fetch studies
-  const { studies, isLoading, error } = useRecruitingStudies({
-    sort: { field: sortField, order: sortOrder },
+  // Fetch studies using the hook
+  const { studies, loading, error } = useStudies({
+    filters: statusFilter ? { status: statusFilter } : undefined,
+    sort: { field: 'createdAt', order: sortOrder },
     limit: maxItems,
   });
 
-  // Apply client-side filters
+  const isLoading = loading;
+
+  // Apply client-side search filter
   const filteredStudies = useMemo(() => {
     let result = studies;
-
-    // Filter by region
-    if (regionFilter) {
-      result = result.filter((study) =>
-        study.region.toLowerCase().includes(regionFilter.toLowerCase())
-      );
-    }
 
     // Filter by search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       result = result.filter(
         (study) =>
-          study.region.toLowerCase().includes(query) ||
-          study.compensationDetails.toLowerCase().includes(query) ||
-          study.studyId.toString().includes(query)
+          study.title.toLowerCase().includes(query) ||
+          study.description.toLowerCase().includes(query) ||
+          study.escrowId.toString().includes(query) ||
+          study.researcherAddress.toLowerCase().includes(query)
       );
     }
 
     return result;
-  }, [studies, regionFilter, searchQuery]);
+  }, [studies, searchQuery]);
 
   // Loading state
   if (isLoading) {
@@ -115,9 +111,7 @@ export function StudyList({
         message={
           searchQuery
             ? `No studies found matching "${searchQuery}"`
-            : regionFilter
-            ? `No studies found in ${regionFilter}`
-            : undefined
+            : 'No active studies available at this time'
         }
       />
     );
@@ -132,7 +126,7 @@ export function StudyList({
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Search studies by region, compensation, or ID..."
+            placeholder="Search studies by title, description, or ID..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full rounded-lg border border-border bg-card pl-10 pr-4 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
@@ -235,7 +229,7 @@ export function StudyList({
       >
         {filteredStudies.map((study, index) => (
           <StudyCardWithCount
-            key={study.studyId.toString()}
+            key={study.escrowId.toString()}
             study={study}
             showApplyButton={showApplyButton}
             onApplyClick={onApplyClick}
@@ -256,12 +250,13 @@ function StudyCardWithCount({
   onApplyClick,
   index,
 }: {
-  study: any;
+  study: Study;
   showApplyButton: boolean;
   onApplyClick?: (studyId: bigint) => void;
   index: number;
 }) {
-  const { count } = useVerifiedApplicantsCount(study.studyId);
+  // Use registryId for fetching applicant count from blockchain
+  const { count } = useVerifiedApplicantsCount(BigInt(study.registryId));
 
   return (
     <motion.div

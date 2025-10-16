@@ -30,12 +30,21 @@ const publicClient = createPublicClient({
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { studyId: string } }
+  { params }: { params: Promise<{ studyId: string }> }
 ) {
   try {
-    const { studyId } = params;
+    const { studyId } = await params;
     const body = await request.json();
-    const { escrowId, minAge, maxAge, eligibilityCodeHash, transactionHash, blockNumber } = body;
+    const {
+      escrowId,
+      minAge,
+      maxAge,
+      eligibilityCodeHash,
+      transactionHash,
+      blockNumber,
+      // Optional medical criteria details
+      medicalCriteria,
+    } = body;
 
     // Validate input
     if (
@@ -124,6 +133,37 @@ export async function POST(
       });
     }
 
+    // Prepare medical criteria data
+    const medicalData = medicalCriteria ? {
+      // Biomarkers
+      hba1cMin: medicalCriteria.hba1c?.enabled ? parseFloat(medicalCriteria.hba1c.min) : null,
+      hba1cMax: medicalCriteria.hba1c?.enabled ? parseFloat(medicalCriteria.hba1c.max) : null,
+      ldlMin: medicalCriteria.ldl?.enabled ? parseFloat(medicalCriteria.ldl.min) : null,
+      ldlMax: medicalCriteria.ldl?.enabled ? parseFloat(medicalCriteria.ldl.max) : null,
+      cholesterolMin: medicalCriteria.cholesterol?.enabled ? parseFloat(medicalCriteria.cholesterol.min) : null,
+      cholesterolMax: medicalCriteria.cholesterol?.enabled ? parseFloat(medicalCriteria.cholesterol.max) : null,
+      hdlMin: medicalCriteria.hdl?.enabled ? parseFloat(medicalCriteria.hdl.min) : null,
+      hdlMax: medicalCriteria.hdl?.enabled ? parseFloat(medicalCriteria.hdl.max) : null,
+      triglyceridesMin: medicalCriteria.triglycerides?.enabled ? parseFloat(medicalCriteria.triglycerides.min) : null,
+      triglyceridesMax: medicalCriteria.triglycerides?.enabled ? parseFloat(medicalCriteria.triglycerides.max) : null,
+      // Vital Signs
+      systolicBPMin: medicalCriteria.systolicBP?.enabled ? parseFloat(medicalCriteria.systolicBP.min) : null,
+      systolicBPMax: medicalCriteria.systolicBP?.enabled ? parseFloat(medicalCriteria.systolicBP.max) : null,
+      diastolicBPMin: medicalCriteria.diastolicBP?.enabled ? parseFloat(medicalCriteria.diastolicBP.min) : null,
+      diastolicBPMax: medicalCriteria.diastolicBP?.enabled ? parseFloat(medicalCriteria.diastolicBP.max) : null,
+      bmiMin: medicalCriteria.bmi?.enabled ? parseFloat(medicalCriteria.bmi.min) : null,
+      bmiMax: medicalCriteria.bmi?.enabled ? parseFloat(medicalCriteria.bmi.max) : null,
+      heartRateMin: medicalCriteria.heartRate?.enabled ? parseFloat(medicalCriteria.heartRate.min) : null,
+      heartRateMax: medicalCriteria.heartRate?.enabled ? parseFloat(medicalCriteria.heartRate.max) : null,
+      // Medications & Allergies
+      requiredMedications: medicalCriteria.requiredMedications || [],
+      excludedMedications: medicalCriteria.excludedMedications || [],
+      excludedAllergies: medicalCriteria.excludedAllergies || [],
+      // Diagnoses
+      requiredDiagnoses: medicalCriteria.requiredDiagnoses || [],
+      excludedDiagnoses: medicalCriteria.excludedDiagnoses || [],
+    } : {};
+
     // Index the criteria
     const indexed = await prisma.studyCriteria.create({
       data: {
@@ -135,6 +175,7 @@ export async function POST(
         chainId: optimismSepolia.id,
         transactionHash,
         blockNumber: BigInt(blockNumber),
+        ...medicalData,
       },
     });
 

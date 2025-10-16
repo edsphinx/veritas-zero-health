@@ -342,7 +342,7 @@ function StatsCard({
 
 function CategoryPill({
   label,
-  category,
+  category: _category,
   selected,
   onClick,
   count,

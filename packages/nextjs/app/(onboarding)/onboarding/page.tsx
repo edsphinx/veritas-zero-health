@@ -24,7 +24,7 @@ type OnboardingStep = 'wallet' | 'passport' | 'complete';
 
 export default function OnboardingPage() {
   const [currentStep, setCurrentStep] = useState<OnboardingStep>('wallet');
-  const [isPolling, setIsPolling] = useState(false);
+  const [_isPolling, setIsPolling] = useState(false);
   const { address, isConnected } = useAccount();
   const { isVerified, refetch, isLoading: isCheckingVerification, humanityScore } = useHumanPassport({
     address,
@@ -58,7 +58,7 @@ export default function OnboardingPage() {
                              localStorage.getItem('veritas_extension_id');
 
           // Check if Chrome extension API is available
-          const chromeRuntime = (window as any).chrome?.runtime;
+          const chromeRuntime = (window as unknown as { chrome?: { runtime?: { sendMessage: (extensionId: string, message: unknown, callback: (response: unknown) => void) => void; lastError?: unknown } } }).chrome?.runtime;
 
           if (extensionId && chromeRuntime) {
             // Send wallet connection update to extension
@@ -74,7 +74,7 @@ export default function OnboardingPage() {
                   humanityScore: 0,
                 },
               },
-              (response: any) => {
+              (_response: unknown) => {
                 if (chromeRuntime.lastError) {
                   console.warn('Extension message failed:', chromeRuntime.lastError);
                 } else {
@@ -117,7 +117,7 @@ export default function OnboardingPage() {
           const urlParams = new URLSearchParams(window.location.search);
           const extensionId = urlParams.get('extensionId') ||
                              localStorage.getItem('veritas_extension_id');
-          const chromeRuntime = (window as any).chrome?.runtime;
+          const chromeRuntime = (window as unknown as { chrome?: { runtime?: { sendMessage: (extensionId: string, message: unknown, callback: (response: unknown) => void) => void; lastError?: unknown } } }).chrome?.runtime;
 
           if (extensionId && chromeRuntime) {
             chromeRuntime.sendMessage(
@@ -132,7 +132,7 @@ export default function OnboardingPage() {
                   humanityScore: humanityScore || 0,
                 },
               },
-              (response: any) => {
+              (_response: unknown) => {
                 if (chromeRuntime.lastError) {
                   console.warn('Extension verification update failed:', chromeRuntime.lastError);
                 } else {
@@ -336,7 +336,7 @@ export default function OnboardingPage() {
                         <div className="rounded-lg bg-blue-600/10 border border-blue-600/20 p-3 text-sm">
                           <p className="text-blue-600 font-medium">After verifying on Passport:</p>
                           <p className="text-xs text-blue-600/70 mt-1">
-                            Click the "Check Verification Status" button below to update your status.
+                            Click the &quot;Check Verification Status&quot; button below to update your status.
                           </p>
                         </div>
 

@@ -206,6 +206,7 @@ interface SidebarItemProps {
 
 function SidebarItem({ item, pathname, isCollapsed, onClick }: SidebarItemProps) {
   const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const Icon = item.icon ? (LucideIcons as any)[item.icon] : null;
 
   // If item has children, render as expandable
@@ -270,6 +271,7 @@ function ExpandableItem({
   const [isExpanded, setIsExpanded] = useState(
     item.children?.some((child) => pathname.startsWith(child.href)) || false
   );
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const Icon = item.icon ? (LucideIcons as any)[item.icon] : null;
   const isActive = pathname === item.href || item.children?.some((child) => pathname === child.href);
 
@@ -314,6 +316,7 @@ function ExpandableItem({
               <div className="ml-6 mt-1 space-y-1">
                 {item.children?.map((child) => {
                   const isChildActive = pathname === child.href;
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   const ChildIcon = child.icon ? (LucideIcons as any)[child.icon] : null;
 
                   return (

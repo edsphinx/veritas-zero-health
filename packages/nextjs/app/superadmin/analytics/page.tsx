@@ -11,8 +11,6 @@ import { motion } from 'framer-motion';
 import { useAccount } from 'wagmi';
 import {
   BarChart3,
-  TrendingUp,
-  TrendingDown,
   Users,
   Activity,
   DollarSign,
@@ -20,7 +18,6 @@ import {
   FileText,
   ArrowUp,
   ArrowDown,
-  Calendar,
   AlertCircle,
 } from 'lucide-react';
 import { SuperAdminLayout } from '@/components/layout';

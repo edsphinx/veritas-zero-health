@@ -10,7 +10,6 @@ export * from './useHumanWallet';
 
 // Contract interaction hooks - Read operations
 export * from './useStudy';
-export * from './useStudies';
 
 // Contract interaction hooks - Write operations
 export * from './useApplyToStudy';

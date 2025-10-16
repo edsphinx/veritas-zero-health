@@ -9,56 +9,17 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import type {
+  Study,
+  StudyCriteria,
+  StudyFilters,
+  StudySortOptions,
+} from '@veritas/types';
+import { StudyStatus } from '@veritas/types';
 
-/**
- * Study status enum
- */
-export enum StudyStatus {
-  Created = 'Created',
-  Funding = 'Funding',
-  Active = 'Active',
-  Paused = 'Paused',
-  Completed = 'Completed',
-  Cancelled = 'Cancelled',
-}
-
-/**
- * Indexed study from database
- */
-export interface Study {
-  id: string;
-  registryId: number;
-  escrowId: number;
-  title: string;
-  description: string;
-  researcherAddress: string;
-  status: string;
-  chainId: number;
-  escrowTxHash: string;
-  registryTxHash: string;
-  criteriaTxHash: string;
-  escrowBlockNumber: string; // BigInt as string
-  registryBlockNumber: string; // BigInt as string
-  createdAt: Date;
-  updatedAt: Date;
-  maxParticipants?: number; // Optional for backward compatibility
-}
-
-/**
- * Filter options for studies
- */
-export interface StudyFilters {
-  status?: string; // Filter by status
-  researcher?: string; // Filter by researcher address
-}
-
-/**
- * Sort options for studies
- */
-export interface StudySortOptions {
-  field: 'registryId' | 'status' | 'createdAt';
-  order: 'asc' | 'desc';
-}
+// Re-export types for backward compatibility
+export type { Study, StudyCriteria };
+export { StudyStatus };
 
 /**
  * Hook to fetch all studies from indexed database
@@ -114,6 +75,7 @@ export function useStudies(options?: {
 
         if (result.success) {
           // Convert date strings to Date objects
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const studiesWithDates = result.data.map((s: any) => ({
             ...s,
             createdAt: new Date(s.createdAt),
@@ -148,14 +110,14 @@ export function useStudies(options?: {
 
         if (field === 'registryId') {
           return order === 'asc'
-            ? aVal - bVal
-            : bVal - aVal;
+            ? (aVal as number) - (bVal as number)
+            : (bVal as number) - (aVal as number);
         }
 
         if (field === 'createdAt') {
           return order === 'asc'
-            ? aVal.getTime() - bVal.getTime()
-            : bVal.getTime() - aVal.getTime();
+            ? (aVal as Date).getTime() - (bVal as Date).getTime()
+            : (bVal as Date).getTime() - (aVal as Date).getTime();
         }
 
         if (field === 'status') {

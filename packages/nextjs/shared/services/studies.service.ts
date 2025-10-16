@@ -13,14 +13,16 @@ import type { Address } from 'viem';
  */
 export interface ContractConfig {
   address: Address;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   abi: readonly any[];
   chainId: number;
 }
 
 /**
- * Study data structure
+ * Study data structure from contracts (raw blockchain data)
+ * Note: For indexed database studies, use Study type from @veritas/types
  */
-export interface Study {
+export interface StudyFromContract {
   studyId: bigint;
   title: string;
   description: string;
@@ -35,9 +37,9 @@ export interface Study {
 }
 
 /**
- * Milestone data structure
+ * Milestone data structure from contracts
  */
-export interface Milestone {
+export interface MilestoneFromContract {
   milestoneId: bigint;
   studyId: bigint;
   description: string;

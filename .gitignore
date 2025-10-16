@@ -33,3 +33,5 @@ package-lock.json
 .private
 
 target/
+
+*.md

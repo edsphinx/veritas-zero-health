@@ -1,36 +1,48 @@
 /**
- * Wagmi Configuration
+ * Wagmi Configuration using WagmiAdapter (Official Pattern)
  *
- * Configures Web3 wallet connection for Veritas Zero Health
- * Supports multiple chains and wallet connectors via Reown AppKit
+ * This follows the official Reown AppKit pattern where WagmiAdapter
+ * is the single source of truth for wagmi configuration.
+ *
+ * Key Pattern:
+ * 1. Create WagmiAdapter with networks and projectId
+ * 2. Extract wagmiConfig from adapter (don't create manually)
+ * 3. Use AppKitNetwork types (not wagmi chain types)
  */
 
-import { http, createConfig, cookieStorage, createStorage } from 'wagmi';
-import { mainnet, sepolia, polygon, polygonAmoy, celo, celoAlfajores, optimismSepolia, optimism } from 'wagmi/chains';
+import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
+import {
+  mainnet,
+  sepolia,
+  polygon,
+  polygonAmoy,
+  celo,
+  celoAlfajores,
+  optimismSepolia,
+  optimism,
+  type AppKitNetwork,
+} from '@reown/appkit/networks';
 
-// Get environment variables
-const reownProjectId = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID || '';
-const alchemyApiKey = process.env.NEXT_PUBLIC_ALCHEMY_API_KEY || '';
+// Get projectId from environment or use default for testing
+export const projectId = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID || 'b56e18d47c72ab683b10814fe9495694';
 
-// Validate required environment variables
-if (!reownProjectId) {
-  console.error('⚠️ NEXT_PUBLIC_REOWN_PROJECT_ID is not set in environment variables');
+if (!projectId) {
+  throw new Error('Project ID is not defined');
 }
 
-// Define supported chains
-// Default to testnets for development, can be overridden with env vars
-export const chains = [
+// Define supported networks using AppKitNetwork type
+// Default to testnets for development, add mainnets in production
+export const networks = [
   optimismSepolia, // Optimism Sepolia testnet (PRIMARY)
-  sepolia,         // Ethereum Sepolia testnet
-  polygonAmoy,     // Polygon Amoy testnet
-  celoAlfajores,   // Celo Alfajores testnet
+  sepolia, // Ethereum Sepolia testnet
+  polygonAmoy, // Polygon Amoy testnet
+  celoAlfajores, // Celo Alfajores testnet
   ...(process.env.NODE_ENV === 'production'
-    ? [optimism, mainnet, polygon, celo]  // Add mainnets in production
+    ? [optimism, mainnet, polygon, celo] // Add mainnets in production
     : []),
-] as const;
+] as [AppKitNetwork, ...AppKitNetwork[]];
 
 // App metadata for Reown AppKit
-export const projectId = reownProjectId;
 export const metadata = {
   name: 'Veritas Zero Health',
   description: 'Private, Verifiable Patient Data for Clinical Trials',
@@ -38,79 +50,63 @@ export const metadata = {
   icons: ['https://veritas.health/icon.png'],
 };
 
-// Configure transports (RPC providers)
-const transports = {
-  [optimismSepolia.id]: http('https://sepolia.optimism.io'),
-  [sepolia.id]: http(
-    alchemyApiKey
-      ? `https://eth-sepolia.g.alchemy.com/v2/${alchemyApiKey}`
-      : 'https://rpc.sepolia.org'
-  ),
-  [polygonAmoy.id]: http(
-    alchemyApiKey
-      ? `https://polygon-amoy.g.alchemy.com/v2/${alchemyApiKey}`
-      : 'https://rpc-amoy.polygon.technology'
-  ),
-  [celoAlfajores.id]: http('https://alfajores-forno.celo-testnet.org'),
-  ...(process.env.NODE_ENV === 'production'
-    ? {
-        [optimism.id]: http('https://mainnet.optimism.io'),
-        [mainnet.id]: http(
-          alchemyApiKey
-            ? `https://eth-mainnet.g.alchemy.com/v2/${alchemyApiKey}`
-            : 'https://eth.llamarpc.com'
-        ),
-        [polygon.id]: http(
-          alchemyApiKey
-            ? `https://polygon-mainnet.g.alchemy.com/v2/${alchemyApiKey}`
-            : 'https://polygon.llamarpc.com'
-        ),
-        [celo.id]: http('https://forno.celo.org'),
-      }
-    : {}),
-};
-
-// Create Wagmi config
-// Note: Connectors are managed by Reown AppKit, not defined here
-export const wagmiConfig = createConfig({
-  chains,
-  transports: transports as any, // Type assertion for conditional transports
+/**
+ * WagmiAdapter - The Single Source of Truth
+ *
+ * This adapter creates and manages the wagmi configuration internally.
+ * DO NOT create a separate wagmi config with createConfig().
+ */
+export const wagmiAdapter = new WagmiAdapter({
   ssr: true, // Enable server-side rendering support
-  storage: createStorage({
-    storage: cookieStorage,
-  }),
+  projectId,
+  networks,
 });
 
-// Export individual chains for convenience
-export { mainnet, sepolia, polygon, polygonAmoy, celo, celoAlfajores, optimismSepolia, optimism };
+/**
+ * Wagmi Config - Extract from Adapter
+ *
+ * This is the wagmi config that should be used throughout the app.
+ * It's created by WagmiAdapter and includes all necessary configuration.
+ */
+export const wagmiConfig = wagmiAdapter.wagmiConfig;
 
-// Helper: Get chain by ID
+// Helper: Get network by chain ID
 export function getChainById(chainId: number) {
-  return chains.find((chain) => chain.id === chainId);
+  return networks.find((network) => network.id === chainId);
 }
 
 // Helper: Get chain name
 export function getChainName(chainId: number) {
-  const chain = getChainById(chainId);
-  return chain?.name || 'Unknown Network';
+  const network = getChainById(chainId);
+  return network?.name || 'Unknown Network';
 }
 
 // Helper: Check if chain is testnet
 export function isTestnet(chainId: number) {
-  return [optimismSepolia.id as number, sepolia.id as number, polygonAmoy.id as number, celoAlfajores.id as number as number].includes(chainId);
+  return [
+    optimismSepolia.id,
+    sepolia.id,
+    polygonAmoy.id,
+    celoAlfajores.id,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ].includes(chainId as any);
 }
 
 // Helper: Get block explorer URL
-export function getBlockExplorerUrl(chainId: number, hash: string, type: 'tx' | 'address' = 'tx') {
-  const chain = getChainById(chainId);
-  if (!chain?.blockExplorers?.default) return '#';
+export function getBlockExplorerUrl(
+  chainId: number,
+  hash: string,
+  type: 'tx' | 'address' = 'tx'
+) {
+  const network = getChainById(chainId);
+  if (!network?.blockExplorers?.default) return '#';
 
-  const baseUrl = chain.blockExplorers.default.url;
+  const baseUrl = network.blockExplorers.default.url;
   return `${baseUrl}/${type}/${hash}`;
 }
 
-// Default chain for the app (can be overridden with env var)
+// Default chain for the app
 export const defaultChain = optimismSepolia;
 
-// Export config as default
+// Export config as default for compatibility
 export default wagmiConfig;

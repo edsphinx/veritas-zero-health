@@ -12,8 +12,8 @@ import { useAccount, useChainId } from 'wagmi';
 import {
   Settings,
   Network,
-  Server,
-  Key,
+  Server as _Server,
+  Key as _Key,
   Save,
   RefreshCw,
   CheckCircle2,

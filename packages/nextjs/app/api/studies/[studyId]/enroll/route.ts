@@ -94,13 +94,13 @@ export async function POST(
       transactionHash: hash,
       blockNumber: receipt.blockNumber.toString(),
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error enrolling participant:', error);
 
     return NextResponse.json(
       {
         error: 'Failed to enroll participant',
-        details: error?.message || 'Unknown error',
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

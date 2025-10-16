@@ -16,8 +16,10 @@ import {
   Users,
   FlaskConical,
 } from 'lucide-react';
-import { PatientLayout } from '@/presentation/components/layout';
+import { PatientLayout } from '@/components/layout';
+import type { Study, StudyMilestone as _StudyMilestone, StudyStatus as _StudyStatus2 } from '@veritas/types';
 
+// Extended milestone interface for mock data (the canonical type uses different field structure)
 interface Milestone {
   id: number;
   studyId: number;
@@ -30,18 +32,17 @@ interface Milestone {
   verifiedAt: number;
 }
 
-interface Study {
-  id: number;
-  title: string;
-  description: string;
+// Extended Study interface for this page's mock data
+interface StudyWithMockData extends Omit<Study, 'id' | 'status' | 'createdAt' | 'milestones'> {
+  id: number; // Mock uses number instead of UUID string
   sponsor: string;
   certifiedProviders: string[];
-  status: string;
+  status: string; // Mock uses string directly
   totalFunding: string;
   remainingFunding: string;
   participantCount: number;
   maxParticipants: number;
-  createdAt: number;
+  createdAt: number; // Mock uses timestamp
   startedAt: number;
   completedAt: number;
   milestones: Milestone[];
@@ -53,7 +54,7 @@ export default function StudyDetailPage() {
   const { address, isConnected } = useAccount();
   const studyId = params?.studyId as string;
 
-  const [study, setStudy] = useState<Study | null>(null);
+  const [study, setStudy] = useState<StudyWithMockData | null>(null);
   const [loading, setLoading] = useState(true);
   const [applying, setApplying] = useState(false);
   const [applicationStatus, setApplicationStatus] = useState<
@@ -65,7 +66,7 @@ export default function StudyDetailPage() {
     if (studyId) {
       loadStudy();
     }
-  }, [studyId]);
+  }, [studyId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadStudy = async () => {
     try {
@@ -182,10 +183,10 @@ export default function StudyDetailPage() {
           setApplying(false);
         }
       }, 60000);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error applying to study:', error);
       setApplicationStatus('error');
-      setErrorMessage(error.message || 'Failed to apply to study');
+      setErrorMessage(error instanceof Error ? error.message : String(error) || 'Failed to apply to study');
       setApplying(false);
     }
   };
@@ -206,27 +207,28 @@ export default function StudyDetailPage() {
     return (
       <PatientLayout>
         <div className="flex items-center justify-center min-h-[60vh]">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center max-w-md mx-auto p-8"
-        >
-          <div className="rounded-full bg-primary/10 p-4 w-fit mx-auto mb-4">
-            <Shield className="h-12 w-12 text-primary" />
-          </div>
-          <h2 className="text-3xl font-bold mb-4">Connect Your Wallet</h2>
-          <p className="text-muted-foreground mb-6">
-            Please connect your wallet to view study details and apply
-          </p>
-          <button
-            onClick={() => router.push('/')}
-            className="inline-flex items-center gap-2 rounded-lg bg-primary text-primary-foreground px-6 py-3 font-semibold hover:opacity-90 transition-opacity"
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center max-w-md mx-auto p-8"
           >
-            Connect Wallet
-            <ArrowLeft className="h-4 w-4 rotate-180" />
-          </button>
-        </motion.div>
-      </div>
+            <div className="rounded-full bg-primary/10 p-4 w-fit mx-auto mb-4">
+              <Shield className="h-12 w-12 text-primary" />
+            </div>
+            <h2 className="text-3xl font-bold mb-4">Connect Your Wallet</h2>
+            <p className="text-muted-foreground mb-6">
+              Please connect your wallet to view study details and apply
+            </p>
+            <button
+              onClick={() => router.push('/')}
+              className="inline-flex items-center gap-2 rounded-lg bg-primary text-primary-foreground px-6 py-3 font-semibold hover:opacity-90 transition-opacity"
+            >
+              Connect Wallet
+              <ArrowLeft className="h-4 w-4 rotate-180" />
+            </button>
+          </motion.div>
+        </div>
+      </PatientLayout>
     );
   }
 
@@ -234,15 +236,16 @@ export default function StudyDetailPage() {
     return (
       <PatientLayout>
         <div className="flex items-center justify-center min-h-[60vh]">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-center"
-        >
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
-          <p className="text-muted-foreground">Loading study details...</p>
-        </motion.div>
-      </div>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center"
+          >
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+            <p className="text-muted-foreground">Loading study details...</p>
+          </motion.div>
+        </div>
+      </PatientLayout>
     );
   }
 
@@ -250,27 +253,28 @@ export default function StudyDetailPage() {
     return (
       <PatientLayout>
         <div className="flex items-center justify-center min-h-[60vh]">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center max-w-md mx-auto p-8"
-        >
-          <div className="rounded-full bg-red-600/10 p-4 w-fit mx-auto mb-4">
-            <AlertCircle className="h-12 w-12 text-red-600" />
-          </div>
-          <h2 className="text-2xl font-bold mb-2">Study Not Found</h2>
-          <p className="text-muted-foreground mb-6">
-            {errorMessage || 'The study you are looking for does not exist'}
-          </p>
-          <Link
-            href="/patient/studies"
-            className="inline-flex items-center gap-2 text-primary hover:opacity-80 transition-opacity font-semibold"
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center max-w-md mx-auto p-8"
           >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Studies
-          </Link>
-        </motion.div>
-      </div>
+            <div className="rounded-full bg-red-600/10 p-4 w-fit mx-auto mb-4">
+              <AlertCircle className="h-12 w-12 text-red-600" />
+            </div>
+            <h2 className="text-2xl font-bold mb-2">Study Not Found</h2>
+            <p className="text-muted-foreground mb-6">
+              {errorMessage || 'The study you are looking for does not exist'}
+            </p>
+            <Link
+              href="/patient/studies"
+              className="inline-flex items-center gap-2 text-primary hover:opacity-80 transition-opacity font-semibold"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Studies
+            </Link>
+          </motion.div>
+        </div>
+      </PatientLayout>
     );
   }
 

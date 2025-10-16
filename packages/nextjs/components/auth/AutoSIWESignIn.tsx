@@ -79,6 +79,6 @@ export function AutoSIWESignIn() {
     handleAutoSignIn();
   }, [isConnected, address, chainId, session, signMessageAsync, isSigning, hasAttempted]);
 
-  // This component doesn't render anything
+  // This component doesn&apos;t render anything
   return null;
 }

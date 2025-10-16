@@ -91,13 +91,13 @@ export async function POST(
       transactionHash: hash,
       blockNumber: receipt.blockNumber.toString(),
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error verifying milestone:', error);
 
     return NextResponse.json(
       {
         error: 'Failed to verify milestone',
-        details: error?.message || 'Unknown error',
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

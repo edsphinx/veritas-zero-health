@@ -16,7 +16,6 @@ import {
   Award,
   User,
   QrCode,
-  Upload,
   CheckCircle2,
   AlertCircle,
   Clock,
@@ -175,7 +174,7 @@ export default function IssueHealthIdentitySBT() {
                   <div>
                     <h2 className="text-xl font-semibold">Patient Information</h2>
                     <p className="text-sm text-muted-foreground">
-                      Enter the patient's wallet address and Nillion DID
+                      Enter the patient&apos;s wallet address and Nillion DID
                     </p>
                   </div>
                 </div>
@@ -321,6 +320,7 @@ export default function IssueHealthIdentitySBT() {
               {/* QR Code Image */}
               <div className="flex flex-col items-center space-y-4">
                 <div className="p-6 bg-white rounded-xl border-2 border-border">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={qrCode} alt="SBT Voucher QR Code" className="w-80 h-80" />
                 </div>
 

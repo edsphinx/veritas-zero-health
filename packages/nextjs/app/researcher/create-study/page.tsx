@@ -32,6 +32,7 @@ export default function CreateStudyPage() {
     step: number;
     message: string;
     hash?: string;
+    details?: string; // Additional details for indexing
   } | null>(null);
 
   const [formData, setFormData] = useState({
@@ -53,7 +54,29 @@ export default function CreateStudyPage() {
 
     // Eligibility Criteria - Medical (✅ ZK Proof Available: Circom/Groth16, On-chain OP Sepolia)
     eligibilityCodeHash: '0', // Will be computed from patient data + criteria
-    requiresEligibilityProof: false,
+    requiresEligibilityProof: true, // Enable by default for demo
+
+    // Medical Criteria - Biomarkers
+    hba1c: { enabled: false, min: '', max: '' },
+    cholesterol: { enabled: false, min: '', max: '' },
+    ldl: { enabled: false, min: '', max: '' },
+    hdl: { enabled: false, min: '', max: '' },
+    triglycerides: { enabled: false, min: '', max: '' },
+
+    // Medical Criteria - Vital Signs
+    systolicBP: { enabled: false, min: '', max: '' },
+    diastolicBP: { enabled: false, min: '', max: '' },
+    bmi: { enabled: false, min: '', max: '' },
+    heartRate: { enabled: false, min: '', max: '' },
+
+    // Medical Criteria - Medications & Allergies
+    requiredMedications: [] as string[],
+    excludedMedications: [] as string[],
+    excludedAllergies: [] as string[],
+
+    // Medical Criteria - Diagnoses (ICD-10)
+    requiredDiagnoses: [] as string[],
+    excludedDiagnoses: [] as string[],
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -126,10 +149,12 @@ export default function CreateStudyPage() {
       });
 
       // Create wallet client from connected wallet
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const ethereum = (window as any).ethereum;
       const walletClient = createWalletClient({
-        account: address,
+        account: address as `0x${string}`,
         chain: optimismSepolia,
-        transport: custom((window as any).ethereum),
+        transport: custom(ethereum),
       });
 
       const { studyParams } = validationResult.data;
@@ -147,6 +172,7 @@ export default function CreateStudyPage() {
           studyParams.certifiedProviders,
           BigInt(studyParams.maxParticipants),
         ],
+        account: address as `0x${string}`,
       });
 
       setTxStatus({ step: 1, message: 'Waiting for confirmation...', hash: escrowHash });
@@ -167,6 +193,7 @@ export default function CreateStudyPage() {
           studyParams.compensation,
           `ipfs://metadata/${escrowStudyId}`,
         ],
+        account: address as `0x${string}`,
       });
 
       setTxStatus({ step: 2, message: 'Waiting for confirmation...', hash: registryHash });
@@ -188,6 +215,7 @@ export default function CreateStudyPage() {
           Number(studyParams.maxAge), // uint32 in contract
           BigInt(studyParams.eligibilityCodeHash), // uint256 in contract
         ],
+        account: address as `0x${string}`,
       });
 
       setTxStatus({ step: 3, message: 'Waiting for confirmation...', hash: criteriaHash });
@@ -223,6 +251,7 @@ export default function CreateStudyPage() {
             description,
             BigInt(rewardPerAppointment),
           ],
+          account: address as `0x${string}`,
         });
 
         setTxStatus({
@@ -235,10 +264,10 @@ export default function CreateStudyPage() {
         milestoneTxHashes.push(milestoneHash);
       }
 
-      // Success! Show toast immediately with Etherscan link
-      toast.success('Study Created Successfully!', {
-        description: `Study ID: ${escrowStudyId} | Max Participants: ${maxParticipants}`,
-        duration: 5000,
+      // Show toast for blockchain success
+      toast.success('Blockchain Transactions Complete!', {
+        description: `Study ID: ${escrowStudyId} | Now indexing to database...`,
+        duration: 3000,
         action: {
           label: 'View on Etherscan',
           onClick: () => {
@@ -250,11 +279,11 @@ export default function CreateStudyPage() {
         },
       });
 
-      // Index the study in our database for fast lookups (non-blocking)
-      setTxStatus({ step: 5, message: 'Indexing study data...' });
+      // Index the study in our database (MUST complete before redirect)
+      setTxStatus({ step: 5, message: 'Indexing study to database...' });
 
       try {
-        // 1. Index the study
+        // 1. Index the study - WAIT for this to complete
         const indexResponse = await fetch('/api/studies/index', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -273,11 +302,15 @@ export default function CreateStudyPage() {
           }),
         });
 
+        if (!indexResponse.ok) {
+          throw new Error(`Failed to index study: HTTP ${indexResponse.status}`);
+        }
+
         const indexResult = await indexResponse.json();
 
         if (!indexResult.success) {
-          console.warn('[Study Creation] Failed to index study:', indexResult.error);
-          throw new Error('Failed to index study');
+          console.error('[Study Creation] Failed to index study:', indexResult.error);
+          throw new Error(indexResult.error || 'Failed to index study');
         }
 
         const studyId = indexResult.data.id;
@@ -298,16 +331,38 @@ export default function CreateStudyPage() {
             eligibilityCodeHash,
             transactionHash: criteriaHash,
             blockNumber: criteriaReceipt.blockNumber.toString(),
+            // Include medical criteria details if eligibility proof is required
+            medicalCriteria: formData.requiresEligibilityProof ? {
+              hba1c: formData.hba1c,
+              cholesterol: formData.cholesterol,
+              ldl: formData.ldl,
+              hdl: formData.hdl,
+              triglycerides: formData.triglycerides,
+              systolicBP: formData.systolicBP,
+              diastolicBP: formData.diastolicBP,
+              bmi: formData.bmi,
+              heartRate: formData.heartRate,
+              requiredMedications: formData.requiredMedications,
+              excludedMedications: formData.excludedMedications,
+              excludedAllergies: formData.excludedAllergies,
+              requiredDiagnoses: formData.requiredDiagnoses,
+              excludedDiagnoses: formData.excludedDiagnoses,
+            } : null,
           }),
         });
+
+        if (!criteriaIndexResponse.ok) {
+          throw new Error(`Failed to index criteria: HTTP ${criteriaIndexResponse.status}`);
+        }
 
         const criteriaIndexResult = await criteriaIndexResponse.json();
 
         if (!criteriaIndexResult.success) {
-          console.warn('[Study Creation] Failed to index criteria:', criteriaIndexResult.error);
-        } else {
-          console.log('[Study Creation] Criteria indexed successfully');
+          console.error('[Study Creation] Failed to index criteria:', criteriaIndexResult.error);
+          throw new Error(criteriaIndexResult.error || 'Failed to index criteria');
         }
+
+        console.log('[Study Creation] Criteria indexed successfully');
 
         // 3. Index milestones
         setTxStatus({ step: 5, message: 'Indexing milestones...' });
@@ -340,24 +395,49 @@ export default function CreateStudyPage() {
           }),
         });
 
+        if (!milestonesIndexResponse.ok) {
+          throw new Error(`Failed to index milestones: HTTP ${milestonesIndexResponse.status}`);
+        }
+
         const milestonesIndexResult = await milestonesIndexResponse.json();
 
         if (!milestonesIndexResult.success) {
-          console.warn('[Study Creation] Failed to index milestones:', milestonesIndexResult.error);
-        } else {
-          console.log('[Study Creation] Milestones indexed successfully:', milestonesIndexResult.milestones?.length);
+          console.error('[Study Creation] Failed to index milestones:', milestonesIndexResult.error);
+          throw new Error(milestonesIndexResult.error || 'Failed to index milestones');
         }
 
-      } catch (indexError) {
-        console.error('[Study Creation] Error indexing data:', indexError);
-        // Continue anyway - study exists on blockchain
-      }
+        console.log('[Study Creation] Milestones indexed successfully:', milestonesIndexResult.milestones?.length);
 
-      // Keep overlay visible and redirect quickly
-      // Note: We use escrowStudyId because that's where the full study data is stored
-      setTimeout(() => {
-        router.push(`/researcher/studies/${escrowStudyId}`);
-      }, 1000);
+        // ALL indexing completed successfully - now show success and redirect
+        setTxStatus({
+          step: 5,
+          message: 'Study created and indexed successfully! Redirecting...',
+        });
+
+        toast.success('Study Created Successfully!', {
+          description: `Study #${escrowStudyId} is now live and ready for patient applications.`,
+          duration: 3000,
+        });
+
+        // Redirect to the study detail page after brief delay
+        // Note: We use escrowStudyId because that's where the full study data is stored
+        setTimeout(() => {
+          router.push(`/researcher/studies/${escrowStudyId}`);
+        }, 1500);
+
+      } catch (indexError: unknown) {
+        console.error('[Study Creation] Error indexing data:', indexError);
+        setTxStatus(null);
+
+        // Show error to user - do NOT redirect since indexing failed
+        toast.error('Failed to Index Study', {
+          description: `Blockchain transactions succeeded, but failed to index study in database: ${indexError instanceof Error ? indexError.message : String(indexError)}. Please contact support with Study ID: ${escrowStudyId}`,
+          duration: 10000,
+        });
+
+        // Re-throw to prevent redirect and show error state
+        throw indexError;
+      }
 
       // Reset form
       setFormData({
@@ -373,13 +453,27 @@ export default function CreateStudyPage() {
         requiresAgeProof: true,
         eligibilityCodeHash: '0',
         requiresEligibilityProof: false,
+        hba1c: { enabled: false, min: '', max: '' },
+        cholesterol: { enabled: false, min: '', max: '' },
+        ldl: { enabled: false, min: '', max: '' },
+        hdl: { enabled: false, min: '', max: '' },
+        triglycerides: { enabled: false, min: '', max: '' },
+        systolicBP: { enabled: false, min: '', max: '' },
+        diastolicBP: { enabled: false, min: '', max: '' },
+        bmi: { enabled: false, min: '', max: '' },
+        heartRate: { enabled: false, min: '', max: '' },
+        requiredMedications: [],
+        excludedMedications: [],
+        excludedAllergies: [],
+        requiredDiagnoses: [],
+        excludedDiagnoses: [],
       });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating study:', error);
       setTxStatus(null);
       toast.error('Failed to Create Study', {
-        description: error?.message || 'An unexpected error occurred. Check console for details.',
+        description: error instanceof Error ? error.message : 'An unexpected error occurred. Check console for details.',
         duration: 6000,
       });
     } finally {
@@ -749,7 +843,7 @@ export default function CreateStudyPage() {
                         <li>• Patients prove age range without revealing exact age</li>
                         <li>• Generated client-side in browser extension (33-60ms)</li>
                         <li>• Verified cryptographically on Optimism Sepolia</li>
-                        <li>• No personal data leaves patient's device</li>
+                        <li>• No personal data leaves patient&apos;s device</li>
                       </ul>
                     </div>
                   </div>
@@ -777,7 +871,7 @@ export default function CreateStudyPage() {
             </div>
 
             <div className="space-y-6">
-              {/* Medical Eligibility - ZK Verified On-Chain */}
+              {/* Enable Medical Eligibility */}
               <div className="space-y-4">
                 <div className="flex items-center gap-2 mb-3">
                   <h3 className="text-lg font-semibold">Medical Criteria Verification</h3>
@@ -816,31 +910,341 @@ export default function CreateStudyPage() {
                     </div>
                   </div>
                 </div>
+              </div>
 
-                {formData.requiresEligibilityProof && (
-                  <div className="bg-warning/10 border border-warning/20 rounded-lg p-4">
+              {/* Medical Criteria Form - Only shown when enabled */}
+              {formData.requiresEligibilityProof && (
+                <>
+                  {/* Biomarkers Section */}
+                  <div className="space-y-4 pt-4 border-t border-border">
+                    <h3 className="text-lg font-semibold text-primary">Biomarker Criteria</h3>
+
+                    {/* HbA1c */}
+                    <div className="p-4 rounded-lg border border-border bg-background/50">
+                      <div className="flex items-center gap-2 mb-3">
+                        <input
+                          type="checkbox"
+                          checked={formData.hba1c.enabled}
+                          onChange={(e) => setFormData({ ...formData, hba1c: { ...formData.hba1c, enabled: e.target.checked } })}
+                          className="w-4 h-4"
+                        />
+                        <label className="font-medium">HbA1c (Hemoglobin A1c)</label>
+                        <span className="text-xs text-muted-foreground">(%)</span>
+                      </div>
+                      {formData.hba1c.enabled && (
+                        <div className="grid grid-cols-2 gap-3 ml-6">
+                          <div>
+                            <label className="block text-xs text-muted-foreground mb-1">Minimum</label>
+                            <input
+                              type="number"
+                              value={formData.hba1c.min}
+                              onChange={(e) => setFormData({ ...formData, hba1c: { ...formData.hba1c, min: e.target.value } })}
+                              placeholder="7.0"
+                              step="0.1"
+                              className="w-full px-3 py-2 text-sm rounded border border-border bg-background"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-muted-foreground mb-1">Maximum</label>
+                            <input
+                              type="number"
+                              value={formData.hba1c.max}
+                              onChange={(e) => setFormData({ ...formData, hba1c: { ...formData.hba1c, max: e.target.value } })}
+                              placeholder="10.0"
+                              step="0.1"
+                              className="w-full px-3 py-2 text-sm rounded border border-border bg-background"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* LDL Cholesterol */}
+                    <div className="p-4 rounded-lg border border-border bg-background/50">
+                      <div className="flex items-center gap-2 mb-3">
+                        <input
+                          type="checkbox"
+                          checked={formData.ldl.enabled}
+                          onChange={(e) => setFormData({ ...formData, ldl: { ...formData.ldl, enabled: e.target.checked } })}
+                          className="w-4 h-4"
+                        />
+                        <label className="font-medium">LDL Cholesterol</label>
+                        <span className="text-xs text-muted-foreground">(mg/dL)</span>
+                      </div>
+                      {formData.ldl.enabled && (
+                        <div className="grid grid-cols-2 gap-3 ml-6">
+                          <div>
+                            <label className="block text-xs text-muted-foreground mb-1">Minimum</label>
+                            <input
+                              type="number"
+                              value={formData.ldl.min}
+                              onChange={(e) => setFormData({ ...formData, ldl: { ...formData.ldl, min: e.target.value } })}
+                              placeholder="0"
+                              className="w-full px-3 py-2 text-sm rounded border border-border bg-background"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-muted-foreground mb-1">Maximum</label>
+                            <input
+                              type="number"
+                              value={formData.ldl.max}
+                              onChange={(e) => setFormData({ ...formData, ldl: { ...formData.ldl, max: e.target.value } })}
+                              placeholder="130"
+                              className="w-full px-3 py-2 text-sm rounded border border-border bg-background"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Vital Signs Section */}
+                  <div className="space-y-4 pt-4 border-t border-border">
+                    <h3 className="text-lg font-semibold text-primary">Vital Signs Criteria</h3>
+
+                    {/* BMI */}
+                    <div className="p-4 rounded-lg border border-border bg-background/50">
+                      <div className="flex items-center gap-2 mb-3">
+                        <input
+                          type="checkbox"
+                          checked={formData.bmi.enabled}
+                          onChange={(e) => setFormData({ ...formData, bmi: { ...formData.bmi, enabled: e.target.checked } })}
+                          className="w-4 h-4"
+                        />
+                        <label className="font-medium">BMI (Body Mass Index)</label>
+                        <span className="text-xs text-muted-foreground">(kg/m²)</span>
+                      </div>
+                      {formData.bmi.enabled && (
+                        <div className="grid grid-cols-2 gap-3 ml-6">
+                          <div>
+                            <label className="block text-xs text-muted-foreground mb-1">Minimum</label>
+                            <input
+                              type="number"
+                              value={formData.bmi.min}
+                              onChange={(e) => setFormData({ ...formData, bmi: { ...formData.bmi, min: e.target.value } })}
+                              placeholder="25"
+                              step="0.1"
+                              className="w-full px-3 py-2 text-sm rounded border border-border bg-background"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-muted-foreground mb-1">Maximum</label>
+                            <input
+                              type="number"
+                              value={formData.bmi.max}
+                              onChange={(e) => setFormData({ ...formData, bmi: { ...formData.bmi, max: e.target.value } })}
+                              placeholder="40"
+                              step="0.1"
+                              className="w-full px-3 py-2 text-sm rounded border border-border bg-background"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Systolic BP */}
+                    <div className="p-4 rounded-lg border border-border bg-background/50">
+                      <div className="flex items-center gap-2 mb-3">
+                        <input
+                          type="checkbox"
+                          checked={formData.systolicBP.enabled}
+                          onChange={(e) => setFormData({ ...formData, systolicBP: { ...formData.systolicBP, enabled: e.target.checked } })}
+                          className="w-4 h-4"
+                        />
+                        <label className="font-medium">Systolic Blood Pressure</label>
+                        <span className="text-xs text-muted-foreground">(mmHg)</span>
+                      </div>
+                      {formData.systolicBP.enabled && (
+                        <div className="grid grid-cols-2 gap-3 ml-6">
+                          <div>
+                            <label className="block text-xs text-muted-foreground mb-1">Minimum</label>
+                            <input
+                              type="number"
+                              value={formData.systolicBP.min}
+                              onChange={(e) => setFormData({ ...formData, systolicBP: { ...formData.systolicBP, min: e.target.value } })}
+                              placeholder="90"
+                              className="w-full px-3 py-2 text-sm rounded border border-border bg-background"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-muted-foreground mb-1">Maximum</label>
+                            <input
+                              type="number"
+                              value={formData.systolicBP.max}
+                              onChange={(e) => setFormData({ ...formData, systolicBP: { ...formData.systolicBP, max: e.target.value } })}
+                              placeholder="140"
+                              className="w-full px-3 py-2 text-sm rounded border border-border bg-background"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Diagnoses Section */}
+                  <div className="space-y-4 pt-4 border-t border-border">
+                    <h3 className="text-lg font-semibold text-primary">Diagnosis Requirements (ICD-10)</h3>
+
+                    <div className="p-4 rounded-lg border border-border bg-background/50">
+                      <label className="block text-sm font-medium mb-2">Required Diagnoses</label>
+                      <p className="text-xs text-muted-foreground mb-3">
+                        Patients must have these diagnoses. Common codes: E11.9 (Type 2 Diabetes), I10 (Hypertension)
+                      </p>
+                      <select
+                        className="w-full px-3 py-2 text-sm rounded border border-border bg-background"
+                        onChange={(e) => {
+                          if (e.target.value && !formData.requiredDiagnoses.includes(e.target.value)) {
+                            setFormData({
+                              ...formData,
+                              requiredDiagnoses: [...formData.requiredDiagnoses, e.target.value]
+                            });
+                          }
+                          e.target.value = '';
+                        }}
+                      >
+                        <option value="">-- Select diagnosis to add --</option>
+                        <option value="E11.9">E11.9 - Type 2 Diabetes Mellitus</option>
+                        <option value="I10">I10 - Essential Hypertension</option>
+                        <option value="E78.5">E78.5 - Hyperlipidemia</option>
+                        <option value="E66.9">E66.9 - Obesity</option>
+                      </select>
+                      {formData.requiredDiagnoses.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          {formData.requiredDiagnoses.map((dx) => (
+                            <div key={dx} className="flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-xs">
+                              <span>{dx}</span>
+                              <button
+                                type="button"
+                                onClick={() => setFormData({
+                                  ...formData,
+                                  requiredDiagnoses: formData.requiredDiagnoses.filter(d => d !== dx)
+                                })}
+                                className="hover:text-primary/70"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="p-4 rounded-lg border border-border bg-background/50">
+                      <label className="block text-sm font-medium mb-2">Excluded Medications</label>
+                      <p className="text-xs text-muted-foreground mb-3">
+                        Patients must NOT be taking these medications
+                      </p>
+                      <select
+                        className="w-full px-3 py-2 text-sm rounded border border-border bg-background"
+                        onChange={(e) => {
+                          if (e.target.value && !formData.excludedMedications.includes(e.target.value)) {
+                            setFormData({
+                              ...formData,
+                              excludedMedications: [...formData.excludedMedications, e.target.value]
+                            });
+                          }
+                          e.target.value = '';
+                        }}
+                      >
+                        <option value="">-- Select medication to exclude --</option>
+                        <option value="WARFARIN">Warfarin (Anticoagulant)</option>
+                        <option value="INSULIN">Insulin</option>
+                        <option value="METFORMIN">Metformin</option>
+                        <option value="ASPIRIN">Aspirin</option>
+                      </select>
+                      {formData.excludedMedications.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          {formData.excludedMedications.map((med) => (
+                            <div key={med} className="flex items-center gap-2 px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs">
+                              <span>{med}</span>
+                              <button
+                                type="button"
+                                onClick={() => setFormData({
+                                  ...formData,
+                                  excludedMedications: formData.excludedMedications.filter(m => m !== med)
+                                })}
+                                className="hover:text-red-500"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="p-4 rounded-lg border border-border bg-background/50">
+                      <label className="block text-sm font-medium mb-2">Excluded Allergies</label>
+                      <p className="text-xs text-muted-foreground mb-3">
+                        Patients must NOT have these allergies (ensures they can safely take study drug)
+                      </p>
+                      <select
+                        className="w-full px-3 py-2 text-sm rounded border border-border bg-background"
+                        onChange={(e) => {
+                          if (e.target.value && !formData.excludedAllergies.includes(e.target.value)) {
+                            setFormData({
+                              ...formData,
+                              excludedAllergies: [...formData.excludedAllergies, e.target.value]
+                            });
+                          }
+                          e.target.value = '';
+                        }}
+                      >
+                        <option value="">-- Select allergy to exclude --</option>
+                        <option value="PENICILLIN">Penicillin</option>
+                        <option value="SULFA">Sulfa Drugs</option>
+                        <option value="METFORMIN">Metformin</option>
+                        <option value="STATINS">Statins</option>
+                      </select>
+                      {formData.excludedAllergies.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          {formData.excludedAllergies.map((allergy) => (
+                            <div key={allergy} className="flex items-center gap-2 px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs">
+                              <span>{allergy}</span>
+                              <button
+                                type="button"
+                                onClick={() => setFormData({
+                                  ...formData,
+                                  excludedAllergies: formData.excludedAllergies.filter(a => a !== allergy)
+                                })}
+                                className="hover:text-red-500"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Working Combinations Warning */}
+                  <div className="bg-warning/10 border border-warning/20 rounded-lg p-4 mt-6">
                     <div className="flex items-start gap-3">
                       <AlertCircle className="h-5 w-5 text-warning flex-shrink-0 mt-0.5" />
                       <div className="space-y-2">
                         <p className="text-sm font-medium text-warning">
-                          How Medical Eligibility Works (MVP)
+                          Validated Criteria Combinations for Demo
                         </p>
-                        <ol className="text-xs text-warning space-y-1 list-decimal list-inside">
-                          <li>Patient provides medical data in browser extension</li>
-                          <li>Extension generates eligibility code (Poseidon hash)</li>
-                          <li>System creates Groth16 ZK proof (2-5 seconds)</li>
-                          <li>Smart contract verifies proof on Optimism Sepolia</li>
-                          <li>If valid: Application accepted, event emitted</li>
-                        </ol>
-                        <p className="text-xs text-warning mt-2">
-                          <strong>Note:</strong> Eligibility code hash is set to <code>0</code> by default (no specific medical criteria).
-                          Configure specific medical criteria via API or contract after study creation.
-                        </p>
+                        <div className="text-xs text-warning space-y-2">
+                          <p><strong>For your demo video, use this combination (verified working):</strong></p>
+                          <ul className="list-disc list-inside space-y-1 ml-2">
+                            <li>HbA1c: 7.0 - 10.0%</li>
+                            <li>LDL: 0 - 130 mg/dL</li>
+                            <li>BMI: 25 - 40</li>
+                            <li>Required Diagnosis: E11.9 (Type 2 Diabetes)</li>
+                            <li>Excluded Medication: WARFARIN</li>
+                            <li>Excluded Allergy: METFORMIN</li>
+                          </ul>
+                          <p className="mt-2 italic">
+                            This exact combination is tested and generates valid ZK proofs. The circuit computes Poseidon hashes for each category.
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
-                )}
-              </div>
+                </>
+              )}
             </div>
           </motion.div>
 
@@ -888,7 +1292,7 @@ export default function CreateStudyPage() {
                   <li>Study will be published on-chain to StudyRegistry contract on Optimism Sepolia</li>
                   <li>Escrow will be funded with {formData.totalFunding || '___'} USDC</li>
                   <li>Patients can browse and apply anonymously using ZK proofs</li>
-                  <li>You'll see verified applicant count (without identities)</li>
+                  <li>You&apos;ll see verified applicant count (without identities)</li>
                   <li>Payments released automatically after participants complete {formData.requiredAppointments} appointments</li>
                 </ol>
               </div>

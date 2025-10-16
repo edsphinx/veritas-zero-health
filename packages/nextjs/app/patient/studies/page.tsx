@@ -12,8 +12,8 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
   FlaskConical,
-  Users,
-  DollarSign,
+  Users as _Users,
+  DollarSign as _DollarSign,
   CheckCircle,
   Clock,
   ArrowRight,
@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { PatientLayout } from '@/components/layout';
 import { useAuth } from '@/shared/hooks/useAuth';
+import type { Study as _Study, StudyStatus as _StudyStatus } from '@veritas/types';
 
 interface Milestone {
   id: number;
@@ -31,8 +32,10 @@ interface Milestone {
   status: string;
 }
 
-interface Study {
-  id: number;
+// Extended Study interface for this page's mock data
+// Note: This is mock data structure, not the canonical Study type from @veritas/types
+interface StudyWithProgress {
+  id: number; // Mock uses number instead of UUID string
   title: string;
   description: string;
   status: 'Created' | 'Funding' | 'Active' | 'Paused' | 'Completed' | 'Cancelled';
@@ -50,8 +53,8 @@ interface Study {
 
 export default function MyStudiesPage() {
   const router = useRouter();
-  const { address, isConnected } = useAuth();
-  const [studies, setStudies] = useState<Study[]>([]);
+  const { address: _address, isConnected } = useAuth();
+  const [studies, setStudies] = useState<StudyWithProgress[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all');
 
@@ -67,7 +70,7 @@ export default function MyStudiesPage() {
 
       // TODO: Fetch from ResearchFundingEscrow contract filtered by participant address
       // Mock data for now
-      const mockStudies: Study[] = [
+      const mockStudies: StudyWithProgress[] = [
         {
           id: 1,
           title: 'Type 2 Diabetes Treatment Study',
@@ -256,7 +259,7 @@ export default function MyStudiesPage() {
             <AlertCircle className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">No Studies Yet</h3>
             <p className="text-muted-foreground mb-6">
-              You haven't enrolled in any clinical studies
+              You haven&apos;t enrolled in any clinical studies
             </p>
             <button
               onClick={() => router.push('/studies')}

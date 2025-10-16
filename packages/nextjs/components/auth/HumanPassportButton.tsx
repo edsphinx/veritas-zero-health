@@ -30,7 +30,7 @@ export function HumanPassportButton({
   address,
   size = 'md',
   className,
-  onVerified,
+  onVerified: _onVerified,
   onVerificationStart,
 }: HumanPassportButtonProps) {
   const [isVerifying, setIsVerifying] = useState(false);
@@ -51,7 +51,7 @@ export function HumanPassportButton({
     window.open(passportUrl, '_blank', 'noopener,noreferrer');
 
     // Note: User must manually check status after verifying
-    // We don't auto-poll to avoid rate limiting
+    // We don&apos;t auto-poll to avoid rate limiting
     setTimeout(() => {
       setIsVerifying(false);
     }, 2000);

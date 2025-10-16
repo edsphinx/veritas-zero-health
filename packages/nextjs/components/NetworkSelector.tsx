@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { useAccount, useSwitchChain, useChainId } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, Check, AlertCircle } from 'lucide-react';
-import { chains, getChainName } from '@/config/wagmi.config';
+import { networks } from '@/config/wagmi.config';
 import { cn } from '@/shared/lib/utils';
 
 export function NetworkSelector() {
@@ -21,7 +21,7 @@ export function NetworkSelector() {
 
   if (!isConnected) return null;
 
-  const currentChain = chains.find(chain => chain.id === currentChainId);
+  const currentChain = networks.find(chain => chain.id === currentChainId);
   const isUnsupportedChain = !currentChain;
 
   return (
@@ -67,7 +67,7 @@ export function NetworkSelector() {
                   Select Network
                 </div>
 
-                {chains.map((chain) => {
+                {networks.map((chain) => {
                   const isActive = chain.id === currentChainId;
                   const isTestnet = chain.testnet;
 
@@ -76,7 +76,7 @@ export function NetworkSelector() {
                       key={chain.id}
                       onClick={() => {
                         if (!isActive && switchChain) {
-                          switchChain({ chainId: chain.id });
+                          switchChain({ chainId: Number(chain.id) });
                         }
                         setIsOpen(false);
                       }}

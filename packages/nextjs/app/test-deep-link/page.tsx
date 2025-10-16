@@ -66,7 +66,7 @@ export default function TestDeepLinkPage() {
           <li>Load the unpacked extension in Chrome from <code>packages/browser-extension/dist/</code></li>
           <li>Copy the extension ID from <code>chrome://extensions/</code></li>
           <li>Paste it in the field below</li>
-          <li>Click "Open Extension" to test the deep link flow</li>
+          <li>Click &quot;Open Extension&quot; to test the deep link flow</li>
         </ol>
       </div>
 

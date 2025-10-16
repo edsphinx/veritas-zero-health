@@ -30,13 +30,13 @@ export async function GET(
       ...result,
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching study applications:', error);
 
     return NextResponse.json(
       {
         error: 'Failed to fetch applications',
-        details: error?.message || 'Unknown error',
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

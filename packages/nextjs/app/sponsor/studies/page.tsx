@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
@@ -25,7 +25,7 @@ import { useStudies } from '@/shared/hooks/useStudies';
 
 export default function FundedStudiesPage() {
   const router = useRouter();
-  const { address, isConnected } = useAuth();
+  const { address: _address, isConnected } = useAuth();
   const { studies, loading } = useStudies();
 
   // TODO: Filter studies that this sponsor has funded
@@ -134,7 +134,7 @@ export default function FundedStudiesPage() {
             <Beaker className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">No Funded Studies Yet</h3>
             <p className="text-muted-foreground max-w-md mx-auto mb-6">
-              You haven't funded any studies yet. Browse available studies and make your first
+              You haven&apos;t funded any studies yet. Browse available studies and make your first
               investment in clinical research.
             </p>
             <button
@@ -181,7 +181,7 @@ export default function FundedStudiesPage() {
                         </span>
                         <span className="text-muted-foreground flex items-center gap-2">
                           <Users className="h-4 w-4" />
-                          0/{study.maxParticipants} participants
+                          0/{(study as { maxParticipants?: number }).maxParticipants || 0} participants
                         </span>
                       </div>
                     </div>
