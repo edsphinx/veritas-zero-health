@@ -7,8 +7,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useAccount } from 'wagmi';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import {
   Beaker,
   DollarSign,
@@ -18,13 +18,21 @@ import {
   AlertCircle,
   CheckCircle2,
   Loader2,
+  ExternalLink,
 } from 'lucide-react';
 import { ResearcherLayout } from '@/components/layout';
 import { toast } from 'sonner';
+import { useAuth } from '@/shared/hooks/useAuth';
 
 export default function CreateStudyPage() {
-  const { address, isConnected } = useAccount();
+  const router = useRouter();
+  const { address, isConnected } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [txStatus, setTxStatus] = useState<{
+    step: number;
+    message: string;
+    hash?: string;
+  } | null>(null);
 
   const [formData, setFormData] = useState({
     // Basic Info
@@ -92,10 +100,7 @@ export default function CreateStudyPage() {
       toast.dismiss(loadingToast);
 
       // Step 2: Execute blockchain transactions via user's wallet
-      toast.loading('Creating study on blockchain...', {
-        description: 'Please confirm the transactions in your wallet',
-        id: 'blockchain-tx',
-      });
+      setTxStatus({ step: 1, message: 'Preparing blockchain transactions...' });
 
       // Import contracts and viem
       const { createPublicClient, createWalletClient, http, custom } = await import('viem');
@@ -126,7 +131,7 @@ export default function CreateStudyPage() {
       const { studyParams } = validationResult.data;
 
       // Transaction 1: Create study in escrow
-      toast.loading('Transaction 1/3: Creating escrow...', { id: 'blockchain-tx' });
+      setTxStatus({ step: 1, message: 'Transaction 1/3: Creating escrow...' });
 
       const escrowHash = await walletClient.writeContract({
         address: escrowContract.address as `0x${string}`,
@@ -140,13 +145,14 @@ export default function CreateStudyPage() {
         ],
       });
 
+      setTxStatus({ step: 1, message: 'Waiting for confirmation...', hash: escrowHash });
       const escrowReceipt = await publicClient.waitForTransactionReceipt({ hash: escrowHash });
       const escrowStudyId = escrowReceipt.logs[0]?.topics[1]
         ? parseInt(escrowReceipt.logs[0].topics[1], 16)
         : null;
 
       // Transaction 2: Publish to registry
-      toast.loading('Transaction 2/3: Publishing to registry...', { id: 'blockchain-tx' });
+      setTxStatus({ step: 2, message: 'Transaction 2/3: Publishing to registry...' });
 
       const registryHash = await walletClient.writeContract({
         address: registryContract.address as `0x${string}`,
@@ -159,13 +165,14 @@ export default function CreateStudyPage() {
         ],
       });
 
+      setTxStatus({ step: 2, message: 'Waiting for confirmation...', hash: registryHash });
       const registryReceipt = await publicClient.waitForTransactionReceipt({ hash: registryHash });
       const registryStudyId = registryReceipt.logs[0]?.topics[1]
         ? parseInt(registryReceipt.logs[0].topics[1], 16)
         : null;
 
       // Transaction 3: Set eligibility criteria
-      toast.loading('Transaction 3/3: Setting eligibility criteria...', { id: 'blockchain-tx' });
+      setTxStatus({ step: 3, message: 'Transaction 3/3: Setting eligibility criteria...' });
 
       const criteriaHash = await walletClient.writeContract({
         address: registryContract.address as `0x${string}`,
@@ -173,21 +180,56 @@ export default function CreateStudyPage() {
         functionName: 'setStudyCriteria',
         args: [
           BigInt(registryStudyId!),
-          studyParams.minAge,
-          studyParams.maxAge,
-          studyParams.eligibilityCodeHash,
+          Number(studyParams.minAge), // uint32 in contract
+          Number(studyParams.maxAge), // uint32 in contract
+          BigInt(studyParams.eligibilityCodeHash), // uint256 in contract
         ],
       });
 
-      await publicClient.waitForTransactionReceipt({ hash: criteriaHash });
+      setTxStatus({ step: 3, message: 'Waiting for final confirmation...', hash: criteriaHash });
+      const criteriaReceipt = await publicClient.waitForTransactionReceipt({ hash: criteriaHash });
 
-      // Dismiss loading toast
-      toast.dismiss('blockchain-tx');
+      // Index the study in our database for fast lookups
+      setTxStatus({ step: 4, message: 'Indexing study...' });
 
-      // Show success toast
+      try {
+        const indexResponse = await fetch('/api/studies/index', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            registryId: registryStudyId!,
+            escrowId: escrowStudyId!,
+            title: formData.title,
+            description: formData.description,
+            researcherAddress: address,
+            escrowTxHash: escrowHash,
+            registryTxHash: registryHash,
+            criteriaTxHash: criteriaHash,
+            escrowBlockNumber: escrowReceipt.blockNumber.toString(),
+            registryBlockNumber: registryReceipt.blockNumber.toString(),
+            chainId: 11155420,
+          }),
+        });
+
+        const indexResult = await indexResponse.json();
+
+        if (!indexResult.success) {
+          console.warn('[Study Creation] Failed to index study:', indexResult.error);
+          // Don't fail the whole flow if indexing fails - study is already on-chain
+        } else {
+          console.log('[Study Creation] Study indexed successfully:', indexResult.data);
+        }
+      } catch (indexError) {
+        console.error('[Study Creation] Error indexing study:', indexError);
+        // Continue anyway - study exists on blockchain
+      }
+
+      // Success! Show toast with Etherscan link
+      setTxStatus({ step: 4, message: 'Study created successfully! Redirecting...' });
+
       toast.success('Study Created Successfully!', {
-        description: `Escrow ID: ${escrowStudyId} | Registry ID: ${registryStudyId} | Max Participants: ${maxParticipants}`,
-        duration: 8000,
+        description: `Study ID: ${escrowStudyId} | Max Participants: ${maxParticipants}`,
+        duration: 5000,
         action: {
           label: 'View on Etherscan',
           onClick: () => {
@@ -198,6 +240,13 @@ export default function CreateStudyPage() {
           },
         },
       });
+
+      // Wait 3 seconds to allow user to click Etherscan link, then redirect
+      // Note: We use escrowStudyId because that's where the full study data is stored
+      setTimeout(() => {
+        setTxStatus(null);
+        router.push(`/researcher/studies/${escrowStudyId}`);
+      }, 3000);
 
       // Reset form
       setFormData({
@@ -215,7 +264,7 @@ export default function CreateStudyPage() {
 
     } catch (error: any) {
       console.error('Error creating study:', error);
-      toast.dismiss('blockchain-tx');
+      setTxStatus(null);
       toast.error('Failed to Create Study', {
         description: error?.message || 'An unexpected error occurred. Check console for details.',
         duration: 6000,
@@ -231,6 +280,102 @@ export default function CreateStudyPage() {
 
   return (
     <ResearcherLayout>
+      {/* Transaction Progress Overlay */}
+      <AnimatePresence>
+        {txStatus && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-md"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-card border border-border rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4"
+            >
+              <div className="text-center space-y-6">
+                {/* Progress Icon */}
+                <div className="flex justify-center">
+                  <div className="relative">
+                    <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
+                      {txStatus.step === 4 ? (
+                        <CheckCircle2 className="h-10 w-10 text-success animate-bounce" />
+                      ) : (
+                        <Loader2 className="h-10 w-10 text-primary animate-spin" />
+                      )}
+                    </div>
+                    <div className="absolute -top-1 -right-1 bg-primary text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
+                      {txStatus.step}/3
+                    </div>
+                  </div>
+                </div>
+
+                {/* Status Message */}
+                <div>
+                  <h3 className="text-xl font-bold mb-2">
+                    {txStatus.step === 4 ? 'Success!' : 'Creating Study...'}
+                  </h3>
+                  <p className="text-muted-foreground">{txStatus.message}</p>
+                </div>
+
+                {/* Transaction Hash */}
+                {txStatus.hash && (
+                  <div className="pt-4 border-t border-border">
+                    <p className="text-xs text-muted-foreground mb-2">Transaction Hash:</p>
+                    <a
+                      href={`https://sepolia-optimism.etherscan.io/tx/${txStatus.hash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 text-sm text-primary hover:underline font-mono"
+                    >
+                      {txStatus.hash.slice(0, 10)}...{txStatus.hash.slice(-8)}
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </div>
+                )}
+
+                {/* Progress Steps */}
+                <div className="space-y-2 pt-4">
+                  {[
+                    { step: 1, label: 'Create Escrow' },
+                    { step: 2, label: 'Publish to Registry' },
+                    { step: 3, label: 'Set Criteria' },
+                  ].map((item) => (
+                    <div
+                      key={item.step}
+                      className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
+                        txStatus.step > item.step
+                          ? 'bg-success/10 text-success'
+                          : txStatus.step === item.step
+                          ? 'bg-primary/10 text-primary'
+                          : 'bg-muted text-muted-foreground'
+                      }`}
+                    >
+                      {txStatus.step > item.step ? (
+                        <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+                      ) : txStatus.step === item.step ? (
+                        <Loader2 className="h-4 w-4 flex-shrink-0 animate-spin" />
+                      ) : (
+                        <div className="h-4 w-4 rounded-full border-2 border-current flex-shrink-0" />
+                      )}
+                      <span className="text-sm font-medium">{item.label}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {txStatus.step === 4 && (
+                  <p className="text-xs text-muted-foreground pt-2">
+                    Redirecting to study details in a moment...
+                  </p>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="space-y-8">
         {/* Header */}
         <div>
