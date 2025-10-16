@@ -14,7 +14,7 @@ import {
   Award,
   ArrowRight,
 } from 'lucide-react';
-import { ClinicLayout } from '@/presentation/components/layout';
+import { ClinicLayout } from '@/components/layout';
 
 export default function ClinicDashboard() {
   return (
