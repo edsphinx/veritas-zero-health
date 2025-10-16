@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAccount } from 'wagmi';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -13,9 +12,12 @@ import {
   CheckCircle,
   Clock,
   DollarSign,
+  ExternalLink,
+  FileCode,
 } from 'lucide-react';
 import { ResearcherLayout } from '@/components/layout';
 import { useStudy, useVerifiedApplicantsCount } from '@/shared/hooks/useStudy';
+import { useAuth } from '@/shared/hooks/useAuth';
 
 interface Milestone {
   id: number;
@@ -36,6 +38,14 @@ interface Study {
   participantCount: number;
   maxParticipants: number;
   milestones: Milestone[];
+  // Blockchain data
+  registryId?: number;
+  escrowId?: number;
+  chainId?: number;
+  escrowTxHash?: string;
+  registryTxHash?: string;
+  criteriaTxHash?: string;
+  researcherAddress?: string;
 }
 
 interface Applicant {
@@ -47,7 +57,7 @@ interface Applicant {
 
 export default function ResearcherStudyDetailPage() {
   const params = useParams();
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useAuth();
   const studyId = params?.studyId as string;
 
   const [study, setStudy] = useState<Study | null>(null);
@@ -261,6 +271,176 @@ export default function ResearcherStudyDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Blockchain Contracts & Transactions */}
+      {(study.escrowTxHash || study.registryTxHash || study.criteriaTxHash) && (
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 mb-6">
+          <div className="flex items-center gap-3 mb-6">
+            <FileCode className="h-6 w-6 text-blue-600" />
+            <h2 className="text-2xl font-bold">Blockchain Contracts & Transactions</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Study IDs */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h3 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                <Shield className="h-4 w-4" />
+                Study Identifiers
+              </h3>
+              <div className="space-y-2 text-sm">
+                {study.escrowId !== undefined && (
+                  <div>
+                    <span className="text-blue-700 font-medium">Escrow ID:</span>
+                    <span className="ml-2 text-blue-900 font-mono">#{study.escrowId}</span>
+                  </div>
+                )}
+                {study.registryId !== undefined && (
+                  <div>
+                    <span className="text-blue-700 font-medium">Registry ID:</span>
+                    <span className="ml-2 text-blue-900 font-mono">#{study.registryId}</span>
+                  </div>
+                )}
+                {study.chainId && (
+                  <div>
+                    <span className="text-blue-700 font-medium">Chain:</span>
+                    <span className="ml-2 text-blue-900 font-mono">
+                      {study.chainId === 11155420 ? 'Optimism Sepolia' : `Chain ${study.chainId}`}
+                    </span>
+                  </div>
+                )}
+                {study.researcherAddress && (
+                  <div>
+                    <span className="text-blue-700 font-medium">Researcher:</span>
+                    <span className="ml-2 text-blue-900 font-mono text-xs">
+                      {study.researcherAddress.slice(0, 6)}...{study.researcherAddress.slice(-4)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Contract Addresses */}
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <h3 className="font-semibold text-purple-900 mb-3 flex items-center gap-2">
+                <FileCode className="h-4 w-4" />
+                Smart Contracts
+              </h3>
+              <div className="space-y-2 text-sm">
+                <div>
+                  <span className="text-purple-700 font-medium">ResearchFundingEscrow</span>
+                  <a
+                    href={`https://sepolia-optimism.etherscan.io/address/${
+                      study.chainId === 11155420
+                        ? '0x...'  // TODO: Get from deployedContracts
+                        : 'unknown'
+                    }`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-2 text-purple-600 hover:text-purple-800 text-xs flex items-center gap-1 mt-1"
+                  >
+                    <span className="font-mono">View Contract</span>
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+                <div>
+                  <span className="text-purple-700 font-medium">StudyRegistry</span>
+                  <a
+                    href={`https://sepolia-optimism.etherscan.io/address/${
+                      study.chainId === 11155420
+                        ? '0x...'  // TODO: Get from deployedContracts
+                        : 'unknown'
+                    }`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-2 text-purple-600 hover:text-purple-800 text-xs flex items-center gap-1 mt-1"
+                  >
+                    <span className="font-mono">View Contract</span>
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+                <div>
+                  <span className="text-purple-700 font-medium">EligibilityCodeVerifier</span>
+                  <a
+                    href="https://sepolia-optimism.etherscan.io/address/0x1BBc9BD3b5b5a2ECB7d99b8b933F866A16bb7B29"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-2 text-purple-600 hover:text-purple-800 text-xs flex items-center gap-1 mt-1"
+                  >
+                    <span className="font-mono">View Contract</span>
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Transactions */}
+          <div className="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <h3 className="font-semibold text-gray-900 mb-3">Creation Transactions</h3>
+            <div className="space-y-3">
+              {study.escrowTxHash && (
+                <div className="flex items-center justify-between pb-3 border-b border-gray-200">
+                  <div>
+                    <p className="font-medium text-gray-900 text-sm">1. Create Escrow</p>
+                    <p className="text-xs text-gray-600 mt-1 font-mono">
+                      {study.escrowTxHash.slice(0, 10)}...{study.escrowTxHash.slice(-8)}
+                    </p>
+                  </div>
+                  <a
+                    href={`https://sepolia-optimism.etherscan.io/tx/${study.escrowTxHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700 transition-colors"
+                  >
+                    View on Etherscan
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              )}
+
+              {study.registryTxHash && (
+                <div className="flex items-center justify-between pb-3 border-b border-gray-200">
+                  <div>
+                    <p className="font-medium text-gray-900 text-sm">2. Publish to Registry</p>
+                    <p className="text-xs text-gray-600 mt-1 font-mono">
+                      {study.registryTxHash.slice(0, 10)}...{study.registryTxHash.slice(-8)}
+                    </p>
+                  </div>
+                  <a
+                    href={`https://sepolia-optimism.etherscan.io/tx/${study.registryTxHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700 transition-colors"
+                  >
+                    View on Etherscan
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              )}
+
+              {study.criteriaTxHash && (
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-gray-900 text-sm">3. Set Eligibility Criteria</p>
+                    <p className="text-xs text-gray-600 mt-1 font-mono">
+                      {study.criteriaTxHash.slice(0, 10)}...{study.criteriaTxHash.slice(-8)}
+                    </p>
+                  </div>
+                  <a
+                    href={`https://sepolia-optimism.etherscan.io/tx/${study.criteriaTxHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700 transition-colors"
+                  >
+                    View on Etherscan
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Milestones Overview */}
       <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 mb-6">

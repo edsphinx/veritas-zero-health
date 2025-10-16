@@ -8,30 +8,25 @@
 
 'use client';
 
-import { useAccount } from 'wagmi';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Plus, Beaker, TrendingUp, Users, CheckCircle } from 'lucide-react';
+import { Plus, Beaker, TrendingUp, Users, CheckCircle, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 
 import { ResearcherLayout } from '@/components/layout';
-import { StudyList } from '@/components/trials';
 import { useStudiesByResearcher } from '@/shared/hooks/useStudies';
 import { cn } from '@/shared/lib/utils';
+import { useAuth } from '@/shared/hooks/useAuth';
 
 export default function ResearcherStudiesPage() {
   const router = useRouter();
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useAuth();
 
   // Fetch studies created by this researcher
   const { studies, isLoading, totalCount } = useStudiesByResearcher(address);
 
   // Calculate stats
-  const activeStudies = studies.filter((s) => s.status === 0).length;
-
-  const handleViewStudyDetails = (studyId: bigint) => {
-    router.push(`/researcher/studies/${studyId.toString()}`);
-  };
+  const activeStudies = studies.filter((s) => s.status === 'Active' || s.status === 'Created').length;
 
   return (
     <ResearcherLayout>
@@ -136,11 +131,71 @@ export default function ResearcherStudiesPage() {
               </Link>
             </div>
           ) : (
-            <StudyList
-              showApplyButton={false}
-              onApplyClick={handleViewStudyDetails}
-              className="mt-0"
-            />
+            <div className="space-y-4">
+              {studies.map((study) => (
+                <motion.div
+                  key={study.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="rounded-xl border border-border bg-card p-6 hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h3 className="text-xl font-semibold mb-1">{study.title}</h3>
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {study.description}
+                      </p>
+                    </div>
+                    <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium border bg-success/10 border-success/20 text-success">
+                      <div className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
+                      {study.status}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4 border-t border-b border-border">
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Study ID</p>
+                      <p className="text-sm font-medium">#{study.escrowId}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Registry ID</p>
+                      <p className="text-sm font-medium">#{study.registryId}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Chain</p>
+                      <p className="text-sm font-medium">
+                        {study.chainId === 11155420 ? 'OP Sepolia' : `Chain ${study.chainId}`}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Created</p>
+                      <p className="text-sm font-medium">
+                        {new Date(study.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 mt-4">
+                    <Link
+                      href={`/researcher/studies/${study.escrowId}`}
+                      className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors"
+                    >
+                      View Details
+                      <Users className="h-4 w-4" />
+                    </Link>
+                    <a
+                      href={`https://sepolia-optimism.etherscan.io/tx/${study.escrowTxHash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium hover:bg-accent transition-colors"
+                    >
+                      View on Etherscan
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           )}
         </motion.div>
       </div>
