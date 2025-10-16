@@ -5,10 +5,12 @@
  * Adapts Prisma's data format to our domain entities.
  */
 
-import type { PrismaClient } from '@prisma/client';
+import type { PrismaClient, Prisma } from '@prisma/client';
 import type { Address } from 'viem';
 import type { ISponsorDepositRepository } from '@/core/domain/ISponsorDepositRepository';
 import type { SponsorDeposit, CreateSponsorDepositData } from '@/core/domain/SponsorDeposit';
+
+type PrismaSponsorDeposit = Prisma.SponsorDepositGetPayload<true>;
 
 export class PrismaSponsorDepositRepository implements ISponsorDepositRepository {
   constructor(private prisma: PrismaClient) {}
@@ -44,8 +46,7 @@ export class PrismaSponsorDepositRepository implements ISponsorDepositRepository
       orderBy: { depositedAt: 'desc' },
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return deposits.map((d: any) => this.toDomain(d));
+    return deposits.map((d: PrismaSponsorDeposit) => this.toDomain(d));
   }
 
   async findByStudy(studyId: string): Promise<SponsorDeposit[]> {
@@ -54,8 +55,7 @@ export class PrismaSponsorDepositRepository implements ISponsorDepositRepository
       orderBy: { depositedAt: 'desc' },
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return deposits.map((d: any) => this.toDomain(d));
+    return deposits.map((d: PrismaSponsorDeposit) => this.toDomain(d));
   }
 
   async findBySponsorAndStudy(
@@ -70,8 +70,7 @@ export class PrismaSponsorDepositRepository implements ISponsorDepositRepository
       orderBy: { depositedAt: 'desc' },
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return deposits.map((d: any) => this.toDomain(d));
+    return deposits.map((d: PrismaSponsorDeposit) => this.toDomain(d));
   }
 
   async getTotalBySponsor(sponsorAddress: Address): Promise<bigint> {
@@ -120,14 +119,13 @@ export class PrismaSponsorDepositRepository implements ISponsorDepositRepository
       distinct: ['studyId'],
     });
 
-    return deposits.map(d => d.studyId);
+    return deposits.map((d: { studyId: string }) => d.studyId);
   }
 
   /**
    * Convert Prisma model to domain entity
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private toDomain(prismaDeposit: any): SponsorDeposit {
+  private toDomain(prismaDeposit: PrismaSponsorDeposit): SponsorDeposit {
     return {
       id: prismaDeposit.id,
       sponsorAddress: prismaDeposit.sponsorAddress as Address,
