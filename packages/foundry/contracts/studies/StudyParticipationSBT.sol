@@ -7,77 +7,72 @@ import { IStudyEnrollmentData } from "./IStudyEnrollmentData.sol";
 import { IStudyParticipationSBT } from "./IStudyParticipationSBT.sol";
 
 /**
- * @title Proof of Match (PoM)
+ * @title StudyParticipationSBT
  * @author edsphinx
- * @notice Mints "Proof of Protocol" Soulbound Tokens (SBTs) representing a verified,
- * real-world interaction within a scientific protocol. This is the core token registry.
+ * @notice Mints Study Participation Soulbound Tokens (SBTs) representing verified
+ * participant enrollment in scientific research studies.
  * @dev Inherits from ERC721 and Ownable. It is responsible for minting and enforcing the
  * non-transferable (Soulbound) nature of the tokens. It delegates the storage of dynamic
- * interaction data (like compliance levels) to a MatchData contract.
+ * enrollment data (like compliance levels) to the StudyEnrollmentData contract.
  */
 contract StudyParticipationSBT is ERC721, Ownable, IStudyParticipationSBT {
     // --- State Variables ---
     uint256 private _nextTokenId;
-    uint256 private _nextMatchId;
-    mapping(address => mapping(address => bool)) public matchExists;
-    mapping(uint256 => uint256) public tokenToMatchId;
+    uint256 private _nextEnrollmentId;
+
+    // Public state variables (part of the interface)
+    mapping(address => mapping(address => bool)) public override enrollmentExists;
+    mapping(uint256 => uint256) public override tokenToEnrollmentId;
 
     mapping(address => uint256[]) private _userTokens;
     mapping(uint256 => uint256) private _tokenIndex;
 
     /**
-     * @notice The address of the MatchData contract, which stores details for each interaction.
+     * @notice The address of the EnrollmentData contract, which stores details for each enrollment.
      */
-    IStudyEnrollmentData public matchDataContract;
+    IStudyEnrollmentData public override enrollmentDataContract;
 
     // --- Constructor ---
-    constructor() ERC721("Proof of Match", "MATCH") Ownable(msg.sender) {}
+    constructor() ERC721("Study Participation Certificate", "SPC") Ownable(msg.sender) {}
 
     // --- Admin Functions ---
 
     /**
-     * @notice Sets the address of the MatchData data contract.
-     * @dev Must be called by the owner before any interactions can be created.
-     * @param _contractAddress The address of the deployed MatchData contract.
+     * @inheritdoc IStudyParticipationSBT
      */
-    function setMatchDataContract(address _contractAddress) public onlyOwner {
-        matchDataContract = IStudyEnrollmentData(_contractAddress);
+    function setEnrollmentDataContract(address _contractAddress) public override onlyOwner {
+        enrollmentDataContract = IStudyEnrollmentData(_contractAddress);
     }
 
     // --- Core Functions ---
 
     /**
-     * @notice Creates a new on-chain record of an interaction, minting one SBT for each participant.
-     * @dev Calls the MatchData contract to create the corresponding data entry.
-     * Can only be called by the owner (backend/oracle).
-     * @param _userA The address of the first participant (e.g., patient).
-     * @param _userB The address of the second participant (e.g., clinic).
-     * @param _locationHint A hint describing the interaction (e.g., "Week 4 Check-in").
+     * @inheritdoc IStudyParticipationSBT
      */
-    function createMatch(address _userA, address _userB, string memory _locationHint) public onlyOwner {
-        require(address(matchDataContract) != address(0), "MatchData contract not set");
-        require(!matchExists[_userA][_userB] && !matchExists[_userB][_userA], "El match ya existe");
+    function enrollParticipant(address _participant, address _institution, string memory _locationHint) public override onlyOwner {
+        require(address(enrollmentDataContract) != address(0), "EnrollmentData contract not set");
+        require(!enrollmentExists[_participant][_institution] && !enrollmentExists[_institution][_participant], "Enrollment already exists");
 
-        uint256 tokenIdA = _nextTokenId++;
-        uint256 tokenIdB = _nextTokenId++;
-        uint256 newMatchId = _nextMatchId++;
+        uint256 participantTokenId = _nextTokenId++;
+        uint256 institutionTokenId = _nextTokenId++;
+        uint256 newEnrollmentId = _nextEnrollmentId++;
 
-        tokenToMatchId[tokenIdA] = newMatchId;
-        tokenToMatchId[tokenIdB] = newMatchId;
-        matchExists[_userA][_userB] = true;
+        tokenToEnrollmentId[participantTokenId] = newEnrollmentId;
+        tokenToEnrollmentId[institutionTokenId] = newEnrollmentId;
+        enrollmentExists[_participant][_institution] = true;
 
-        _safeMint(_userA, tokenIdA);
-        _safeMint(_userB, tokenIdB);
+        _safeMint(_participant, participantTokenId);
+        _safeMint(_institution, institutionTokenId);
 
-        matchDataContract.createMatchEntry(newMatchId, _userA, _userB, _locationHint);
+        enrollmentDataContract.createEnrollmentEntry(newEnrollmentId, _participant, _institution, _locationHint);
 
-        emit MatchCreated(newMatchId, tokenIdA, tokenIdB, _userA, _userB);
+        emit ParticipantEnrolled(newEnrollmentId, participantTokenId, institutionTokenId, _participant, _institution);
     }
 
     /**
      * @inheritdoc IStudyParticipationSBT
      */
-    function getTokensOfOwner(address owner) public view returns (uint256[] memory) {
+    function getTokensOfOwner(address owner) public view override returns (uint256[] memory) {
         return _userTokens[owner];
     }
 
@@ -87,14 +82,14 @@ contract StudyParticipationSBT is ERC721, Ownable, IStudyParticipationSBT {
      * @dev Overridden to enforce Soulbound (non-transferable) logic. Always reverts.
      */
     function transferFrom(address, address, uint256) public pure override {
-        revert("Este es un Token Soulbound y no se puede transferir.");
+        revert("This is a Soulbound Token and cannot be transferred");
     }
 
     /**
      * @dev Overridden to enforce Soulbound (non-transferable) logic. Always reverts.
      */
     function safeTransferFrom(address, address, uint256, bytes memory) public pure override {
-        revert("Este es un Token Soulbound y no se puede transferir.");
+        revert("This is a Soulbound Token and cannot be transferred");
     }
 
     // --- Internal Functions ---

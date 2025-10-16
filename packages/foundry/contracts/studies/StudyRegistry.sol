@@ -1,45 +1,217 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.20;
+
+import "./IStudyRegistry.sol";
+import "../zk/EligibilityCodeVerifier.sol";
 
 /**
- * @title IStudyRegistry Interface
+ * @title StudyRegistry
  * @author edsphinx
- * @notice Defines the interface for the on-chain registry of clinical trials.
+ * @notice Implementation of the on-chain clinical trial registry with ZK eligibility verification
+ * @dev Hybrid ZK Architecture:
+ *      - Age verification: Client-side (Halo2 + Mopro WASM, 33-60ms) for fast UX
+ *      - Medical eligibility: On-chain (Circom + Groth16, 2-5s) for trustless verification
+ *
+ *      Researchers can publish studies with eligibility code requirements.
+ *      Patients submit ZK proofs of eligibility codes without revealing medical data.
  */
-interface IStudyRegistry {
-    struct Study {
-        uint256 studyId;
-        address researcher;
-        uint8 status; // e.g., 0: Recruiting, 1: Closed
-        string region;
-        string compensationDetails;
-        string criteriaURI; // Link to off-chain criteria (IPFS)
+contract StudyRegistry is IStudyRegistry {
+    // State variables
+    uint256 private nextStudyId;
+    mapping(uint256 => Study) public studies;
+    mapping(uint256 => EligibilityCriteria) public studyCriteria;
+    mapping(uint256 => uint256) public verifiedApplicantsCount;
+    mapping(uint256 => mapping(address => bool)) public hasApplied;
+
+    // ZK Verifier (Groth16 for medical eligibility codes)
+    Groth16Verifier public immutable eligibilityVerifier;
+
+    // Errors
+    error InvalidStudyId();
+    error StudyNotRecruiting();
+    error AlreadyApplied();
+    error ProofVerificationFailed();
+    error Unauthorized();
+
+    /**
+     * @notice Constructor initializes the registry with ZK verifier
+     * @param _eligibilityVerifier Address of deployed Groth16Verifier contract
+     */
+    constructor(address _eligibilityVerifier) {
+        eligibilityVerifier = Groth16Verifier(_eligibilityVerifier);
+        nextStudyId = 1;
     }
 
     /**
-     * @notice Emitted when a new study is published to the registry.
-     * @param studyId The unique ID of the new study.
-     * @param researcher The address of the researcher or institution.
-     * @param region The geographical region for the study.
-     */
-    event StudyPublished(uint256 indexed studyId, address indexed researcher, string region);
-
-    /**
-     * @notice Allows a researcher to publish a new study.
-     * @param _region The geographical region for recruitment.
-     * @param _compensationDetails A description of the participant compensation.
-     * @param _criteriaURI An IPFS URI pointing to a JSON file with detailed clinical criteria.
+     * @notice Publishes a new clinical trial study to the registry
+     * @param _region Geographic region for recruitment
+     * @param _compensationDetails Participant compensation description
+     * @param _criteriaURI IPFS URI with detailed eligibility criteria
+     * @return studyId The ID of the newly created study
      */
     function publishStudy(
         string calldata _region,
         string calldata _compensationDetails,
         string calldata _criteriaURI
-    ) external returns (uint256 studyId);
+    ) external returns (uint256) {
+        uint256 studyId = nextStudyId++;
+
+        studies[studyId] = Study({
+            studyId: studyId,
+            researcher: msg.sender,
+            status: 0, // Recruiting
+            region: _region,
+            compensationDetails: _compensationDetails,
+            criteriaURI: _criteriaURI
+        });
+
+        emit StudyPublished(studyId, msg.sender, _region);
+
+        return studyId;
+    }
 
     /**
-     * @notice Returns the details for a specific study.
-     * @param _studyId The ID of the study to query.
-     * @return The complete Study struct.
+     * @notice Sets eligibility criteria for a study
+     * @param _studyId The study to configure
+     * @param _minAge Minimum age requirement
+     * @param _maxAge Maximum age requirement
+     * @param _eligibilityCodeHash Poseidon hash of required eligibility code (0 if not required)
      */
-    function getStudyDetails(uint256 _studyId) external view returns (Study memory);
+    function setStudyCriteria(
+        uint256 _studyId,
+        uint32 _minAge,
+        uint32 _maxAge,
+        uint256 _eligibilityCodeHash
+    ) external {
+        if (_studyId == 0 || _studyId >= nextStudyId) revert InvalidStudyId();
+        if (studies[_studyId].researcher != msg.sender) revert Unauthorized();
+
+        studyCriteria[_studyId] = EligibilityCriteria({
+            minAge: _minAge,
+            maxAge: _maxAge,
+            requiresAgeProof: _minAge > 0 || _maxAge > 0,
+            requiredEligibilityCodeHash: _eligibilityCodeHash,
+            requiresEligibilityProof: _eligibilityCodeHash != 0
+        });
+
+        emit StudyCriteriaSet(_studyId, _minAge, _maxAge, _eligibilityCodeHash);
+    }
+
+    /**
+     * @notice Submit anonymous application with ZK proof of eligibility
+     * @param _studyId The study to apply to
+     * @param _pA Groth16 proof component A
+     * @param _pB Groth16 proof component B
+     * @param _pC Groth16 proof component C
+     * @dev Hybrid ZK verification:
+     *      - Age: Client-side verification (Halo2 + Mopro WASM, 33-60ms)
+     *      - Medical eligibility: On-chain verification (Circom + Groth16, 2-5s)
+     *      Patient remains anonymous - only wallet address stored
+     */
+    function submitAnonymousApplication(
+        uint256 _studyId,
+        uint[2] calldata _pA,
+        uint[2][2] calldata _pB,
+        uint[2] calldata _pC
+    ) external {
+        // Validation
+        if (_studyId == 0 || _studyId >= nextStudyId) revert InvalidStudyId();
+        if (studies[_studyId].status != 0) revert StudyNotRecruiting();
+        if (hasApplied[_studyId][msg.sender]) revert AlreadyApplied();
+
+        // Get criteria
+        EligibilityCriteria memory criteria = studyCriteria[_studyId];
+
+        // Verify eligibility code proof on-chain
+        if (criteria.requiresEligibilityProof) {
+            uint[1] memory pubSignals;
+            pubSignals[0] = criteria.requiredEligibilityCodeHash;
+
+            bool isValid = eligibilityVerifier.verifyProof(_pA, _pB, _pC, pubSignals);
+            if (!isValid) revert ProofVerificationFailed();
+        }
+
+        // Record application (anonymous, just count)
+        hasApplied[_studyId][msg.sender] = true;
+        verifiedApplicantsCount[_studyId]++;
+
+        emit AnonymousApplicationSubmitted(
+            _studyId,
+            verifiedApplicantsCount[_studyId]
+        );
+    }
+
+    /**
+     * @notice Get details of a specific study
+     * @param _studyId The study ID to query
+     * @return Study struct with all details
+     */
+    function getStudyDetails(uint256 _studyId)
+        external
+        view
+        returns (Study memory)
+    {
+        if (_studyId == 0 || _studyId >= nextStudyId) revert InvalidStudyId();
+        return studies[_studyId];
+    }
+
+    /**
+     * @notice Get eligibility criteria for a study
+     * @param _studyId The study ID to query
+     * @return EligibilityCriteria struct
+     */
+    function getStudyCriteria(uint256 _studyId)
+        external
+        view
+        returns (EligibilityCriteria memory)
+    {
+        if (_studyId == 0 || _studyId >= nextStudyId) revert InvalidStudyId();
+        return studyCriteria[_studyId];
+    }
+
+    /**
+     * @notice Get count of verified anonymous applicants
+     * @param _studyId The study ID to query
+     * @return Number of verified applicants
+     */
+    function getVerifiedApplicantsCount(uint256 _studyId)
+        external
+        view
+        returns (uint256)
+    {
+        return verifiedApplicantsCount[_studyId];
+    }
+
+    /**
+     * @notice Check if an address has already applied to a study
+     * @param _studyId The study ID
+     * @param _applicant The address to check
+     * @return True if already applied
+     */
+    function hasAddressApplied(uint256 _studyId, address _applicant)
+        external
+        view
+        returns (bool)
+    {
+        return hasApplied[_studyId][_applicant];
+    }
+
+    /**
+     * @notice Researcher can close recruitment for their study
+     * @param _studyId The study to close
+     */
+    function closeStudyRecruitment(uint256 _studyId) external {
+        if (_studyId == 0 || _studyId >= nextStudyId) revert InvalidStudyId();
+        if (studies[_studyId].researcher != msg.sender) revert Unauthorized();
+
+        studies[_studyId].status = 1; // Closed
+    }
+
+    /**
+     * @notice Get the total number of studies published
+     * @return Total study count
+     */
+    function getTotalStudies() external view returns (uint256) {
+        return nextStudyId - 1;
+    }
 }

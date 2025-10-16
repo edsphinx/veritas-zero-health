@@ -4,26 +4,27 @@ pragma solidity ^0.8.24;
 import { IStudyEnrollmentData } from "./IStudyEnrollmentData.sol";
 
 /**
- * @title Match Data
+ * @title StudyEnrollmentData
  * @author edsphinx
- * @notice Contract to store and manage dynamic data for on-chain scientific interactions.
- * @dev This contract separates the interaction data logic (e.g., compliance levels)
+ * @notice Contract to store and manage dynamic data for study participant enrollments.
+ * @dev This contract separates the enrollment data logic (e.g., compliance levels)
  * from the SBT token logic for greater security and flexibility.
  */
 contract StudyEnrollmentData is IStudyEnrollmentData {
     /**
-     * @notice The address of the main ProofOfMatch (SBT registry) contract.
+     * @notice The address of the StudyParticipationSBT contract.
      */
-    address public proofOfMatchContract;
+    address public participationSBTContract;
+
     /**
      * @notice The address of the protocol owner (backend/oracle), authorized to log new interactions.
      */
     address public owner;
 
     /**
-     * @notice Mapping from an interaction ID (`matchId`) to its detailed data.
+     * @notice Mapping from an enrollment ID to its detailed data.
      */
-    mapping(uint256 => Match) public matches;
+    mapping(uint256 => Enrollment) public enrollments;
 
     /**
      * @dev Modifier to restrict functions to only the protocol owner.
@@ -36,30 +37,30 @@ contract StudyEnrollmentData is IStudyEnrollmentData {
     /**
      * @dev On deployment, sets the addresses of the SBT contract and the protocol owner.
      */
-    constructor(address _proofOfMatchAddress, address _ownerAddress) {
-        proofOfMatchContract = _proofOfMatchAddress;
+    constructor(address _participationSBTAddress, address _ownerAddress) {
+        participationSBTContract = _participationSBTAddress;
         owner = _ownerAddress;
     }
 
     /**
      * @inheritdoc IStudyEnrollmentData
-     * @dev Security is enforced by requiring `msg.sender` to be the ProofOfMatch contract,
+     * @dev Security is enforced by requiring `msg.sender` to be the StudyParticipationSBT contract,
      * ensuring data entries are only created when an SBT is minted.
      */
-    function createMatchEntry(
-        uint256 _matchId,
-        address _userA,
-        address _userB,
+    function createEnrollmentEntry(
+        uint256 _enrollmentId,
+        address _participant,
+        address _institution,
         string memory _locationHint
     ) external override {
-        require(msg.sender == proofOfMatchContract, "Only ProofOfMatch can create entries");
+        require(msg.sender == participationSBTContract, "Only StudyParticipationSBT can create entries");
 
-        matches[_matchId] = Match({
-            userA: _userA,
-            userB: _userB,
+        enrollments[_enrollmentId] = Enrollment({
+            participant: _participant,
+            institution: _institution,
             timestamp: block.timestamp,
             locationHint: _locationHint,
-            level: 1,
+            complianceLevel: 1,
             interactionCount: 1
         });
     }
@@ -69,28 +70,28 @@ contract StudyEnrollmentData is IStudyEnrollmentData {
      * @dev Security is enforced by the onlyOwner modifier. The compliance leveling
      * logic can be adjusted here in future versions.
      */
-    function recordInteraction(uint256 _matchId) external override onlyOwner {
-        Match storage matchToUpdate = matches[_matchId];
-        require(matchToUpdate.timestamp != 0, "Match does not exist");
+    function recordInteraction(uint256 _enrollmentId) external override onlyOwner {
+        Enrollment storage enrollment = enrollments[_enrollmentId];
+        require(enrollment.timestamp != 0, "Enrollment does not exist");
 
-        matchToUpdate.interactionCount++;
+        enrollment.interactionCount++;
 
-        uint8 oldLevel = matchToUpdate.level;
-        if (matchToUpdate.interactionCount >= 5) {
-            matchToUpdate.level = 3;
-        } else if (matchToUpdate.interactionCount >= 3) {
-            matchToUpdate.level = 2;
+        uint8 oldLevel = enrollment.complianceLevel;
+        if (enrollment.interactionCount >= 5) {
+            enrollment.complianceLevel = 3;
+        } else if (enrollment.interactionCount >= 3) {
+            enrollment.complianceLevel = 2;
         }
 
-        if (oldLevel != matchToUpdate.level) {
-            emit MatchUpgraded(_matchId, matchToUpdate.level);
+        if (oldLevel != enrollment.complianceLevel) {
+            emit EnrollmentLevelUpgraded(_enrollmentId, enrollment.complianceLevel);
         }
     }
 
     /**
      * @inheritdoc IStudyEnrollmentData
      */
-    function getMatchDetails(uint256 _matchId) external view override returns (Match memory) {
-        return matches[_matchId];
+    function getEnrollmentDetails(uint256 _enrollmentId) external view override returns (Enrollment memory) {
+        return enrollments[_enrollmentId];
     }
 }

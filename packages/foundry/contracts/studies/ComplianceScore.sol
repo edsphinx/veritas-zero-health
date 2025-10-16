@@ -2,56 +2,56 @@
 pragma solidity ^0.8.24;
 
 import { IStudyEnrollmentData } from "./IStudyEnrollmentData.sol";
-import { IStudyParticipationSBT } from "./IStudyParticipationSBT.sol"; // Importamos el contrato, no una interfaz
+import { IStudyParticipationSBT } from "./IStudyParticipationSBT.sol";
 
 /**
  * @title ComplianceScore
  * @author edsphinx
- * @notice Read-only contract that calculates a "Compliance Score" for a user (e.g., a patient).
+ * @notice Read-only contract that calculates a "Compliance Score" for study participants.
  * @dev Serves as a Sybil resistance and on-chain reputation mechanism. It reads data from the
- * ProofOfMatch (SBT registry) and MatchData (interaction data) contracts to generate a score
- * based on a user's verified participation in scientific protocols.
+ * StudyParticipationSBT (SBT registry) and StudyEnrollmentData (enrollment data) contracts to generate a score
+ * based on a participant's verified participation in scientific protocols.
  */
 contract ComplianceScore {
     /**
      * @notice The instance of the IStudyParticipationSBT contract interface.
      */
-    IStudyParticipationSBT public proofOfMatchContract;
+    IStudyParticipationSBT public participationSBTContract;
     /**
      * @notice The instance of the IStudyEnrollmentData contract interface.
      */
-    IStudyEnrollmentData public matchDataContract;
+    IStudyEnrollmentData public enrollmentDataContract;
 
     /**
      * @dev On deployment, links the addresses of the contracts this scoring module depends on.
      */
-    constructor(address _proofOfMatchAddress, address _matchDataAddress) {
-        proofOfMatchContract = IStudyParticipationSBT(_proofOfMatchAddress);
-        matchDataContract = IStudyEnrollmentData(_matchDataAddress);
+    constructor(address _participationSBTAddress, address _enrollmentDataAddress) {
+        participationSBTContract = IStudyParticipationSBT(_participationSBTAddress);
+        enrollmentDataContract = IStudyEnrollmentData(_enrollmentDataAddress);
     }
 
     /**
-     * @notice Calculates the Compliance Score for a given user address.
-     * @dev It fetches all of the user's "Proof of Protocol" SBTs, gets the details for each
-     * associated interaction (including the compliance level), and applies a formula to generate the final score.
-     * @param user The address of the user (e.g., patient) to query.
+     * @notice Calculates the Compliance Score for a given participant address.
+     * @dev It fetches all of the participant's Study Participation SBTs, gets the details for each
+     * associated enrollment (including the compliance level), and applies a formula to generate the final score.
+     * @param participant The address of the participant to query.
      * @return score The calculated Compliance Score.
      */
-    function getPresenceScore(address user) public view returns (uint256) {
+    function getComplianceScore(address participant) public view returns (uint256) {
         uint256 score = 0;
 
-        uint256[] memory tokens = proofOfMatchContract.getTokensOfOwner(user);
+        uint256[] memory tokens = participationSBTContract.getTokensOfOwner(participant);
 
         for (uint i = 0; i < tokens.length; i++) {
-            uint256 matchId = proofOfMatchContract.tokenToMatchId(tokens[i]);
+            uint256 enrollmentId = participationSBTContract.tokenToEnrollmentId(tokens[i]);
 
-            IStudyEnrollmentData.Match memory currentMatch = matchDataContract.getMatchDetails(matchId);
+            IStudyEnrollmentData.Enrollment memory enrollment = enrollmentDataContract.getEnrollmentDetails(enrollmentId);
 
-            if (currentMatch.level == 1) {
+            if (enrollment.complianceLevel == 1) {
                 score += 10;
-            } else if (currentMatch.level == 2) {
+            } else if (enrollment.complianceLevel == 2) {
                 score += 25;
-            } else if (currentMatch.level >= 3) {
+            } else if (enrollment.complianceLevel >= 3) {
                 score += 50;
             }
         }
