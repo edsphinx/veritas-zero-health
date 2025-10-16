@@ -3,48 +3,23 @@
  *
  * Represents a clinical study indexed from blockchain contracts.
  * This entity maps the relationship between StudyRegistry and ResearchFundingEscrow.
+ *
+ * @deprecated This domain model is being phased out in favor of the centralized
+ * Study type from @veritas/types. Use that for all new code.
  */
 
-export interface Study {
-  id?: string; // Database ID (optional for new entities)
+import type { Study as StudyFromTypes } from '@veritas/types';
+import { StudyStatus as StudyStatusFromTypes } from '@veritas/types';
 
-  // Contract IDs
-  registryId: number; // ID from StudyRegistry contract
-  escrowId: number; // ID from ResearchFundingEscrow contract
+/**
+ * @deprecated Use Study from @veritas/types instead
+ */
+export type Study = StudyFromTypes;
 
-  // Basic info
-  title: string;
-  description: string;
-  researcherAddress: string; // Creator's wallet address
-
-  // Status
-  status: StudyStatus;
-
-  // Blockchain tracking
-  chainId: number; // 11155420 for Optimism Sepolia
-
-  // Transaction hashes for verification
-  escrowTxHash: string; // TX that created study in escrow
-  registryTxHash: string; // TX that published to registry
-  criteriaTxHash: string; // TX that set criteria
-
-  // Block numbers for event indexing
-  escrowBlockNumber: bigint;
-  registryBlockNumber: bigint;
-
-  // Timestamps
-  createdAt?: Date;
-  updatedAt?: Date;
-}
-
-export enum StudyStatus {
-  CREATED = 'Created',
-  FUNDING = 'Funding',
-  ACTIVE = 'Active',
-  PAUSED = 'Paused',
-  COMPLETED = 'Completed',
-  CANCELLED = 'Cancelled',
-}
+/**
+ * @deprecated Use StudyStatus from @veritas/types instead
+ */
+export const StudyStatus = StudyStatusFromTypes;
 
 /**
  * Study creation data (from blockchain)

@@ -132,6 +132,9 @@ model Study {
   // Status
   status            String   // Created, Funding, Active, Paused, Completed, Cancelled
 
+  // Funding
+  totalFunding      String   @default("0.00") // Total funding required (sum of milestone rewards) in USDC display format
+
   // Blockchain tracking
   chainId           Int      @default(11155420) // Optimism Sepolia
 
@@ -150,6 +153,9 @@ model Study {
 
   // Relations
   deposits SponsorDeposit[]
+  criteria StudyCriteria?
+  milestones StudyMilestone[]
+  applications StudyApplication[]
 
   @@index([researcherAddress])
   @@index([registryId])
@@ -190,4 +196,153 @@ model SponsorDeposit {
   @@index([escrowId])
   @@index([transactionHash])
   @@map("sponsor_deposits")
+}
+
+// Study Criteria - Eligibility criteria for a study (age + medical)
+model StudyCriteria {
+  id                  String   @id @default(cuid())
+
+  // Study relation
+  studyId             String   @unique
+  study               Study    @relation(fields: [studyId], references: [id], onDelete: Cascade)
+
+  // Blockchain ID
+  escrowId            Int      @unique
+
+  // Age criteria (verified with Halo2/PLONK off-chain)
+  minAge              Int
+  maxAge              Int
+
+  // Medical eligibility code hash (verified with Circom/Groth16 on-chain)
+  eligibilityCodeHash String   // Poseidon hash of required eligibility code
+
+  // Detailed criteria (for display purposes)
+  // Biomarkers
+  hba1cMin            Float?
+  hba1cMax            Float?
+  ldlMin              Float?
+  ldlMax              Float?
+  cholesterolMin      Float?
+  cholesterolMax      Float?
+  hdlMin              Float?
+  hdlMax              Float?
+  triglyceridesMin    Float?
+  triglyceridesMax    Float?
+
+  // Vital Signs
+  systolicBPMin       Float?
+  systolicBPMax       Float?
+  diastolicBPMin      Float?
+  diastolicBPMax      Float?
+  bmiMin              Float?
+  bmiMax              Float?
+  heartRateMin        Float?
+  heartRateMax        Float?
+
+  // Medications & Allergies (JSON arrays)
+  requiredMedications String[] @default([])
+  excludedMedications String[] @default([])
+  excludedAllergies   String[] @default([])
+
+  // Diagnoses (ICD-10 codes)
+  requiredDiagnoses   String[] @default([])
+  excludedDiagnoses   String[] @default([])
+
+  // Blockchain tracking
+  chainId             Int      @default(11155420)
+  transactionHash     String
+  blockNumber         BigInt
+
+  // Timestamps
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([escrowId])
+  @@index([transactionHash])
+  @@map("study_criteria")
+}
+
+// Study Milestones - Appointment milestones for reward distribution
+model StudyMilestone {
+  id              String   @id @default(cuid())
+
+  // Study relation
+  studyId         String
+  study           Study    @relation(fields: [studyId], references: [id], onDelete: Cascade)
+
+  // Blockchain IDs
+  escrowId        Int
+  milestoneId     Int      // Index in the escrow contract
+
+  // Milestone details
+  milestoneType   Int      // 0=Initial, 1=Intermediate, 2=Follow-up, 3=Completion
+  description     String
+  rewardAmount    String   // Amount in USDC (string to preserve precision)
+
+  // Blockchain tracking
+  chainId         Int      @default(11155420)
+  transactionHash String
+  blockNumber     BigInt
+
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([escrowId, milestoneId])
+  @@index([studyId])
+  @@index([escrowId])
+  @@index([transactionHash])
+  @@map("study_milestones")
+}
+
+// Study Applications - Anonymous applications with ZK proof verification
+model StudyApplication {
+  id                  String   @id @default(cuid())
+
+  // Study relation
+  studyId             String
+  study               Study    @relation(fields: [studyId], references: [id], onDelete: Cascade)
+
+  // Blockchain IDs
+  registryId          Int      // Study ID in StudyRegistry contract
+  applicantNumber     Int      // Sequential number of applicant for this study
+
+  // ZK Proof verification
+  proofVerified       Boolean  @default(false)
+  proofTransactionHash String? // TX hash of on-chain proof verification
+  proofBlockNumber    BigInt?  // Block number of proof verification
+
+  // Application status
+  status              String   @default("pending") // pending, verified, approved, rejected, enrolled
+  approvedBy          String?  // Address of researcher/clinic who approved
+  approvedAt          DateTime?
+
+  // Enrollment (SBT token)
+  enrolled            Boolean  @default(false)
+  enrollmentTokenId   Int?     // Token ID of StudyParticipationSBT
+  enrollmentTxHash    String?  // TX hash of enrollment
+  enrollmentBlockNumber BigInt?
+
+  // Patient identity (only known if enrolled by clinic)
+  patientAddress      String?  // Wallet address (only if clinic enrolled them)
+  patientSBTTokenId   Int?     // HealthIdentitySBT token ID (only if clinic enrolled them)
+
+  // Blockchain tracking
+  chainId             Int      @default(11155420)
+  applicationTxHash   String   // TX hash of submitAnonymousApplication
+  applicationBlockNumber BigInt
+
+  // Timestamps
+  appliedAt           DateTime @default(now())
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@unique([registryId, applicantNumber])
+  @@index([studyId])
+  @@index([registryId])
+  @@index([status])
+  @@index([patientAddress])
+  @@index([applicationTxHash])
+  @@index([proofTransactionHash])
+  @@map("study_applications")
 }

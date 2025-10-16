@@ -14,6 +14,10 @@
       "types": "./dist/health.d.ts",
       "default": "./dist/health.js"
     },
+    "./study": {
+      "types": "./dist/study.d.ts",
+      "default": "./dist/study.js"
+    },
     "./zk": {
       "types": "./dist/zk-proof.d.ts",
       "default": "./dist/zk-proof.js"
@@ -27,6 +31,9 @@
     "build": "tsc",
     "watch": "tsc --watch",
     "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "viem": "^2.21.54"
   },
   "devDependencies": {
     "typescript": "5.9.3"
