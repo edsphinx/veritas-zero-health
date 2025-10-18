@@ -82,13 +82,14 @@ export function getChainName(chainId: number) {
 }
 
 // Helper: Check if chain is testnet
-export function isTestnet(chainId: number) {
-  return [
+export function isTestnet(chainId: number): boolean {
+  const testnetIds = [
     optimismSepolia.id,
     sepolia.id,
     polygonAmoy.id,
     celoAlfajores.id,
-  ].includes(chainId);
+  ] as const;
+  return testnetIds.includes(chainId as typeof testnetIds[number]);
 }
 
 // Helper: Get block explorer URL
