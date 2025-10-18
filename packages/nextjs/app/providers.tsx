@@ -30,6 +30,15 @@ export const modal = createAppKit({
     'c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96', // MetaMask
     'fd20dc426fb37566d803205b19bbc1d4096b248ac04548e3cfb6b3a38bd033aa', // Coinbase Wallet
   ],
+  // Theme customization to match DASHI design
+  themeMode: 'light',
+  themeVariables: {
+    '--w3m-accent': '#0a2540',        // Deep Blue (primary)
+    '--w3m-color-mix': '#008060',     // Emerald Green (secondary)
+    '--w3m-color-mix-strength': 20,
+    '--w3m-border-radius-master': '0.75rem',  // Match our border radius
+    '--w3m-font-family': 'Inter, system-ui, sans-serif',
+  },
 })
 
 export function Providers({

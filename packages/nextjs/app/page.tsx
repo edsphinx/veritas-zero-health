@@ -2,6 +2,9 @@
 
 import Link from 'next/link';
 import { AppHeader, AppFooter } from '@/components/layout';
+import { FeatureCard, PortalCard } from '@/components/features/home';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 export default function Home() {
   return (
@@ -13,11 +16,11 @@ export default function Home() {
           <div className="container mx-auto px-4">
             <div className="text-center max-w-4xl mx-auto">
               {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
+              <Badge variant="outline" className="mb-6 px-4 py-2 bg-primary/10 border-primary/20">
                 <span className="text-sm font-medium text-primary">
                   Decentralized Anonymous Sovereign Health Identity
                 </span>
-              </div>
+              </Badge>
 
               {/* Title */}
               <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold mb-6">
@@ -37,18 +40,16 @@ export default function Home() {
 
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-                <Link
-                  href="/patient"
-                  className="px-8 py-4 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl font-semibold text-lg"
-                >
-                  Get Started
-                </Link>
-                <Link
-                  href="/studies"
-                  className="px-8 py-4 bg-muted text-foreground rounded-xl hover:bg-muted/80 transition-all border border-border font-medium text-lg"
-                >
-                  Browse Studies
-                </Link>
+                <Button asChild size="lg" className="px-8 py-6 text-lg shadow-lg hover:shadow-xl">
+                  <Link href="/patient">
+                    Get Started
+                  </Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="px-8 py-6 text-lg">
+                  <Link href="/studies">
+                    Browse Studies
+                  </Link>
+                </Button>
               </div>
 
               {/* Trust Indicators */}
@@ -142,42 +143,3 @@ export default function Home() {
   );
 }
 
-function FeatureCard({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="p-6 rounded-xl border border-border bg-card hover:shadow-lg transition-shadow">
-      <h3 className="text-xl font-semibold mb-2">{title}</h3>
-      <p className="text-muted-foreground leading-relaxed">{description}</p>
-    </div>
-  );
-}
-
-function PortalCard({
-  title,
-  description,
-  href,
-}: {
-  title: string;
-  description: string;
-  href: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className="block p-8 rounded-xl border border-border bg-card hover:border-primary/40 hover:shadow-lg transition-all"
-    >
-      <h3 className="text-2xl font-bold mb-3 text-foreground">{title}</h3>
-      <p className="text-muted-foreground mb-4 leading-relaxed">
-        {description}
-      </p>
-      <div className="flex items-center gap-2 font-medium text-primary">
-        Enter Portal →
-      </div>
-    </Link>
-  );
-}
