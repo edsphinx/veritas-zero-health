@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createAppKit } from '@reown/appkit/react'
 import React, { type ReactNode } from 'react'
 import { cookieToInitialState, WagmiProvider, type Config } from 'wagmi'
+import { SessionProvider } from '@/components/providers/SessionProvider'
 
 // Set up queryClient
 const queryClient = new QueryClient({
@@ -54,7 +55,9 @@ export function Providers({
   return (
     <WagmiProvider config={wagmiAdapter.wagmiConfig as Config} initialState={initialState}>
       <QueryClientProvider client={queryClient}>
-        {children}
+        <SessionProvider>
+          {children}
+        </SessionProvider>
       </QueryClientProvider>
     </WagmiProvider>
   )
