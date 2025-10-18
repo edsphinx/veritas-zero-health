@@ -305,6 +305,9 @@ importers:
       '@nillion/secretvaults':
         specifier: latest
         version: 0.1.6(@nillion/blindfold@0.1.0)(@nillion/nuc@0.1.1(bufferutil@4.0.9)(utf-8-validate@5.0.10))(pino-pretty@13.1.2)(pino@10.0.0)(uuid@11.1.0)
+      '@prisma/client':
+        specifier: 6.17.1
+        version: 6.17.1(prisma@6.17.1(typescript@5.9.3))(typescript@5.9.3)
       '@radix-ui/react-avatar':
         specifier: ^1.1.10
         version: 1.1.10(@types/react-dom@19.2.1(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -393,6 +396,9 @@ importers:
       eslint-config-next:
         specifier: 15.5.6
         version: 15.5.6(eslint@9.37.0(jiti@2.6.1))(typescript@5.9.3)
+      prisma:
+        specifier: ^6.17.1
+        version: 6.17.1(typescript@5.9.3)
       tailwindcss:
         specifier: ^4
         version: 4.1.14

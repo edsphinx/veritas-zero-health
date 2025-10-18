@@ -163,11 +163,13 @@ packages/nextjs/
 - [ ] Encryption/decryption utilities
 - [ ] User collections management
 
-### Human Protocol Integration
-- [ ] Human Passport verification
-- [ ] Human Wallet integration
-- [ ] Sybil resistance checks
-- [ ] Verification badges UI
+### Human Passport Integration
+- [ ] Human Passport verification (score-based Sybil resistance)
+- [ ] Stamp collection and verification
+- [ ] Humanity score tracking and display
+- [ ] Verification badges UI (bronze/silver/gold tiers)
+- [ ] Onchain stamp validation
+- [ ] Score threshold enforcement for features
 
 ### Reown (WalletConnect) Features
 - [ ] Multi-wallet support
