@@ -3,7 +3,10 @@ const path = require("path");
 // Use ESLint CLI with explicit config path
 const buildNextEslintCommand = (filenames) => {
   const eslintConfig = path.join(process.cwd(), "packages/nextjs/eslint.config.mjs");
-  const files = filenames.join(" ");
+  // Filter out auto-generated files that shouldn't be linted
+  const files = filenames
+    .filter((f) => !f.endsWith("next-env.d.ts"))
+    .join(" ");
   return `eslint --config ${eslintConfig} --fix ${files}`;
 };
 
