@@ -3,7 +3,12 @@
 # dependencies
 /node_modules
 /.pnp
-.pnp.js
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
 
 # testing
 /coverage
@@ -11,7 +16,6 @@
 # next.js
 /.next/
 /out/
-.vercel
 
 # production
 /build
@@ -26,28 +30,12 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# local env files
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# env files (can opt-in for committing if needed)
+.env*
+
+# vercel
+.vercel
 
 # typescript
 *.tsbuildinfo
-ipfs-upload.config.json
-
-ARCHITECTURE.md
-CHANGELOG.md
-HUMAN_PROTOCOL_INTEGRATION.md
-MIGRATION_PLAN.md
-PASSPORT_CONTRACT_INTEGRATION.md
-PASSPORT_INTEGRATION_CORRECTED.md
-PASSPORT_OFFICIAL_PATTERNS.md
-RULES.md
-SESSION_STATUS.md
-SETUP_STATUS.md
-TODO.md
-UNIFIED_ARCHITECTURE.md
-
-/app/generated/prisma
+next-env.d.ts

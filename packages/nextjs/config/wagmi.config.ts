@@ -88,8 +88,7 @@ export function isTestnet(chainId: number) {
     sepolia.id,
     polygonAmoy.id,
     celoAlfajores.id,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ].includes(chainId as any);
+  ].includes(chainId);
 }
 
 // Helper: Get block explorer URL
