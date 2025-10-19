@@ -17,7 +17,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { getNavigationForRole } from '@/config/navigation.config';
 import type { NavItem } from '@/config/navigation.config';
 import { cn } from '@/lib/utils';
-import { menuVariants, mobileMenuVariants, transitions } from '@/lib/animations';
+import { mobileMenuVariants, transitions } from '@/lib/animations';
 
 export function AppHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

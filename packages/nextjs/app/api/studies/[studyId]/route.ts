@@ -12,9 +12,9 @@ import { createStudyRepository } from '@/infrastructure/repositories/PrismaStudy
 import { prisma } from '@/lib/prisma';
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     studyId: string;
-  };
+  }>;
 }
 
 /**
@@ -28,10 +28,10 @@ interface RouteParams {
  */
 export async function GET(
   request: NextRequest,
-  { params }: RouteParams
+  context: RouteParams
 ) {
   try {
-    const { studyId } = params;
+    const { studyId } = await context.params;
 
     console.log('[Get Study API] Request:', { studyId });
 
