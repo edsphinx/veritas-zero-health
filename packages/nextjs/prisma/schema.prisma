@@ -46,12 +46,31 @@ enum ApplicationStatus {
   enrolled  // Patient enrolled with SBT minted
 }
 
-// Milestone types - MUST match @veritas/types/src/study.ts
+// Milestone types - MUST match @veritas/types/src/study.ts and IStudyTypes.sol
 enum MilestoneType {
-  initial       // 0 - Initial appointment
-  intermediate  // 1 - Mid-study checkpoint
-  followup      // 2 - Follow-up appointment
-  completion    // 3 - Final completion milestone
+  enrollment          // 0 - Initial enrollment
+  data_submission     // 1 - Data submission milestone
+  followup_visit      // 2 - Follow-up visit
+  study_completion    // 3 - Final completion
+  custom              // 4 - Custom milestone
+}
+
+// Milestone statuses - MUST match @veritas/types/src/study.ts and IStudyTypes.sol
+enum MilestoneStatus {
+  pending      // 0 - Not yet started
+  in_progress  // 1 - Currently active
+  completed    // 2 - Completed by participant
+  verified     // 3 - Verified by provider/researcher
+  paid         // 4 - Payment released
+}
+
+// Certification levels for medical providers - MUST match @veritas/types/src/provider.ts
+enum CertificationLevel {
+  none                    // 0 - Not certified
+  individual              // 1 - Individual practitioner
+  clinic                  // 2 - Medical clinic
+  hospital                // 3 - Hospital institution
+  government_authority    // 4 - Government health authority
 }
 
 // ============================================================================

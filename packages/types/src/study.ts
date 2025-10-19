@@ -27,14 +27,27 @@ export enum StudyStatus {
 }
 
 /**
- * Milestone type enum - matches smart contract
+ * Milestone type enum - MUST match smart contract IStudyTypes.sol
  * Using lowercase for consistency (enum keys are PascalCase, values are lowercase)
  */
 export enum MilestoneType {
-  Initial = 'initial',
-  Intermediate = 'intermediate',
-  FollowUp = 'followup',
-  Completion = 'completion',
+  Enrollment = 'enrollment',           // 0 - Initial enrollment
+  DataSubmission = 'data_submission',  // 1 - Data submission milestone
+  FollowUpVisit = 'followup_visit',    // 2 - Follow-up visit
+  StudyCompletion = 'study_completion', // 3 - Final completion
+  Custom = 'custom',                   // 4 - Custom milestone
+}
+
+/**
+ * Milestone status enum - tracks milestone workflow state
+ * MUST match smart contract IStudyTypes.sol
+ */
+export enum MilestoneStatus {
+  Pending = 'pending',         // 0 - Not yet started
+  InProgress = 'in_progress',  // 1 - Currently active
+  Completed = 'completed',     // 2 - Completed by participant
+  Verified = 'verified',       // 3 - Verified by provider/researcher
+  Paid = 'paid',              // 4 - Payment released
 }
 
 /**
@@ -97,17 +110,56 @@ export interface StudyCriteria {
 }
 
 /**
- * Study milestone for payment tracking
+ * Study milestone for payment tracking (API/Frontend type)
  */
 export interface StudyMilestone {
   id: string;
+  studyId: string;
+  escrowId: number;
   milestoneId: number;
   milestoneType: MilestoneType;
   description: string;
-  rewardAmount: string; // BigInt as string (USDC with 6 decimals)
+  rewardAmount: string; // Decimal as string (USDC display format, e.g., "100.00")
+  status: MilestoneStatus;
+  verificationDataHash?: string | null; // bytes32 as hex string
+
+  // Blockchain tracking
+  chainId: number;
   transactionHash: string;
   blockNumber: string; // BigInt as string
-  createdAt: Date | string; // Allow both for serialization
+
+  // Timestamps
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  completedAt?: Date | string | null;
+  verifiedAt?: Date | string | null;
+}
+
+/**
+ * Study milestone (Database type)
+ * Uses native DB types for Prisma operations
+ */
+export interface StudyMilestoneDB {
+  id: string;
+  studyId: string;
+  escrowId: number;
+  milestoneId: number;
+  milestoneType: MilestoneType;
+  description: string;
+  rewardAmount: string | number; // Decimal from Prisma
+  status: MilestoneStatus;
+  verificationDataHash: string | null;
+
+  // Blockchain tracking
+  chainId: number;
+  transactionHash: string;
+  blockNumber: bigint;
+
+  // Timestamps
+  createdAt: Date;
+  updatedAt: Date;
+  completedAt: Date | null;
+  verifiedAt: Date | null;
 }
 
 /**
@@ -179,7 +231,11 @@ export interface StudyDB {
 
   // Funding & Participants (native DB types)
   totalFunding: string | number; // Decimal in DB, but Prisma returns as string
-  maxParticipants?: number | null;
+  remainingFunding: string | number; // Decimal - funds not yet paid out
+  sponsor: string; // Primary sponsor address
+  certifiedProviders: string[]; // Array of certified provider addresses
+  participantCount: number; // Current enrolled participants
+  maxParticipants: number; // Maximum participants allowed
 
   // Blockchain tracking
   chainId: number;
@@ -192,6 +248,8 @@ export interface StudyDB {
   // Timestamps (native Date from DB)
   createdAt: Date;
   updatedAt: Date;
+  startedAt: Date | null; // When study actually started recruiting
+  completedAt: Date | null; // When study completed
   deletedAt: Date | null;
 }
 
@@ -236,8 +294,12 @@ export interface Study {
   status: StudyStatus;
 
   // Funding & Participants (serialized as strings)
-  totalFunding?: string; // Decimal as string (e.g., "1000.50" USDC)
-  maxParticipants?: number; // Maximum number of participants allowed
+  totalFunding: string; // Decimal as string (e.g., "1000.50" USDC)
+  remainingFunding: string; // Decimal as string - funds not yet paid out
+  sponsor: string; // Primary sponsor address
+  certifiedProviders: string[]; // Array of certified provider addresses
+  participantCount: number; // Current enrolled participants
+  maxParticipants: number; // Maximum participants allowed
 
   // Blockchain tracking (BigInt as strings for JSON)
   chainId: number;
@@ -250,6 +312,8 @@ export interface Study {
   // Timestamps (allow both Date and string for serialization)
   createdAt: Date | string;
   updatedAt: Date | string;
+  startedAt?: Date | string | null; // When study actually started recruiting
+  completedAt?: Date | string | null; // When study completed
 
   // Relations (optional - loaded with include)
   criteria?: StudyCriteria | null;
@@ -285,7 +349,11 @@ export function toAPIStudy(dbStudy: StudyDB): Study {
     researcherAddress: dbStudy.researcherAddress,
     status: dbStudy.status,
     totalFunding: dbStudy.totalFunding?.toString() || '0',
-    maxParticipants: dbStudy.maxParticipants || undefined,
+    remainingFunding: dbStudy.remainingFunding?.toString() || '0',
+    sponsor: dbStudy.sponsor,
+    certifiedProviders: dbStudy.certifiedProviders,
+    participantCount: dbStudy.participantCount,
+    maxParticipants: dbStudy.maxParticipants,
     chainId: dbStudy.chainId,
     escrowTxHash: dbStudy.escrowTxHash,
     registryTxHash: dbStudy.registryTxHash,
@@ -294,6 +362,8 @@ export function toAPIStudy(dbStudy: StudyDB): Study {
     registryBlockNumber: dbStudy.registryBlockNumber.toString(),
     createdAt: dbStudy.createdAt,
     updatedAt: dbStudy.updatedAt,
+    startedAt: dbStudy.startedAt || undefined,
+    completedAt: dbStudy.completedAt || undefined,
   };
 }
 
@@ -598,4 +668,126 @@ export interface StudyIds {
   registryId: number;
   /** ResearchFundingEscrow contract ID - use for escrow contract calls */
   escrowId: number;
+}
+
+// ============================================================================
+// Participation Types (from ResearchFundingEscrow.sol)
+// ============================================================================
+
+/**
+ * Study participation record (API/Frontend type)
+ * Tracks participant enrollment and progress in a study
+ */
+export interface Participation {
+  id: string;
+  studyId: string;
+  escrowId: number;
+  participant: string; // DASHI Smart Account address
+  enrolledAt: Date | string;
+  completedMilestones: number[]; // Array of milestone IDs
+  totalEarned: string; // BigInt as string (wei/smallest unit)
+  active: boolean;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
+/**
+ * Participation record (Database type)
+ */
+export interface ParticipationDB {
+  id: string;
+  studyId: string;
+  escrowId: number;
+  participant: string;
+  enrolledAt: Date;
+  completedMilestones: number[];
+  totalEarned: bigint; // Native BigInt
+  active: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Convert ParticipationDB to Participation (API type)
+ */
+export function toAPIParticipation(dbParticipation: ParticipationDB): Participation {
+  return {
+    id: dbParticipation.id,
+    studyId: dbParticipation.studyId,
+    escrowId: dbParticipation.escrowId,
+    participant: dbParticipation.participant,
+    enrolledAt: dbParticipation.enrolledAt,
+    completedMilestones: dbParticipation.completedMilestones,
+    totalEarned: dbParticipation.totalEarned.toString(),
+    active: dbParticipation.active,
+    createdAt: dbParticipation.createdAt,
+    updatedAt: dbParticipation.updatedAt,
+  };
+}
+
+// ============================================================================
+// Payment Types (from ResearchFundingEscrow.sol)
+// ============================================================================
+
+/**
+ * Payment record (API/Frontend type)
+ * Tracks milestone payments to participants
+ */
+export interface Payment {
+  id: string;
+  paymentId: number; // ID from contract
+  studyId: string;
+  escrowId: number;
+  milestoneId: string;
+  participant: string;
+  amount: string; // BigInt as string
+  token: string; // Token address (0x0 for ETH, USDC address for USDC)
+  paidAt: Date | string;
+  transactionHash: string;
+  blockNumber: string; // BigInt as string
+  chainId: number;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
+/**
+ * Payment record (Database type)
+ */
+export interface PaymentDB {
+  id: string;
+  paymentId: number;
+  studyId: string;
+  escrowId: number;
+  milestoneId: string;
+  participant: string;
+  amount: bigint; // Native BigInt
+  token: string;
+  paidAt: Date;
+  transactionHash: string;
+  blockNumber: bigint; // Native BigInt
+  chainId: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Convert PaymentDB to Payment (API type)
+ */
+export function toAPIPayment(dbPayment: PaymentDB): Payment {
+  return {
+    id: dbPayment.id,
+    paymentId: dbPayment.paymentId,
+    studyId: dbPayment.studyId,
+    escrowId: dbPayment.escrowId,
+    milestoneId: dbPayment.milestoneId,
+    participant: dbPayment.participant,
+    amount: dbPayment.amount.toString(),
+    token: dbPayment.token,
+    paidAt: dbPayment.paidAt,
+    transactionHash: dbPayment.transactionHash,
+    blockNumber: dbPayment.blockNumber.toString(),
+    chainId: dbPayment.chainId,
+    createdAt: dbPayment.createdAt,
+    updatedAt: dbPayment.updatedAt,
+  };
 }

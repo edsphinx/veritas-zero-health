@@ -47,7 +47,17 @@
     "vercel": "pnpm --filter @veritas/nextjs vercel",
     "vercel:login": "pnpm --filter @veritas/nextjs vercel:login",
     "vercel:yolo": "pnpm --filter @veritas/nextjs vercel:yolo",
-    "verify": "pnpm foundry:verify"
+    "verify": "pnpm foundry:verify",
+    "db:generate": "pnpm --filter @veritas/nextjs db:generate",
+    "db:push": "pnpm --filter @veritas/nextjs db:push",
+    "db:migrate": "pnpm --filter @veritas/nextjs db:migrate",
+    "db:studio": "pnpm --filter @veritas/nextjs db:studio",
+    "db:seed": "pnpm --filter @veritas/nextjs db:seed",
+    "db:clear": "pnpm --filter @veritas/nextjs db:clear",
+    "sync:blockchain": "pnpm --filter @veritas/nextjs sync:blockchain",
+    "sync:blockchain:dry-run": "pnpm --filter @veritas/nextjs sync:blockchain:dry-run",
+    "admin:add-superadmin": "pnpm --filter @veritas/nextjs admin:add-superadmin",
+    "admin:set-role": "pnpm --filter @veritas/nextjs admin:set-role"
   },
   "devDependencies": {
     "husky": "~9.1.7",

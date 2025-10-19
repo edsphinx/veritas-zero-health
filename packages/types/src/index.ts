@@ -15,6 +15,12 @@ export * from './health';
 // Study types
 export * from './study';
 
+// Medical Provider types
+export * from './provider';
+
+// Health Identity & Attestation types
+export * from './identity';
+
 // Authentication & Authorization types
 export * from './auth';
 
