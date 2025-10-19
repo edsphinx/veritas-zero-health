@@ -21,15 +21,8 @@ import { ReownAuthentication } from '@reown/appkit-siwx';
  * - Session management via Reown Dashboard
  * - Automatic integration with wallet connections
  *
- * Note: ReownAuthentication automatically uses the projectId from createAppKit
- * No additional configuration is needed - it's managed via Reown Dashboard
- *
- * Custom message configuration:
- * ReownAuthentication generates user-friendly messages automatically.
- * The message will include:
- * - Domain: dashi.health
- * - Statement: "Sign in to DASHI - Your sovereign health identity"
- * - URI: Current app URL
- * - Nonce: Auto-generated for security
+ * Custom message configuration for cleaner sign-in experience
  */
+// ReownAuthentication doesn't accept options, it uses default configuration
+// The message format is controlled by the CAIP-122 standard
 export const siwxConfig = new ReownAuthentication();
