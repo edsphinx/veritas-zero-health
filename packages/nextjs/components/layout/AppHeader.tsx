@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { WalletButton } from '@/components/wallet/WalletButton';
+import { WalletButton, NetworkSwitcher } from '@/components/wallet';
 
 export function AppHeader() {
   return (
@@ -42,7 +42,8 @@ export function AppHeader() {
           </Link>
         </nav>
 
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-3">
+          <NetworkSwitcher />
           <WalletButton />
         </div>
       </div>

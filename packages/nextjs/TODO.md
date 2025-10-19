@@ -4,16 +4,16 @@
 
 ---
 
-## 🔴 Priority 1: Design System & Components (NOW)
+## 🔴 Priority 1: Design System & Components ✅ COMPLETED
 
 ### Shadcn Components Setup
-- [ ] Install base shadcn components:
-  - [ ] Button
-  - [ ] Card
-  - [ ] Badge
-  - [ ] Dropdown Menu
-  - [ ] Avatar
-  - [ ] Separator
+- [x] Install base shadcn components:
+  - [x] Button
+  - [x] Card
+  - [x] Badge
+  - [x] Dropdown Menu
+  - [x] Avatar
+  - [x] Separator
   - [ ] Skeleton (loading states)
   - [ ] Dialog
   - [ ] Tooltip
@@ -26,32 +26,37 @@
 - [ ] Implement responsive design breakpoints
 
 ### AppKit Theme Customization
-- [ ] Configure AppKit theme to match DASHI colors
-- [ ] Customize button styles, border radius, fonts
+- [x] Configure AppKit theme to match DASHI colors
+- [x] Customize button styles, border radius, fonts
 - [ ] Test on mobile devices
+
+### Logo & Branding
+- [x] Simplify logo design for favicon (3-element: Shield + Cross + ZK)
+- [x] Generate multi-resolution favicon.ico
+- [x] Update app/icon.svg and public/dashi-logo.svg
 
 ---
 
-## 🟡 Priority 2: Advanced Wallet Component (NEXT)
+## 🟡 Priority 2: Advanced Wallet Component ✅ COMPLETED
 
 ### Professional ConnectWallet Component
 **Location**: `components/wallet/WalletButton.tsx`
 
 **Features to implement gradually:**
 
-#### Phase 1: Basic Connection + SIWX
-- [ ] Integrate SIWX (Sign-In with X) instead of SIWE
-- [ ] Single component: Connect + Sign In with NextAuth
-- [ ] Loading states and error handling
-- [ ] Disconnect functionality
+#### Phase 1: Basic Connection + SIWX ✅
+- [x] Integrate SIWX (Sign-In with X) instead of SIWE
+- [x] Single component: Connect + Sign In with NextAuth
+- [x] Loading states and error handling
+- [x] Disconnect functionality
 
-#### Phase 2: Wallet Info Dropdown
-- [ ] Display wallet address (truncated with copy button)
-- [ ] Show native token balance (ETH, OP, etc.)
-- [ ] Display connected network with icon
-- [ ] Network switcher dropdown
-- [ ] ENS name resolution and display
-- [ ] Avatar from ENS or generated
+#### Phase 2: Wallet Info Dropdown ✅
+- [x] Display wallet address (truncated with copy button)
+- [x] Show native token balance (ETH, OP, etc.)
+- [x] Display connected network with icon
+- [x] Network switcher dropdown (separate component)
+- [x] ENS name resolution and display
+- [x] Avatar from ENS or generated
 
 #### Phase 3: Advanced Features
 - [ ] Multi-token balance display (ERC20)
@@ -98,18 +103,19 @@ export function NFTPreview() {
 
 ---
 
-## 🟢 Priority 3: Authentication & Authorization
+## 🟢 Priority 3: Authentication & Authorization ✅ COMPLETED
 
 ### NextAuth + SIWX Integration
-- [ ] Setup NextAuth with SIWX provider
-- [ ] Create auth API routes
-- [ ] Implement session management
-- [ ] Add role-based access control (Patient, Researcher, Clinic, Sponsor)
-- [ ] Create RouteGuard component for protected routes
-- [ ] Add auto-sign middleware
+- [x] Setup NextAuth with SIWX provider
+- [x] Create auth API routes
+- [x] Implement session management
+- [x] Add role-based access control (Patient, Researcher, Clinic, Sponsor)
+- [x] Create RouteGuard component for protected routes
+- [x] Add auth middleware for route protection
+- [x] Create useAuth() hook for accessing auth state
 
 ### Auth UI Components
-- [ ] SignIn modal/page
+- [ ] SignIn modal/page (using AppKit modal currently)
 - [ ] Session expiry warning
 - [ ] Re-authentication flow
 - [ ] Verification badges (Human Protocol)
