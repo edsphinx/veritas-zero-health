@@ -25,8 +25,8 @@ export type StatCardColor =
  * StatCard Props
  */
 export interface StatCardProps {
-  /** Icon element to display */
-  icon: React.ReactNode;
+  /** Icon element to display (required for compact variant, not used in Card-style) */
+  icon?: React.ReactNode;
   /** Card title (optional, for Card-style stats) */
   title?: string;
   /** Stat label */
