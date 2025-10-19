@@ -138,6 +138,15 @@ export function NFTPreview() {
 - [ ] Create API routes using use cases
 - [ ] Add dependency injection (future)
 
+### Health Types Migration (Future)
+**Note**: When migrating health-related features from bk_nextjs, fix type errors in browser-extension:
+- [ ] Fix Biomarker type (missing `type` property)
+- [ ] Fix BiomarkerValue type (missing `flag` property)
+- [ ] Fix Vital type (missing `bloodPressure` property, incorrect number type)
+- [ ] Fix Allergy type (missing `dateIdentified`, `type` properties)
+- [ ] Ensure @veritas/types health.ts matches actual Prisma schema
+- [ ] Update browser-extension to use corrected types
+
 ### Folder Structure
 ```
 packages/nextjs/
