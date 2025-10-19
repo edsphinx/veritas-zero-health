@@ -1,121 +1,32 @@
-<!-- DASHI Logo - Simplified Version E for Favicon/Icon -->
-<!-- Shield + Medical cross (scientific colors) + Privacy bars + Incognito icon + ZK element -->
+<!-- DASHI Logo V5 - Cross clipped to shield shape -->
+<!-- Cross extends to inner border but NOT beyond outer border of shield -->
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <!-- DNA/Medical gradient (scientific blue-purple) -->
-    <linearGradient id="medicalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#4A90E2;stop-opacity:1" />
-      <stop offset="50%" style="stop-color:#00FF41;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#7B68EE;stop-opacity:1" />
-    </linearGradient>
-
-    <!-- Privacy bar gradient -->
-    <linearGradient id="privacyGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#f29f05;stop-opacity:0.95" />
-      <stop offset="50%" style="stop-color:#0a2540;stop-opacity:0.95" />
-      <stop offset="100%" style="stop-color:#f29f05;stop-opacity:0.95" />
-    </linearGradient>
-
-    <!-- Shield gradient -->
-    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#0a2540;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#008060;stop-opacity:1" />
-    </linearGradient>
+    <!-- Clip path: Only show cross INSIDE shield area -->
+    <clipPath id="shieldClip">
+      <path d="M 256 60 L 400 130 L 400 270 Q 400 380, 256 470 Q 112 380, 112 270 L 112 130 Z"/>
+    </clipPath>
   </defs>
 
-  <!-- Shield (bold and simple) -->
-  <path d="M 256 70 L 390 135 L 390 265 Q 390 370, 256 460 Q 122 370, 122 265 L 122 135 Z"
-        fill="url(#shieldGrad)" opacity="0.08"/>
+  <!-- LAYER 1: Medical Cross (Green - clipped to shield shape) -->
+  <g clip-path="url(#shieldClip)">
+    <!-- Vertical bar - extends past shield inner border -->
+    <rect x="216" y="50" width="80" height="420" fill="#008060"/>
 
-  <path d="M 256 70 L 390 135 L 390 265 Q 390 370, 256 460 Q 122 370, 122 265 L 122 135 Z"
-        stroke="url(#shieldGrad)" stroke-width="8" fill="none"/>
-
-  <!-- Medical Cross (scientific colors - DNA/ECG) -->
-  <g opacity="0.9">
-    <!-- Vertical bar -->
-    <rect x="231" y="155" width="50" height="190" rx="8" fill="url(#medicalGrad)"/>
-
-    <!-- Horizontal bar -->
-    <rect x="186" y="220" width="140" height="50" rx="8" fill="url(#medicalGrad)"/>
+    <!-- Horizontal bar - extends past shield inner border -->
+    <rect x="100" y="206" width="312" height="80" fill="#008060"/>
   </g>
 
-  <!-- Privacy bars (redacted effect) -->
-  <g opacity="0.92">
-    <rect x="195" y="200" width="122" height="32" rx="5" fill="url(#privacyGrad)"/>
-    <rect x="195" y="245" width="122" height="32" rx="5" fill="url(#privacyGrad)"/>
-    <rect x="195" y="290" width="122" height="32" rx="5" fill="url(#privacyGrad)"/>
+  <!-- LAYER 2: Shield outline (Blue - defines boundaries) -->
+  <path d="M 256 60 L 400 130 L 400 270 Q 400 380, 256 470 Q 112 380, 112 270 L 112 130 Z"
+        stroke="#0a2540" stroke-width="20" fill="none"/>
 
-    <!-- Lock icons on bars -->
-    <g transform="translate(305, 210)">
-      <rect x="0" y="4" width="12" height="10" rx="2" fill="#ffffff" opacity="0.95"/>
-      <path d="M 3 4 L 3 0.5 Q 3 -2.5, 6 -2.5 Q 9 -2.5, 9 0.5 L 9 4"
-            stroke="#ffffff" stroke-width="2.5" fill="none" opacity="0.95"/>
-      <circle cx="6" cy="9" r="2" fill="#0a2540"/>
-    </g>
-    <g transform="translate(305, 255)">
-      <rect x="0" y="4" width="12" height="10" rx="2" fill="#ffffff" opacity="0.95"/>
-      <path d="M 3 4 L 3 0.5 Q 3 -2.5, 6 -2.5 Q 9 -2.5, 9 0.5 L 9 4"
-            stroke="#ffffff" stroke-width="2.5" fill="none" opacity="0.95"/>
-      <circle cx="6" cy="9" r="2" fill="#0a2540"/>
-    </g>
-    <g transform="translate(305, 300)">
-      <rect x="0" y="4" width="12" height="10" rx="2" fill="#ffffff" opacity="0.95"/>
-      <path d="M 3 4 L 3 0.5 Q 3 -2.5, 6 -2.5 Q 9 -2.5, 9 0.5 L 9 4"
-            stroke="#ffffff" stroke-width="2.5" fill="none" opacity="0.95"/>
-      <circle cx="6" cy="9" r="2" fill="#0a2540"/>
-    </g>
-  </g>
-
-  <!-- INCOGNITO ICON (top - privacy indicator) -->
-  <g transform="translate(256, 110)">
-    <!-- Incognito mask/glasses -->
-    <ellipse cx="0" cy="0" rx="60" ry="38" fill="#0a2540" opacity="0.95"/>
-
-    <!-- Left eye lens -->
-    <circle cx="-24" cy="2" r="16" fill="#008060"/>
-    <circle cx="-24" cy="2" r="10" fill="#0a2540"/>
-
-    <!-- Right eye lens -->
-    <circle cx="24" cy="2" r="16" fill="#008060"/>
-    <circle cx="24" cy="2" r="10" fill="#0a2540"/>
-
-    <!-- Bridge -->
-    <path d="M -8 -5 Q 0 -8, 8 -5" stroke="#008060" stroke-width="4" fill="none" stroke-linecap="round"/>
-
-    <!-- Left arm -->
-    <rect x="-55" y="-8" width="35" height="5" rx="2.5" fill="#0a2540" opacity="0.9"/>
-
-    <!-- Right arm -->
-    <rect x="20" y="-8" width="35" height="5" rx="2.5" fill="#0a2540" opacity="0.9"/>
-
-    <!-- Privacy text -->
-    <text x="0" y="55" font-family="Inter, sans-serif" font-size="18" font-weight="800"
-          text-anchor="middle" fill="#0a2540" opacity="0.7">ANONYMOUS</text>
-  </g>
-
-  <!-- ZK ELEMENT - Large and Visual (bottom) -->
-  <g transform="translate(256, 380)">
-    <!-- ZK Badge (bold) -->
-    <rect x="-70" y="-30" width="140" height="60" rx="30" fill="#008060"/>
-    <rect x="-70" y="-30" width="140" height="60" rx="30" stroke="#0a2540" stroke-width="3" fill="none"/>
-
-    <!-- ZK Text (large) -->
-    <text x="0" y="-5" font-family="Inter, sans-serif" font-size="32" font-weight="900"
-          text-anchor="middle" fill="#ffffff">ZK</text>
-    <text x="0" y="18" font-family="Inter, sans-serif" font-size="14" font-weight="700"
-          text-anchor="middle" fill="#ffffff" opacity="0.9">PROOF</text>
-
-    <!-- Checkmark (verified) -->
-    <circle cx="50" cy="-5" r="18" fill="#f29f05"/>
-    <path d="M 44 -5 L 48 0 L 57 -10"
-          stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  </g>
-
-  <!-- Web3 indicator hexagons (corners - subtle) -->
-  <path d="M 256 60 L 264 64.5 L 264 73.5 L 256 78 L 248 73.5 L 248 64.5 Z"
-        fill="#008060" opacity="0.7"/>
-  <path d="M 395 140 L 403 144.5 L 403 153.5 L 395 158 L 387 153.5 L 387 144.5 Z"
-        fill="#0a2540" opacity="0.7"/>
-  <path d="M 117 140 L 125 144.5 L 125 153.5 L 117 158 L 109 153.5 L 109 144.5 Z"
-        fill="#0a2540" opacity="0.7"/>
+  <!-- LAYER 3: ZK Text (Orange - very bold, centered) -->
+  <text x="256" y="280"
+        font-family="Inter, system-ui, sans-serif"
+        font-size="90"
+        font-weight="900"
+        text-anchor="middle"
+        fill="#f29f05"
+        letter-spacing="-6">ZK</text>
 </svg>
