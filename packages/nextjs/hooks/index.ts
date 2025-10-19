@@ -4,6 +4,7 @@
  * Custom React hooks for DASHI application
  */
 
+// Passport hooks
 export {
   usePassport,
   usePassportScore,
@@ -11,3 +12,7 @@ export {
   type UsePassportResult,
   type UsePassportScoreOptions,
 } from './usePassport';
+
+// Study hooks
+export * from './useStudies';
+export * from './useStudy';
