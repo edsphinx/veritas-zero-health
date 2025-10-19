@@ -13,6 +13,7 @@ import type { NextAuthConfig } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { SiweMessage } from "siwe";
 import { prisma } from "./prisma";
+import { DEFAULT_CHAIN_ID } from "@/config/blockchain.config";
 
 // Map Prisma UserRole enum to @veritas/types UserRole
 function mapPrismaRoleToUserRole(
@@ -124,6 +125,9 @@ export const authConfig = {
             displayName: user.displayName,
             avatar: user.avatar,
           };
+          // Add top-level address and chainId for convenience
+          session.address = user.address;
+          session.chainId = DEFAULT_CHAIN_ID;
         }
       }
       return session;

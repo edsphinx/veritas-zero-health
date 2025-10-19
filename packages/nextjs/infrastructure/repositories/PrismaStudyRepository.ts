@@ -14,6 +14,7 @@ import type { IStudyRepository, StudyFilters } from '@/core/domain/repositories'
 import type { Study, CreateStudyData, UpdateStudyData } from '@/core/domain/entities';
 import type { StudyDB } from '@veritas/types';
 import { toAPIStudy, StudyStatus } from '@veritas/types';
+import { DEFAULT_CHAIN_ID } from '@/config/blockchain.config';
 
 // Helper to convert Prisma type to StudyDB
 function toStudyDB(prismaStudy: PrismaStudy): StudyDB {
@@ -70,6 +71,18 @@ export class PrismaStudyRepository implements IStudyRepository {
     return toAPIStudy(studyDB);
   }
 
+  async findByEscrowId(escrowId: bigint): Promise<Study | null> {
+    // Prisma stores BigInt as number in some configs, handle both
+    const escrowIdNum = Number(escrowId);
+    const prismaStudy = await this.prisma.study.findUnique({
+      where: { escrowId: escrowIdNum },
+    });
+    if (!prismaStudy) return null;
+
+    const studyDB = toStudyDB(prismaStudy);
+    return toAPIStudy(studyDB);
+  }
+
   async findAll(filters?: StudyFilters): Promise<Study[]> {
     const where: Prisma.StudyWhereInput = {};
 
@@ -119,7 +132,7 @@ export class PrismaStudyRepository implements IStudyRepository {
         certifiedProviders: data.certifiedProviders ?? [],
         participantCount: data.participantCount ?? 0,
         maxParticipants: data.maxParticipants,
-        chainId: data.chainId || 11155420,
+        chainId: data.chainId ?? DEFAULT_CHAIN_ID,
         escrowTxHash: data.escrowTxHash,
         registryTxHash: data.registryTxHash,
         criteriaTxHash: data.criteriaTxHash,
@@ -172,4 +185,11 @@ export class PrismaStudyRepository implements IStudyRepository {
 
     return this.prisma.study.count({ where });
   }
+}
+
+/**
+ * Factory function for creating the repository
+ */
+export function createStudyRepository(prisma: PrismaClient): IStudyRepository {
+  return new PrismaStudyRepository(prisma);
 }

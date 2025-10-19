@@ -122,7 +122,26 @@ export function NFTPreview() {
 
 ---
 
-## 🔵 Priority 4: Core Architecture ⏳ IN PROGRESS
+## 🔵 Priority 4: Core Architecture & Researcher Flow ⏳ IN PROGRESS
+
+### Database Schema & Types ✅ COMPLETED
+- [x] Complete Prisma schema with all blockchain models:
+  - [x] Study, StudyMilestone, StudyCriteria, StudyApplication
+  - [x] Participation, Payment, SponsorDeposit
+  - [x] MedicalProvider, HealthIdentity, HealthAttestation
+  - [x] StudyParticipationToken
+- [x] Align all enums with smart contracts:
+  - [x] MilestoneType (enrollment, data_submission, followup_visit, study_completion, custom)
+  - [x] MilestoneStatus (pending, in_progress, completed, verified, paid)
+  - [x] CertificationLevel (none, individual, clinic, hospital, government_authority)
+  - [x] StudyStatus (draft, recruiting, active, paused, completed, cancelled)
+- [x] Create complete type system in @veritas/types:
+  - [x] Study types (Study, StudyDB, toAPIStudy)
+  - [x] Provider types (MedicalProvider, CertificationLevel)
+  - [x] Identity types (HealthIdentity, HealthAttestation, StudyParticipationToken)
+  - [x] Enrollment types (Participation, Payment)
+- [x] Update domain entities (CreateStudyData, UpdateStudyData)
+- [x] Generate Prisma client with new schema
 
 ### Clean Architecture Setup ✅
 - [x] Create `core/` folder structure:
@@ -134,9 +153,70 @@ export function NFTPreview() {
 - [x] Create domain entities (Study, User)
 - [x] Create repository interfaces (IStudyRepository, IUserRepository)
 - [x] Implement first use cases (GetStudies, GetStudyById)
-- [ ] Implement Prisma repositories
+- [x] Implement PrismaStudyRepository with all new fields
+- [ ] Implement remaining Prisma repositories (Participation, Payment, Provider, Identity)
 - [ ] Create API routes using use cases
 - [ ] Add dependency injection (future)
+
+### Researcher Flow Implementation ⏳ IN PROGRESS
+**Based on bk_nextjs analysis (33 files to port)**
+
+#### Core Domain Layer
+- [ ] Port Study use cases from bk_nextjs:
+  - [ ] CreateStudy (with blockchain transaction)
+  - [ ] UpdateStudy
+  - [ ] DeleteStudy
+  - [ ] GetStudiesByResearcher
+  - [ ] AddStudyCriteria
+  - [ ] AddStudyMilestones
+  - [ ] GetStudyApplications
+- [ ] Create repository implementations:
+  - [ ] ParticipationRepository
+  - [ ] PaymentRepository
+  - [ ] StudyCriteriaRepository (if not exists)
+  - [ ] StudyApplicationRepository (if not exists)
+
+#### API Routes Layer
+- [ ] `/api/studies/create` - Create new study
+- [ ] `/api/studies/index` - List all studies
+- [ ] `/api/studies/[studyId]/route` - Get/update/delete study
+- [ ] `/api/studies/[studyId]/criteria/route` - Add eligibility criteria
+- [ ] `/api/studies/[studyId]/criteria/index` - List criteria
+- [ ] `/api/studies/[studyId]/milestones/route` - Add milestone
+- [ ] `/api/studies/[studyId]/milestones/index` - List milestones
+- [ ] `/api/studies/[studyId]/milestones/add` - Add milestone
+- [ ] `/api/studies/[studyId]/milestones/verify` - Verify milestone completion
+- [ ] `/api/studies/[studyId]/milestones/release-payment` - Release payment
+- [ ] `/api/studies/[studyId]/applications` - Get applications
+- [ ] `/api/studies/[studyId]/fund` - Fund study (sponsor)
+
+#### Hooks Layer
+- [ ] `useStudies()` - List studies with filters
+- [ ] `useStudy(id)` - Get single study with details
+- [ ] `useCreateStudy()` - Create study mutation
+- [ ] `useUpdateStudy()` - Update study mutation
+- [ ] `useStudyMilestones()` - Manage milestones
+- [ ] `useStudyCriteria()` - Manage criteria
+
+#### Components Layer
+- [ ] `StudyCard` - Study preview card
+- [ ] `StudyList` - List of studies
+- [ ] `MedicalCriteriaDisplay` - Display eligibility criteria
+- [ ] `StudyForm` - Create/edit study form
+- [ ] `MilestoneManager` - Manage study milestones
+- [ ] `CriteriaManager` - Manage eligibility criteria
+
+#### Pages Layer
+- [ ] `/researcher/page.tsx` - Researcher dashboard
+- [ ] `/researcher/studies/page.tsx` - Studies list
+- [ ] `/researcher/studies/[studyId]/page.tsx` - Study detail
+- [ ] `/researcher/create-study/page.tsx` - Create study form
+
+#### Scripts & Services
+- [ ] `sync-blockchain-db.ts` - Sync blockchain events to database
+- [ ] `add-milestones-to-studies.ts` - Bulk milestone management
+- [ ] `studies.service.ts` - Study business logic
+- [ ] `studies-blockchain.service.ts` - Blockchain interaction layer
 
 ### Health Types Migration (Future)
 **Note**: When migrating health-related features from bk_nextjs, fix type errors in browser-extension:
@@ -176,7 +256,54 @@ packages/nextjs/
 
 ---
 
-## 🟣 Priority 5: Integration Services
+## 🟣 Priority 5: Browser Extension Review & Contract Integration Audit
+
+### Browser Extension Contract Implementation Review
+**Purpose**: Audit existing browser extension contract implementations and ensure consistency with Next.js
+
+**Location**: `packages/browser-extension/`
+
+**Tasks**:
+- [ ] Review all smart contract interactions in extension:
+  - [ ] HealthIdentitySBT integration (minting, attestations)
+  - [ ] Study application flow (ZK proofs, eligibility)
+  - [ ] Health data extraction and storage (Nillion)
+  - [ ] Provider attestation requests
+  - [ ] Milestone completion submissions
+- [ ] Document contract integration points in `CONTRACTS_IMPLEMENTATION.md`:
+  - [ ] Update HealthIdentitySBT section with extension implementation status
+  - [ ] Update StudyParticipationSBT section with extension flow
+  - [ ] Update ZKVerifier section with proof generation
+  - [ ] Document extension ↔ Next.js communication patterns
+- [ ] Identify inconsistencies between packages:
+  - [ ] Type mismatches (extension vs @veritas/types)
+  - [ ] Contract ABI differences
+  - [ ] Event handling discrepancies
+  - [ ] API endpoint differences
+- [ ] Create integration checklist:
+  - [ ] List all contract functions used by extension
+  - [ ] Verify Next.js has corresponding endpoints
+  - [ ] Ensure event sync coverage
+  - [ ] Document missing functionality
+- [ ] Gap analysis and improvement opportunities:
+  - [ ] Features in extension not in Next.js
+  - [ ] Features in Next.js not in extension
+  - [ ] Opportunities for code sharing
+  - [ ] Potential for monorepo shared packages
+
+**Deliverables**:
+- Updated `CONTRACTS_IMPLEMENTATION.md` with extension integration status
+- `EXTENSION_INTEGRATION.md` document (new) with:
+  - Extension contract usage patterns
+  - Next.js ↔ Extension communication flow
+  - Shared code opportunities
+  - Migration plan for consistency
+
+**Timeline**: After Researcher Flow MVP is complete
+
+---
+
+## 🟢 Priority 6: Integration Services
 
 ### Nillion Integration
 - [ ] Setup Nillion client
@@ -354,5 +481,5 @@ packages/nextjs/
 
 ---
 
-**Last Updated**: 2025-10-18
-**Current Focus**: Priority 1 - Design System & Components
+**Last Updated**: 2025-10-19
+**Current Focus**: Priority 4 - Researcher Flow Implementation (After complete schema & types setup)

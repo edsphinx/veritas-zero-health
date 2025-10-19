@@ -21,6 +21,8 @@ declare module "next-auth" {
 
   interface Session {
     user: User;
+    address: string;
+    chainId: number;
   }
 }
 

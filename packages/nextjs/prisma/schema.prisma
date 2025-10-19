@@ -226,7 +226,7 @@ model Study {
 
   // Blockchain IDs (source of truth)
   registryId Int @unique // ID from StudyRegistry contract
-  escrowId   Int         // ID from ResearchFundingEscrow contract
+  escrowId   Int @unique // ID from ResearchFundingEscrow contract
 
   // Basic info (indexed from blockchain)
   title             String

@@ -25,6 +25,11 @@ export interface IStudyRepository {
   findByRegistryId(registryId: bigint): Promise<Study | null>;
 
   /**
+   * Find study by blockchain escrow ID
+   */
+  findByEscrowId(escrowId: bigint): Promise<Study | null>;
+
+  /**
    * Find all studies with optional filters
    */
   findAll(filters?: StudyFilters): Promise<Study[]>;
