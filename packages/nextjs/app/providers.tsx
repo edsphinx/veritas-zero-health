@@ -8,12 +8,30 @@ import React, { type ReactNode } from 'react'
 import { cookieToInitialState, WagmiProvider, type Config } from 'wagmi'
 import { SessionProvider } from '@/components/providers/SessionProvider'
 
-// Set up queryClient
+// Set up queryClient with optimized defaults
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 60 * 1000, // 1 minute
-      refetchOnWindowFocus: false,
+      // Data freshness
+      staleTime: 5 * 60 * 1000,           // 5 minutes - data stays fresh longer
+      gcTime: 10 * 60 * 1000,             // 10 minutes - garbage collection (cache retention)
+
+      // Refetch behavior
+      refetchOnWindowFocus: false,        // Don't refetch when window regains focus
+      refetchOnMount: false,              // Don't refetch on component mount if data exists
+      refetchOnReconnect: false,          // Don't refetch on network reconnect
+
+      // Retry behavior
+      retry: 1,                           // Only retry failed requests once
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+
+      // Performance
+      refetchInterval: false,             // Don't poll by default
+      refetchIntervalInBackground: false, // Don't poll in background
+    },
+    mutations: {
+      // Mutations retry once by default
+      retry: 1,
     },
   },
 })

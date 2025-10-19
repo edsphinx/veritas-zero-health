@@ -16,7 +16,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { getNavigationForRole } from '@/config/navigation.config';
 import type { NavItem } from '@/config/navigation.config';
 import { cn } from '@/lib/utils';
-import { slideRightVariants, fadeVariants, transitions } from '@/lib/animations';
+import { slideRightVariants, fadeVariants, sidebarVariants, transitions } from '@/lib/animations';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 
@@ -59,9 +59,8 @@ export function DashboardSidebar({
       {/* Desktop Sidebar */}
       <motion.aside
         initial={false}
-        animate={{
-          width: isCollapsed ? '4rem' : '16rem',
-        }}
+        animate={isCollapsed ? 'collapsed' : 'expanded'}
+        variants={sidebarVariants}
         transition={transitions.spring}
         className="hidden lg:flex flex-col border-r border-border bg-background h-[calc(100vh-4rem)] sticky top-16"
       >

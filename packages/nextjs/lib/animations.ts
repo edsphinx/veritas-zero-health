@@ -303,3 +303,20 @@ export const pageSlideVariants: Variants = {
     x: 50,
   },
 };
+
+// ============================================
+// Layout Variants
+// ============================================
+
+/**
+ * Sidebar collapse/expand animation
+ * Used in DashboardSidebar component
+ */
+export const sidebarVariants: Variants = {
+  expanded: {
+    width: '16rem', // w-64
+  },
+  collapsed: {
+    width: '4rem', // w-16
+  },
+};
