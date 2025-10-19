@@ -6,3 +6,4 @@
 
 export type { IStudyRepository, StudyFilters } from './IStudyRepository';
 export type { IUserRepository, UserFilters } from './IUserRepository';
+export type { IPassportVerificationRepository } from './IPassportVerificationRepository';

@@ -6,3 +6,4 @@
 
 export { PrismaStudyRepository } from './PrismaStudyRepository';
 export { PrismaUserRepository } from './PrismaUserRepository';
+export { PrismaPassportVerificationRepository } from './PrismaPassportVerificationRepository';

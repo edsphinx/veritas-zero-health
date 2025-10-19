@@ -85,8 +85,9 @@ model User {
   avatar      String?
 
   // Relations
-  accounts Account[]
-  sessions Session[]
+  accounts              Account[]
+  sessions              Session[]
+  passportVerifications PassportVerification[]
 
   @@index([address])
   @@index([role])
@@ -149,6 +150,52 @@ model VerificationToken {
 
   @@unique([identifier, token])
   @@map("verification_tokens")
+}
+
+// ============================================================================
+// PASSPORT VERIFICATION MODELS
+// ============================================================================
+
+// Gitcoin Passport verification history
+// Stores verification scores and stamps for Sybil resistance
+model PassportVerification {
+  id String @id @default(cuid())
+
+  // User relation
+  userId  String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  address String // Ethereum address (denormalized for queries)
+
+  // Verification results from Gitcoin Passport API
+  score         Float   // Numerical humanity score
+  threshold     Float   // Score threshold at time of verification
+  passingScore  Boolean // Whether score meets threshold
+  verified      Boolean // Whether user is verified (score >= minScore)
+
+  // Stamps (JSON object mapping stamp provider to score)
+  // Example: {"Google": 2.5, "Twitter": 1.8, "Github": 3.0}
+  stampScores Json? // Map of stamp provider -> individual score
+
+  // API Response metadata
+  lastScoreTimestamp   DateTime // When Passport API last updated score
+  expirationTimestamp  DateTime // When verification expires
+  apiResponseRaw       Json?    // Full API response for debugging
+
+  // Verification metadata
+  minScoreRequired Float    @default(20) // Minimum score required at time of check
+  verifiedAt       DateTime @default(now())
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, verifiedAt]) // One verification per user per timestamp
+  @@index([userId])
+  @@index([address])
+  @@index([verified])
+  @@index([verifiedAt])
+  @@index([expirationTimestamp])
+  @@map("passport_verifications")
 }
 
 // ============================================================================

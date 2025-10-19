@@ -24,8 +24,8 @@ export * from './enrollment';
 // Event types (blockchain & system events)
 export * from './events';
 
-// Human Passport types
-export * from './human';
+// Human Passport types (Gitcoin Passport)
+export * from './passport';
 
 // Zero-Knowledge Proof types
 export * from './zk-proof';
