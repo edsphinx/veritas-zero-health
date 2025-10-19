@@ -199,6 +199,19 @@ button[class*="apkt"]:hover,
 button[class*="w3m"]:hover {
   background-color: #f6f9fc !important; /* Light gray instead of white */
   border-radius: 12px !important;
+  color: #0a2540 !important; /* Force dark text on hover (not white!) */
+}
+
+/* Fix text color in nested elements on hover */
+w3m-button:hover *,
+w3m-connect-button:hover *,
+w3m-account-button:hover *,
+w3m-network-button:hover *,
+appkit-button:hover *,
+[data-testid*="button"]:hover *,
+button[class*="apkt"]:hover *,
+button[class*="w3m"]:hover * {
+  color: #0a2540 !important; /* Force dark text for all child elements */
 }
 
 /* Force consistent border radius in modal content */
@@ -236,4 +249,54 @@ appkit-wallet-button:hover,
 [data-testid*="network"]:hover {
   background-color: #f6f9fc !important;
   border-radius: 12px !important;
+  color: #0a2540 !important;
+}
+
+[class*="network-button"]:hover *,
+[data-testid*="network"]:hover * {
+  color: #0a2540 !important;
+}
+
+/* Fix modal buttons - prevent border-radius change on hover/active */
+appkit-modal button,
+w3m-modal button,
+[class*="apkt-modal"] button,
+[class*="w3m-modal"] button {
+  border-radius: 12px !important;
+  transition: background-color 0.2s ease, color 0.2s ease !important;
+}
+
+appkit-modal button:hover,
+w3m-modal button:hover,
+[class*="apkt-modal"] button:hover,
+[class*="w3m-modal"] button:hover,
+appkit-modal button:active,
+w3m-modal button:active,
+[class*="apkt-modal"] button:active,
+[class*="w3m-modal"] button:active,
+appkit-modal button:focus,
+w3m-modal button:focus,
+[class*="apkt-modal"] button:focus,
+[class*="w3m-modal"] button:focus {
+  border-radius: 12px !important;
+  background-color: #f6f9fc !important;
+  color: #0a2540 !important;
+}
+
+/* Fix Sign In button specifically */
+button[data-testid="connect-button"],
+button[aria-label*="Sign"],
+button[aria-label*="Connect"] {
+  border-radius: 12px !important;
+}
+
+button[data-testid="connect-button"]:hover,
+button[data-testid="connect-button"]:active,
+button[aria-label*="Sign"]:hover,
+button[aria-label*="Sign"]:active,
+button[aria-label*="Connect"]:hover,
+button[aria-label*="Connect"]:active {
+  border-radius: 12px !important;
+  background-color: #f6f9fc !important;
+  color: #0a2540 !important;
 }
