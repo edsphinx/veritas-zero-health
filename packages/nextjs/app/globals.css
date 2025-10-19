@@ -170,3 +170,70 @@ body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
 }
+
+/* ============================================================================
+   AppKit (Reown) Style Overrides
+   Fix inconsistencies in button borders, hover states, and colors
+   ============================================================================ */
+
+/* Force consistent border radius on ALL AppKit buttons */
+w3m-button,
+w3m-connect-button,
+w3m-account-button,
+w3m-network-button,
+appkit-button,
+[data-testid*="button"],
+button[class*="apkt"],
+button[class*="w3m"] {
+  border-radius: 12px !important;
+}
+
+/* Override button hover states - use light gray instead of white */
+w3m-button:hover,
+w3m-connect-button:hover,
+w3m-account-button:hover,
+w3m-network-button:hover,
+appkit-button:hover,
+[data-testid*="button"]:hover,
+button[class*="apkt"]:hover,
+button[class*="w3m"]:hover {
+  background-color: #f6f9fc !important; /* Light gray instead of white */
+  border-radius: 12px !important;
+}
+
+/* Force consistent border radius in modal content */
+w3m-modal,
+appkit-modal,
+[class*="modal-content"],
+[class*="apkt-modal"],
+[class*="w3m-modal"] {
+  border-radius: 12px !important;
+}
+
+/* Fix wallet option cards */
+w3m-wallet-button,
+appkit-wallet-button,
+[data-testid*="wallet"],
+[class*="wallet-button"] {
+  border-radius: 12px !important;
+}
+
+w3m-wallet-button:hover,
+appkit-wallet-button:hover,
+[data-testid*="wallet"]:hover,
+[class*="wallet-button"]:hover {
+  background-color: #f6f9fc !important;
+  border-radius: 12px !important;
+}
+
+/* Network switcher items */
+[class*="network-button"],
+[data-testid*="network"] {
+  border-radius: 12px !important;
+}
+
+[class*="network-button"]:hover,
+[data-testid*="network"]:hover {
+  background-color: #f6f9fc !important;
+  border-radius: 12px !important;
+}

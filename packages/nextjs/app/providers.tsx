@@ -37,8 +37,8 @@ export const modal = createAppKit({
   themeMode: 'light',
   themeVariables: {
     '--apkt-accent': '#008060',                 // Emerald Green (primary action)
-    '--apkt-color-mix': '#ffffff',              // White background
-    '--apkt-color-mix-strength': 0,             // Pure white, no mixing
+    '--apkt-color-mix': '#f6f9fc',              // Light gray for better hover visibility
+    '--apkt-color-mix-strength': 10,            // Subtle mixing for hover states
     '--apkt-border-radius-master': '12px',      // All buttons/cards/inputs same radius
     '--apkt-font-family': 'Inter, system-ui, sans-serif',
     '--apkt-font-size-master': '14px',          // Base font size

@@ -44,10 +44,10 @@ export const networks = [
 
 // App metadata for Reown AppKit
 export const metadata = {
-  name: 'Veritas Zero Health',
-  description: 'Private, Verifiable Patient Data for Clinical Trials',
-  url: typeof window !== 'undefined' ? window.location.origin : 'https://veritas.health',
-  icons: ['https://veritas.health/icon.png'],
+  name: 'DASHI',
+  description: 'Decentralized Anonymous Sovereign Health Identity',
+  url: typeof window !== 'undefined' ? window.location.origin : 'https://dashizk.vercel.app',
+  icons: [typeof window !== 'undefined' ? `${window.location.origin}/dashi-logo.svg` : 'https://dashizk.vercel.app/dashi-logo.svg'],
 };
 
 /**
