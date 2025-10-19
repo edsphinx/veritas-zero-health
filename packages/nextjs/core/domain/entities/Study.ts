@@ -21,6 +21,11 @@ export type CreateStudyData = {
   researcherAddress: string;
   status: string;
   totalFunding?: Prisma.Decimal | string | number;
+  sponsor: string; // Primary sponsor address (required)
+  maxParticipants: number; // Maximum participants allowed (required)
+  certifiedProviders?: string[]; // Optional: defaults to empty array
+  remainingFunding?: Prisma.Decimal | string | number; // Optional: defaults to totalFunding
+  participantCount?: number; // Optional: defaults to 0
   chainId?: number;
   escrowTxHash: string;
   registryTxHash: string;

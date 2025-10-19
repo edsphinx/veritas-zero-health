@@ -237,7 +237,14 @@ model Study {
   status StudyStatus
 
   // Funding (using Decimal for precise calculations)
-  totalFunding Decimal @default(0) @db.Decimal(20, 2) // Total funding in USDC
+  totalFunding     Decimal @default(0) @db.Decimal(20, 2) // Total funding in USDC
+  remainingFunding Decimal @default(0) @db.Decimal(20, 2) // Remaining funds not yet paid
+
+  // Participants & Providers
+  sponsor              String   // Primary sponsor address
+  certifiedProviders   String[] @default([]) // Array of certified provider addresses
+  participantCount     Int      @default(0) // Current enrolled participants
+  maxParticipants      Int // Maximum participants allowed
 
   // Blockchain tracking
   chainId Int @default(11155420) // Optimism Sepolia
@@ -248,21 +255,26 @@ model Study {
   criteriaTxHash String
 
   // Timestamps
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime? // Soft delete
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  startedAt   DateTime? // When study actually started recruiting
+  completedAt DateTime? // When study completed
+  deletedAt   DateTime? // Soft delete
 
   // Block numbers for event indexing
   escrowBlockNumber   BigInt
   registryBlockNumber BigInt
 
   // Relations
-  deposits     SponsorDeposit[]
-  criteria     StudyCriteria?
-  milestones   StudyMilestone[]
-  applications StudyApplication[]
+  deposits       SponsorDeposit[]
+  criteria       StudyCriteria?
+  milestones     StudyMilestone[]
+  applications   StudyApplication[]
+  participations Participation[]
+  payments       Payment[]
 
   @@index([researcherAddress])
+  @@index([sponsor])
   @@index([registryId])
   @@index([escrowId])
   @@index([status])
@@ -381,9 +393,11 @@ model StudyMilestone {
   milestoneId Int // Index in the escrow contract
 
   // Milestone details
-  milestoneType MilestoneType
-  description   String
-  rewardAmount  Decimal       @db.Decimal(20, 2) // Amount in USDC
+  milestoneType        MilestoneType
+  description          String
+  rewardAmount         Decimal        @db.Decimal(20, 2) // Amount in USDC
+  status               MilestoneStatus @default(pending) // Workflow status
+  verificationDataHash String? // bytes32 as hex string
 
   // Blockchain tracking
   chainId         Int    @default(11155420)
@@ -391,12 +405,15 @@ model StudyMilestone {
   blockNumber     BigInt
 
   // Timestamps
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  completedAt DateTime? // When milestone completed
+  verifiedAt  DateTime? // When milestone verified
 
   @@unique([escrowId, milestoneId])
   @@index([studyId])
   @@index([escrowId])
+  @@index([status])
   @@index([transactionHash])
   @@map("study_milestones")
 }
@@ -451,4 +468,225 @@ model StudyApplication {
   @@index([applicationTxHash])
   @@index([proofTransactionHash])
   @@map("study_applications")
+}
+
+// ============================================================================
+// PARTICIPATION & PAYMENT MODELS
+// ============================================================================
+
+// Study participation tracking (from ResearchFundingEscrow.sol)
+model Participation {
+  id String @id @default(cuid())
+
+  // Study relation
+  studyId String
+  study   Study  @relation(fields: [studyId], references: [id], onDelete: Cascade)
+
+  // Blockchain IDs
+  escrowId Int
+
+  // Participant info
+  participant String // DASHI Smart Account address
+
+  // Enrollment tracking
+  enrolledAt          DateTime
+  completedMilestones Int[]   @default([]) // Array of milestone IDs
+  totalEarned         BigInt   @default(0) // Total earned in wei/smallest unit
+  active              Boolean  @default(true)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studyId, participant])
+  @@index([studyId])
+  @@index([escrowId])
+  @@index([participant])
+  @@index([active])
+  @@map("participations")
+}
+
+// Payment records (from ResearchFundingEscrow.sol)
+model Payment {
+  id String @id @default(cuid())
+
+  // Payment ID from contract
+  paymentId Int
+
+  // Study relation
+  studyId String
+  study   Study  @relation(fields: [studyId], references: [id], onDelete: Cascade)
+
+  // Blockchain IDs
+  escrowId    Int
+  milestoneId String // UUID of StudyMilestone
+
+  // Payment details
+  participant String // Recipient address
+  amount      BigInt // Amount in wei/smallest unit
+  token       String // Token address (0x0 for ETH, USDC address for USDC)
+  paidAt      DateTime
+
+  // Blockchain tracking
+  chainId         Int    @default(11155420)
+  transactionHash String @unique
+  blockNumber     BigInt
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([studyId])
+  @@index([escrowId])
+  @@index([participant])
+  @@index([transactionHash])
+  @@index([paidAt])
+  @@map("payments")
+}
+
+// ============================================================================
+// MEDICAL PROVIDER MODELS
+// ============================================================================
+
+// Certified medical providers (from MedicalProviderRegistry.sol)
+model MedicalProvider {
+  id String @id @default(cuid())
+
+  // Provider identity
+  address        String             @unique
+  name           String
+  licenseNumber  String
+  licenseHash    String // bytes32 as hex string
+  certificationLevel CertificationLevel
+
+  // Certification details
+  certifiedAt DateTime
+  expiresAt   DateTime?
+  certifiedBy String // Address of certifier
+  isActive    Boolean  @default(true)
+
+  // Provider details
+  country          String   // ISO country code
+  specializations  String[] @default([]) // Array of specialization codes
+
+  // Revocation (if applicable)
+  revokedAt        DateTime?
+  revokedBy        String?
+  revocationReason String?
+
+  // Blockchain tracking
+  chainId                      Int    @default(11155420)
+  certificationTxHash          String @unique
+  certificationBlockNumber     BigInt
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([address])
+  @@index([isActive])
+  @@index([certificationLevel])
+  @@index([country])
+  @@index([expiresAt])
+  @@map("medical_providers")
+}
+
+// ============================================================================
+// HEALTH IDENTITY MODELS
+// ============================================================================
+
+// Patient health identity SBTs (from HealthIdentitySBT.sol)
+model HealthIdentity {
+  id String @id @default(cuid())
+
+  // Identity info
+  address         String @unique
+  tokenId         Int    @unique
+  nillionDID      String @unique
+  humanPassportId Int?
+  attestationCount Int   @default(0)
+  active          Boolean @default(true)
+
+  // Blockchain tracking
+  chainId        Int    @default(11155420)
+  mintTxHash     String @unique
+  mintBlockNumber BigInt
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  attestations HealthAttestation[]
+
+  @@index([address])
+  @@index([tokenId])
+  @@index([nillionDID])
+  @@index([active])
+  @@map("health_identities")
+}
+
+// Medical data attestations (from HealthIdentitySBT.sol)
+model HealthAttestation {
+  id String @id @default(cuid())
+
+  // Attestation data
+  dataHash        String @unique // bytes32 as hex - keccak256(nillionRecordId + dataType + vcSignature)
+  providerAddress String
+  patientAddress  String
+  revoked         Boolean @default(false)
+
+  // Health identity relation
+  patientId      String
+  healthIdentity HealthIdentity @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  // Blockchain tracking
+  chainId         Int      @default(11155420)
+  transactionHash String   @unique
+  blockNumber     BigInt
+  timestamp       DateTime
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([dataHash])
+  @@index([providerAddress])
+  @@index([patientAddress])
+  @@index([patientId])
+  @@index([revoked])
+  @@index([timestamp])
+  @@map("health_attestations")
+}
+
+// Study participation SBTs (from StudyParticipationSBT.sol)
+model StudyParticipationToken {
+  id String @id @default(cuid())
+
+  // Token info
+  tokenId      Int @unique
+  enrollmentId Int @unique
+
+  // Participant info
+  participantAddress  String
+  institutionAddress  String
+  locationHint        String?
+  complianceLevel     Int     @default(1) // 1-5 scale
+  interactionCount    Int     @default(1)
+
+  // Blockchain tracking
+  chainId        Int      @default(11155420)
+  mintTxHash     String   @unique
+  mintBlockNumber BigInt
+  timestamp      DateTime
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tokenId])
+  @@index([enrollmentId])
+  @@index([participantAddress])
+  @@index([institutionAddress])
+  @@map("study_participation_tokens")
 }

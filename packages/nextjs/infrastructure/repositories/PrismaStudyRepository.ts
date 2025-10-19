@@ -26,7 +26,11 @@ function toStudyDB(prismaStudy: PrismaStudy): StudyDB {
     researcherAddress: prismaStudy.researcherAddress,
     status: prismaStudy.status as StudyStatus, // Prisma enum to our enum
     totalFunding: prismaStudy.totalFunding.toString(),
-    maxParticipants: null, // TODO: Add to schema
+    remainingFunding: prismaStudy.remainingFunding.toString(),
+    sponsor: prismaStudy.sponsor,
+    certifiedProviders: prismaStudy.certifiedProviders,
+    participantCount: prismaStudy.participantCount,
+    maxParticipants: prismaStudy.maxParticipants,
     chainId: prismaStudy.chainId,
     escrowTxHash: prismaStudy.escrowTxHash,
     registryTxHash: prismaStudy.registryTxHash,
@@ -35,6 +39,8 @@ function toStudyDB(prismaStudy: PrismaStudy): StudyDB {
     registryBlockNumber: prismaStudy.registryBlockNumber,
     createdAt: prismaStudy.createdAt,
     updatedAt: prismaStudy.updatedAt,
+    startedAt: prismaStudy.startedAt,
+    completedAt: prismaStudy.completedAt,
     deletedAt: prismaStudy.deletedAt,
   };
 }
@@ -108,6 +114,11 @@ export class PrismaStudyRepository implements IStudyRepository {
         researcherAddress: data.researcherAddress,
         status: data.status as StudyStatus, // Type assertion for enum
         totalFunding: data.totalFunding,
+        remainingFunding: data.remainingFunding ?? data.totalFunding,
+        sponsor: data.sponsor,
+        certifiedProviders: data.certifiedProviders ?? [],
+        participantCount: data.participantCount ?? 0,
+        maxParticipants: data.maxParticipants,
         chainId: data.chainId || 11155420,
         escrowTxHash: data.escrowTxHash,
         registryTxHash: data.registryTxHash,
