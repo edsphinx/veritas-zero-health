@@ -2,16 +2,21 @@
  * Medical Criteria Display Component
  *
  * Shows eligibility criteria in human-readable format
+ * Includes Card wrapper by default for standalone use
  */
 
 'use client';
 
 import { Shield, Activity, Heart, Pill, AlertCircle } from 'lucide-react';
 import type { StudyCriteria } from '@veritas/types';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 interface Props {
   criteria: StudyCriteria;
+  /** Show compact version (no Card wrapper) */
   compact?: boolean;
+  /** Show Card wrapper (default: true when not compact) */
+  showCard?: boolean;
 }
 
 const diagnoseNames: Record<string, string> = {
@@ -21,7 +26,7 @@ const diagnoseNames: Record<string, string> = {
   'E66.9': 'Obesity',
 };
 
-export function MedicalCriteriaDisplay({ criteria, compact = false }: Props) {
+export function MedicalCriteriaDisplay({ criteria, compact = false, showCard = true }: Props) {
   const hasBiomarkers =
     criteria.hba1cMin != null ||
     criteria.ldlMin != null ||
@@ -77,7 +82,7 @@ export function MedicalCriteriaDisplay({ criteria, compact = false }: Props) {
     );
   }
 
-  return (
+  const criteriaContent = (
     <div className="space-y-4">
       {/* Age Requirement - Always shown */}
       <div className="flex items-start gap-3 p-3 rounded-lg bg-green-50 border border-green-200">
@@ -236,4 +241,22 @@ export function MedicalCriteriaDisplay({ criteria, compact = false }: Props) {
       </div>
     </div>
   );
+
+  // Return with Card wrapper if showCard is true and not compact
+  if (showCard && !compact) {
+    return (
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Shield className="h-6 w-6 text-primary" />
+            <h2 className="text-2xl font-bold">Eligibility Criteria</h2>
+          </div>
+        </CardHeader>
+        <CardContent>{criteriaContent}</CardContent>
+      </Card>
+    );
+  }
+
+  // Return content only (for embedding in another Card)
+  return criteriaContent;
 }
