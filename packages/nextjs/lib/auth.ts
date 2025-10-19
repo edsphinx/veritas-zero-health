@@ -131,6 +131,7 @@ export const authConfig = {
     async jwt({ token, user }) {
       if (user) {
         token.sub = user.id;
+        token.user = user;
       }
       return token;
     },
