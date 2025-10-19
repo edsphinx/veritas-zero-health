@@ -207,10 +207,14 @@ export function NFTPreview() {
 - [ ] `CriteriaManager` - Manage eligibility criteria
 
 #### Pages Layer
-- [ ] `/researcher/page.tsx` - Researcher dashboard
-- [ ] `/researcher/studies/page.tsx` - Studies list
-- [ ] `/researcher/studies/[studyId]/page.tsx` - Study detail
-- [ ] `/researcher/create-study/page.tsx` - Create study form
+- [x] `/researcher/page.tsx` - Researcher dashboard ✅
+- [x] `/researcher/studies/page.tsx` - Studies list ✅
+- [x] `/researcher/studies/[studyId]/page.tsx` - Study detail ✅
+- [x] `/researcher/create-study/page.tsx` - Create study multi-step wizard ✅
+  - [x] Refactored to clean architecture (12 lines, imports StudyCreationWizard)
+  - [x] Extracted 7 reusable components with animations:
+    - ProgressIndicator, BasicInfoStep, FundingStep, AgeVerificationStep
+    - MedicalEligibilityStep, ReviewStep, StudyCreationWizard
 
 #### Scripts & Services
 - [ ] `sync-blockchain-db.ts` - Sync blockchain events to database

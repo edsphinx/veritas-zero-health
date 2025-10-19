@@ -92,7 +92,6 @@ export function StudyCreationWizard() {
   // Calculated values
   const totalFunding = form.watch('totalFunding');
   const paymentPerParticipant = form.watch('paymentPerParticipant');
-  const requiredAppointments = form.watch('requiredAppointments');
   const maxParticipants =
     totalFunding && paymentPerParticipant
       ? Math.floor(totalFunding / paymentPerParticipant)
