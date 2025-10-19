@@ -36,12 +36,14 @@ export const modal = createAppKit({
   // Theme customization to match DASHI design
   themeMode: 'light',
   themeVariables: {
-    '--w3m-accent': '#0a2540',        // Deep Blue (primary)
-    '--w3m-color-mix': '#008060',     // Emerald Green (secondary)
-    '--w3m-color-mix-strength': 20,
-    '--w3m-border-radius-master': '0.75rem',  // Match our border radius
+    '--w3m-accent': '#008060',        // Emerald Green (primary action color)
+    '--w3m-color-mix': '#0a2540',     // Deep Blue (secondary)
+    '--w3m-color-mix-strength': 15,
+    '--w3m-border-radius-master': '0.75rem',  // Match shadcn/ui border radius
     '--w3m-font-family': 'Inter, system-ui, sans-serif',
+    '--w3m-z-index': 9999,
   },
+  allWallets: 'SHOW', // Show all available wallets
 })
 
 export function Providers({

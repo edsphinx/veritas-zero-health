@@ -1,12 +1,21 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
+import { WalletButton } from '@/components/wallet/WalletButton';
 
 export function AppHeader() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 flex h-16 items-center justify-between">
-        <Link href="/" className="flex items-center space-x-2">
+        <Link href="/" className="flex items-center space-x-3">
+          <Image
+            src="/dashi-logo.svg"
+            alt="DASHI"
+            width={40}
+            height={40}
+            className="w-10 h-10"
+          />
           <span className="text-2xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
             DASHI
           </span>
@@ -34,7 +43,7 @@ export function AppHeader() {
         </nav>
 
         <div className="flex items-center space-x-4">
-          <appkit-button />
+          <WalletButton />
         </div>
       </div>
     </header>
