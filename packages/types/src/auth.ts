@@ -118,7 +118,41 @@ export interface AuthState {
 }
 
 /**
- * User profile data
+ * User entity (database model)
+ *
+ * Complete user data including database fields and timestamps
+ */
+export interface User {
+  // Database fields
+  id: string;
+  address: string; // Wallet address (lowercase, unique)
+  role: UserRole;
+
+  // Human Passport verification
+  isVerified: boolean;
+  humanityScore?: number | null;
+  verifiedAt?: Date | null;
+
+  // NextAuth fields
+  name?: string | null;
+  email?: string | null;
+  emailVerified?: Date | null;
+  image?: string | null;
+
+  // Timestamps
+  createdAt: Date;
+  updatedAt: Date;
+  lastActiveAt: Date;
+
+  // Optional profile data
+  displayName?: string | null;
+  avatar?: string | null;
+}
+
+/**
+ * User profile data (lightweight, for display)
+ *
+ * @deprecated Use User instead for consistency with database model
  */
 export interface UserProfile {
   address: Address;

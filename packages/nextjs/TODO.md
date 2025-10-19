@@ -122,15 +122,21 @@ export function NFTPreview() {
 
 ---
 
-## 🔵 Priority 4: Core Architecture
+## 🔵 Priority 4: Core Architecture ⏳ IN PROGRESS
 
-### Clean Architecture Setup
-- [ ] Create `core/` folder structure:
-  - [ ] `domain/` - Entities and interfaces
-  - [ ] `use-cases/` - Business logic
-  - [ ] `infrastructure/` - External services
-- [ ] Implement repository pattern
-- [ ] Add dependency injection
+### Clean Architecture Setup ✅
+- [x] Create `core/` folder structure:
+  - [x] `domain/` - Entities and interfaces
+  - [x] `use-cases/` - Business logic
+  - [x] `infrastructure/` - External services
+- [x] Implement repository pattern (interfaces defined)
+- [x] Add User type to @veritas/types
+- [x] Create domain entities (Study, User)
+- [x] Create repository interfaces (IStudyRepository, IUserRepository)
+- [x] Implement first use cases (GetStudies, GetStudyById)
+- [ ] Implement Prisma repositories
+- [ ] Create API routes using use cases
+- [ ] Add dependency injection (future)
 
 ### Folder Structure
 ```
