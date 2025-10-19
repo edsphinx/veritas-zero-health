@@ -22,7 +22,6 @@ import {
   Stethoscope,
   CheckCircle2,
   Loader2,
-  ExternalLink,
   AlertCircle,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -46,13 +45,6 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 // ============================================
@@ -60,12 +52,6 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 // ============================================
 
 type FormStep = 1 | 2 | 3 | 4 | 5;
-
-interface TxStatus {
-  step: number;
-  message: string;
-  hash?: string;
-}
 
 // ============================================
 // Multi-Step Form Component
@@ -75,7 +61,6 @@ export default function CreateStudyPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState<FormStep>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [txStatus, setTxStatus] = useState<TxStatus | null>(null);
 
   const form = useForm<CreateStudyFormData>({
     resolver: zodResolver(createStudySchema),
