@@ -13,25 +13,28 @@
 // ============================================================================
 
 /**
- * Study status enum - matches Prisma schema
+ * Study status enum - MUST match Prisma schema exactly
+ * Using lowercase for consistency with database and JSON serialization
  */
 export enum StudyStatus {
-  Created = 'Created',
-  Funding = 'Funding',
-  Active = 'Active',
-  Paused = 'Paused',
-  Completed = 'Completed',
-  Cancelled = 'Cancelled',
+  Created = 'created',
+  Funding = 'funding',
+  Recruiting = 'recruiting',
+  Active = 'active',
+  Paused = 'paused',
+  Completed = 'completed',
+  Cancelled = 'cancelled',
 }
 
 /**
  * Milestone type enum - matches smart contract
+ * Using lowercase for consistency (enum keys are PascalCase, values are lowercase)
  */
 export enum MilestoneType {
-  Initial = 0,
-  Intermediate = 1,
-  FollowUp = 2,
-  Completion = 3,
+  Initial = 'initial',
+  Intermediate = 'intermediate',
+  FollowUp = 'followup',
+  Completion = 'completion',
 }
 
 /**
@@ -148,11 +151,56 @@ export interface SponsorDeposit {
 // ============================================================================
 
 /**
- * Complete study entity from indexed database
+ * Study type for database operations (Prisma)
  *
- * IMPORTANT: This is the canonical Study type for the entire application.
+ * Uses native database types:
+ * - BigInt for blockchain block numbers
+ * - Decimal for precise financial calculations
+ *
+ * This type is used ONLY in:
+ * - Repository implementations
+ * - Database queries/mutations
+ * - Prisma operations
+ *
+ * DO NOT use in API responses, React components, or serialization contexts.
+ * Use `Study` type instead for those cases.
+ */
+export interface StudyDB {
+  // Database identifiers
+  id: string; // UUID from Prisma
+  registryId: number; // Study ID from StudyRegistry contract
+  escrowId: number; // Study ID from ResearchFundingEscrow contract (canonical)
+
+  // Basic information
+  title: string;
+  description: string;
+  researcherAddress: string;
+  status: StudyStatus;
+
+  // Funding & Participants (native DB types)
+  totalFunding: string | number; // Decimal in DB, but Prisma returns as string
+  maxParticipants?: number | null;
+
+  // Blockchain tracking
+  chainId: number;
+  escrowTxHash: string;
+  registryTxHash: string;
+  criteriaTxHash: string;
+  escrowBlockNumber: bigint; // Native BigInt from DB
+  registryBlockNumber: bigint; // Native BigInt from DB
+
+  // Timestamps (native Date from DB)
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+}
+
+/**
+ * Study type for API/Frontend (JSON-serializable)
+ *
+ * IMPORTANT: This is the canonical Study type for the application layer.
  * Use this type in:
- * - API responses
+ * - API responses (Next.js routes)
  * - React components
  * - Hooks
  * - Services
@@ -169,6 +217,11 @@ export interface SponsorDeposit {
  * - `id` for database operations
  * - `registryId` for StudyRegistry contract calls
  * - `escrowId` for ResearchFundingEscrow contract calls
+ *
+ * Type Conversions:
+ * - BigInt → string (for JSON serialization)
+ * - Decimal → string (human-readable USDC amounts)
+ * - Date → string | Date (flexible for serialization)
  */
 export interface Study {
   // Database identifiers
@@ -182,11 +235,11 @@ export interface Study {
   researcherAddress: string;
   status: StudyStatus;
 
-  // Funding & Participants
-  totalFunding?: string; // Total funding required (sum of milestone rewards) in USDC display format
+  // Funding & Participants (serialized as strings)
+  totalFunding?: string; // Decimal as string (e.g., "1000.50" USDC)
   maxParticipants?: number; // Maximum number of participants allowed
 
-  // Blockchain tracking
+  // Blockchain tracking (BigInt as strings for JSON)
   chainId: number;
   escrowTxHash: string;
   registryTxHash: string;
@@ -204,6 +257,93 @@ export interface Study {
   applications?: StudyApplication[];
   deposits?: SponsorDeposit[];
 }
+
+// ============================================================================
+// Type Conversion Helpers
+// ============================================================================
+
+/**
+ * Convert database Study (StudyDB) to API Study
+ *
+ * Use this at the boundary between repository and use case/API layer:
+ * - After fetching from database
+ * - Before returning from API routes
+ * - Before sending to React components
+ *
+ * Conversions:
+ * - BigInt → string (JSON-safe)
+ * - Decimal → string (human-readable)
+ * - Date → Date (kept as-is, Next.js will serialize)
+ */
+export function toAPIStudy(dbStudy: StudyDB): Study {
+  return {
+    id: dbStudy.id,
+    registryId: dbStudy.registryId,
+    escrowId: dbStudy.escrowId,
+    title: dbStudy.title,
+    description: dbStudy.description,
+    researcherAddress: dbStudy.researcherAddress,
+    status: dbStudy.status,
+    totalFunding: dbStudy.totalFunding?.toString() || '0',
+    maxParticipants: dbStudy.maxParticipants || undefined,
+    chainId: dbStudy.chainId,
+    escrowTxHash: dbStudy.escrowTxHash,
+    registryTxHash: dbStudy.registryTxHash,
+    criteriaTxHash: dbStudy.criteriaTxHash,
+    escrowBlockNumber: dbStudy.escrowBlockNumber.toString(),
+    registryBlockNumber: dbStudy.registryBlockNumber.toString(),
+    createdAt: dbStudy.createdAt,
+    updatedAt: dbStudy.updatedAt,
+  };
+}
+
+/**
+ * Convert API Study to database input for calculations
+ *
+ * Use this when you need to perform calculations with Study data:
+ * - Converting string amounts back to numbers
+ * - Converting string block numbers back to BigInt
+ *
+ * Note: This doesn't return StudyDB because you typically don't convert
+ * back to DB format. Instead, use specific helpers for each field.
+ */
+export const studyHelpers = {
+  /**
+   * Convert totalFunding string to number for calculations
+   * Example: "1000.50" → 1000.50
+   */
+  fundingToNumber(funding?: string): number {
+    return funding ? parseFloat(funding) : 0;
+  },
+
+  /**
+   * Convert totalFunding string to BigInt (wei/smallest unit)
+   * Example: "1000.50" USDC → 1000500000n (6 decimals)
+   */
+  fundingToBigInt(funding?: string, decimals = 6): bigint {
+    if (!funding) return 0n;
+    const num = parseFloat(funding);
+    return BigInt(Math.floor(num * Math.pow(10, decimals)));
+  },
+
+  /**
+   * Convert block number string to BigInt
+   * Example: "12345678" → 12345678n
+   */
+  blockNumberToBigInt(blockNumber: string): bigint {
+    return BigInt(blockNumber);
+  },
+
+  /**
+   * Format funding amount for display
+   * Example: "1000.50" → "$1,000.50 USDC"
+   */
+  formatFunding(funding?: string): string {
+    if (!funding) return '$0.00 USDC';
+    const num = parseFloat(funding);
+    return `$${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDC`;
+  },
+};
 
 // ============================================================================
 // Blockchain Contract Types (from smart contracts)

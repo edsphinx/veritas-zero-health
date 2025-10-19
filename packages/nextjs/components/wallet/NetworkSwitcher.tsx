@@ -8,7 +8,6 @@
  */
 
 import { useAppKitNetwork } from '@reown/appkit/react';
-import { useSwitchChain } from 'wagmi';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,7 +23,6 @@ import { networks, isTestnet } from '@/config/wagmi.config';
 
 export function NetworkSwitcher() {
   const { caipNetwork, switchNetwork } = useAppKitNetwork();
-  const { chains } = useSwitchChain();
 
   // Get current chain ID (AppKit returns string | number, normalize to number)
   const currentChainId = typeof caipNetwork?.id === 'string'

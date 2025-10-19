@@ -18,7 +18,7 @@ import { prisma } from "./prisma";
 function mapPrismaRoleToUserRole(
   prismaRole: string
 ): UserRole {
-  // Prisma enum values are uppercase strings like "PATIENT"
+  // Prisma enum values are lowercase strings like "patient"
   // @veritas/types enum values are lowercase like "patient"
   return prismaRole.toLowerCase() as UserRole;
 }
@@ -63,11 +63,11 @@ export const authConfig = {
           });
 
           if (!user) {
-            // Create new user with default PATIENT role
+            // Create new user with default patient role
             user = await prisma.user.create({
               data: {
                 address,
-                role: "PATIENT", // Default role for new users
+                role: "patient", // Default role for new users
               },
             });
           }

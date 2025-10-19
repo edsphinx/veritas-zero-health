@@ -12,40 +12,46 @@ datasource db {
 }
 
 // ============================================================================
-// ENUMS
+// ENUMS (synchronized with @veritas/types)
 // ============================================================================
 
+// User roles - MUST match @veritas/types/src/auth.ts
 enum UserRole {
-  PATIENT      // Can apply to studies, manage health records
-  CLINIC       // Can issue health credentials, enroll patients
-  RESEARCHER   // Can create studies, review applications
-  SPONSOR      // Can fund studies
-  ADMIN        // Platform admin
-  SUPERADMIN   // Full platform control
+  patient      // Can apply to studies, manage health records
+  clinic       // Can issue health credentials, enroll patients
+  researcher   // Can create studies, review applications
+  sponsor      // Can fund studies
+  admin        // Platform admin
+  superadmin   // Full platform control
+  guest        // Unauthenticated user
 }
 
+// Study statuses - MUST match @veritas/types/src/study.ts
 enum StudyStatus {
-  CREATED    // Study created, not yet funded
-  FUNDING    // Accepting sponsor deposits
-  ACTIVE     // Fully funded, accepting applications
-  PAUSED     // Temporarily paused
-  COMPLETED  // Study finished successfully
-  CANCELLED  // Study cancelled
+  created    // Study created, not yet funded
+  funding    // Accepting sponsor deposits
+  recruiting // Recruiting participants
+  active     // Fully funded, study in progress
+  paused     // Temporarily paused
+  completed  // Study finished successfully
+  cancelled  // Study cancelled
 }
 
+// Application statuses - MUST match @veritas/types/src/enrollment.ts
 enum ApplicationStatus {
-  PENDING   // Application submitted, awaiting proof verification
-  VERIFIED  // ZK proof verified on-chain
-  APPROVED  // Researcher/clinic approved application
-  REJECTED  // Application rejected
-  ENROLLED  // Patient enrolled with SBT minted
+  pending   // Application submitted, awaiting proof verification
+  verified  // ZK proof verified on-chain
+  approved  // Researcher/clinic approved application
+  rejected  // Application rejected
+  enrolled  // Patient enrolled with SBT minted
 }
 
+// Milestone types - MUST match @veritas/types/src/study.ts
 enum MilestoneType {
-  INITIAL       // 0 - Initial appointment
-  INTERMEDIATE  // 1 - Mid-study checkpoint
-  FOLLOWUP      // 2 - Follow-up appointment
-  COMPLETION    // 3 - Final completion milestone
+  initial       // 0 - Initial appointment
+  intermediate  // 1 - Mid-study checkpoint
+  followup      // 2 - Follow-up appointment
+  completion    // 3 - Final completion milestone
 }
 
 // ============================================================================
@@ -347,7 +353,7 @@ model StudyApplication {
   proofBlockNumber     BigInt?
 
   // Application status
-  status     ApplicationStatus @default(PENDING)
+  status     ApplicationStatus @default(pending)
   approvedBy String?           // Address of researcher/clinic who approved
   approvedAt DateTime?
 
