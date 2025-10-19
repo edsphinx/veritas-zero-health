@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { headers } from 'next/headers';
+import { Toaster } from 'sonner';
 import './globals.css';
 import { Providers } from './providers';
 
@@ -61,7 +62,10 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <Providers cookies={cookies}>{children}</Providers>
+        <Providers cookies={cookies}>
+          {children}
+          <Toaster richColors position="top-right" />
+        </Providers>
       </body>
     </html>
   );
