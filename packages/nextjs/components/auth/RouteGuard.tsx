@@ -12,7 +12,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { UserRole } from '@veritas/types';
 
-interface RouteGuardProps {
+export interface RouteGuardProps {
   children: React.ReactNode;
   requireAuth?: boolean;
   allowedRoles?: UserRole[];
