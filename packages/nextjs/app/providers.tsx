@@ -1,6 +1,7 @@
 'use client'
 
 import { wagmiAdapter, projectId, networks, metadata } from '@/config/wagmi.config'
+import { siwxConfig } from '@/config/siwx.config'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createAppKit } from '@reown/appkit/react'
 import React, { type ReactNode } from 'react'
@@ -23,6 +24,7 @@ export const modal = createAppKit({
   projectId,
   networks,
   metadata,
+  siwx: siwxConfig, // Enable SIWX multichain authentication
   features: {
     analytics: false,
   },
