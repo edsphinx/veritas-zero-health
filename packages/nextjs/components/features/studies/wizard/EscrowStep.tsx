@@ -4,8 +4,8 @@
  * Collects data for escrow creation and executes TX1
  * - Basic study information (title, description, region)
  * - Provider and compensation splits (MVP: single clinic)
- * - Funding parameters
- * - USDC approval + escrow creation transaction
+ * - Funding parameters with ERC20 token selection
+ * - Token approval + escrow creation with user wallet signing
  */
 
 'use client';
@@ -21,8 +21,11 @@ import {
   AlertCircle,
   Loader2,
   ArrowRight,
+  Coins,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi';
+import { type Address, type Hex } from 'viem';
 
 import { escrowStepSchema, type EscrowStepFormData } from '@/lib/validations';
 import { fadeUpVariants, transitions } from '@/lib/animations';
@@ -32,7 +35,12 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { MockStudyBlockchainService, MockUSDCService } from '@/lib/blockchain/mock-study-service';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+import { useBuildEscrowTx, useIndexStep } from '@/hooks/wizard';
+import { getAvailableTokens, getTokenConfig, ERC20_ABI, parseTokenAmount, formatTokenAmount } from '@/config';
+import { getResearchFundingEscrowContract } from '@/infrastructure/contracts/study-contracts';
+import { getDefaultChainId } from '@/infrastructure/blockchain/blockchain-client.service';
 
 // ============================================
 // Types
@@ -45,15 +53,46 @@ interface EscrowStepProps {
   isResuming?: boolean;
 }
 
-type TransactionStatus = 'idle' | 'checking_balance' | 'checking_approval' | 'approving' | 'creating_escrow' | 'success' | 'error';
+type TransactionStatus =
+  | 'idle'
+  | 'checking_balance'
+  | 'checking_approval'
+  | 'approving'
+  | 'building_tx'
+  | 'waiting_signature'
+  | 'confirming'
+  | 'indexing'
+  | 'success'
+  | 'error';
 
 // ============================================
 // Component
 // ============================================
 
 export function EscrowStep({ onComplete, onBack, initialData, isResuming }: EscrowStepProps) {
+  const { address: userAddress, chainId: userChainId } = useAccount();
+  const chainId = userChainId || getDefaultChainId();
+
   const [txStatus, setTxStatus] = useState<TransactionStatus>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [selectedToken, setSelectedToken] = useState<string>('USDC');
+  const [approvalTxHash, setApprovalTxHash] = useState<Hex | null>(null);
+  const [escrowTxHash, setEscrowTxHash] = useState<Hex | null>(null);
+
+  // Hooks
+  const buildEscrowTx = useBuildEscrowTx();
+  const indexStep = useIndexStep();
+  const { writeContractAsync } = useWriteContract();
+
+  // Wait for approval confirmation
+  const { isLoading: isApprovingConfirming } = useWaitForTransactionReceipt({
+    hash: approvalTxHash || undefined,
+  });
+
+  // Wait for escrow TX confirmation
+  const { data: escrowReceipt, isLoading: isEscrowConfirming } = useWaitForTransactionReceipt({
+    hash: escrowTxHash || undefined,
+  });
 
   const form = useForm<EscrowStepFormData>({
     resolver: zodResolver(escrowStepSchema),
@@ -80,63 +119,179 @@ export function EscrowStep({ onComplete, onBack, initialData, isResuming }: Escr
   const totalCost = maxParticipants * paymentPerParticipant;
   const isOverBudget = totalCost > totalFunding;
 
-  // Execute blockchain transaction
+  // Get available tokens for current chain
+  const availableTokens = getAvailableTokens(chainId);
+  const tokenConfig = getTokenConfig(selectedToken, chainId);
+  const escrowContract = getResearchFundingEscrowContract(chainId);
+
+  // Read token balance
+  const { data: tokenBalance } = useReadContract({
+    address: tokenConfig?.address,
+    abi: ERC20_ABI,
+    functionName: 'balanceOf',
+    args: userAddress ? [userAddress] : undefined,
+    query: {
+      enabled: !!userAddress && !!tokenConfig,
+    },
+  });
+
+  // Read token allowance
+  const { data: tokenAllowance, refetch: refetchAllowance } = useReadContract({
+    address: tokenConfig?.address,
+    abi: ERC20_ABI,
+    functionName: 'allowance',
+    args: userAddress && escrowContract ? [userAddress, escrowContract.address] : undefined,
+    query: {
+      enabled: !!userAddress && !!tokenConfig && !!escrowContract,
+    },
+  });
+
+  // Execute blockchain transactions
   async function onSubmit(data: EscrowStepFormData) {
+    if (!userAddress) {
+      toast.error('Please connect your wallet');
+      return;
+    }
+
+    if (!tokenConfig) {
+      toast.error(`${selectedToken} not available on this network`);
+      return;
+    }
+
+    if (!escrowContract) {
+      toast.error('Escrow contract not deployed on this network');
+      return;
+    }
+
     setErrorMessage(null);
 
     try {
-      // Step 1: Check USDC balance
+      const fundingAmount = parseTokenAmount(data.totalFunding, tokenConfig.decimals);
+
+      // Step 1: Check balance
       setTxStatus('checking_balance');
-      const loadingToast = toast.loading('Checking USDC balance...');
+      const balanceToast = toast.loading(`Checking ${selectedToken} balance...`);
 
-      // TODO: Replace with real wallet address from useAccount()
-      const mockWalletAddress = '0x' + '1'.repeat(40);
-      const balance = await MockUSDCService.checkBalance(mockWalletAddress);
-
-      if (balance < data.totalFunding) {
-        toast.dismiss(loadingToast);
-        throw new Error(`Insufficient USDC balance. Need ${data.totalFunding} USDC, have ${balance} USDC`);
+      if (!tokenBalance || tokenBalance < fundingAmount) {
+        toast.dismiss(balanceToast);
+        const available = tokenBalance ? formatTokenAmount(tokenBalance, tokenConfig.decimals) : '0';
+        throw new Error(
+          `Insufficient ${selectedToken} balance. Need ${data.totalFunding} ${selectedToken}, have ${available} ${selectedToken}`
+        );
       }
 
-      // Step 2: Check USDC approval
+      toast.dismiss(balanceToast);
+
+      // Step 2: Check and request approval if needed
       setTxStatus('checking_approval');
-      toast.dismiss(loadingToast);
-      const approvalToast = toast.loading('Checking USDC approval...');
+      const approvalToast = toast.loading(`Checking ${selectedToken} approval...`);
 
-      // TODO: Replace with real escrow contract address from config
-      const mockEscrowAddress = '0x' + '2'.repeat(40);
-      const currentAllowance = await MockUSDCService.checkApproval(mockWalletAddress, mockEscrowAddress);
-
-      // Step 3: Request approval if needed
-      if (currentAllowance < data.totalFunding) {
-        setTxStatus('approving');
+      if (!tokenAllowance || tokenAllowance < fundingAmount) {
         toast.dismiss(approvalToast);
-        const approvalActionToast = toast.loading('Approve USDC spending...', {
+        setTxStatus('approving');
+
+        const approvalActionToast = toast.loading(`Approve ${selectedToken} spending...`, {
           description: 'Confirm the transaction in your wallet',
         });
 
-        const approval = await MockUSDCService.approve(mockEscrowAddress, data.totalFunding);
+        const approvalHash = await writeContractAsync({
+          address: tokenConfig.address,
+          abi: ERC20_ABI,
+          functionName: 'approve',
+          args: [escrowContract.address, fundingAmount],
+          chainId,
+        });
 
+        setApprovalTxHash(approvalHash);
+
+        // Wait for approval confirmation
         toast.dismiss(approvalActionToast);
-        toast.success('USDC Approved', {
-          description: `TX: ${approval.txHash.slice(0, 10)}...`,
+        const confirmToast = toast.loading('Waiting for approval confirmation...');
+
+        // Poll until approval confirms
+        let attempts = 0;
+        while (isApprovingConfirming && attempts < 60) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          attempts++;
+        }
+
+        toast.dismiss(confirmToast);
+        toast.success(`${selectedToken} Approved`, {
+          description: `TX: ${approvalHash.slice(0, 10)}...`,
           duration: 3000,
         });
+
+        // Refetch allowance
+        await refetchAllowance();
       } else {
         toast.dismiss(approvalToast);
       }
 
-      // Step 4: Create escrow contract
-      setTxStatus('creating_escrow');
-      const escrowToast = toast.loading('Creating escrow contract...', {
+      // Step 3: Build escrow transaction
+      setTxStatus('building_tx');
+      const buildToast = toast.loading('Building escrow transaction...');
+
+      const buildResult = await buildEscrowTx.mutateAsync({
+        title: data.title,
+        description: data.description,
+        totalFunding: data.totalFunding,
+        maxParticipants: data.maxParticipants,
+        certifiedProviders: data.clinicAddress ? [data.clinicAddress as Address] : undefined,
+      });
+
+      toast.dismiss(buildToast);
+
+      // Step 4: Sign escrow transaction
+      setTxStatus('waiting_signature');
+      const signToast = toast.loading('Creating escrow contract...', {
         description: 'Confirm the transaction in your wallet',
       });
 
-      const result = await MockStudyBlockchainService.createEscrow(data);
+      const hash = await writeContractAsync({
+        address: buildResult.txData.address,
+        abi: buildResult.txData.abi,
+        functionName: buildResult.txData.functionName as string,
+        args: buildResult.txData.args as unknown[],
+        chainId: buildResult.chainId,
+      });
 
-      toast.dismiss(escrowToast);
+      setEscrowTxHash(hash);
+      toast.dismiss(signToast);
+
+      // Step 5: Wait for confirmation
+      setTxStatus('confirming');
+      const confirmToast = toast.loading('Waiting for confirmation...');
+
+      // Poll until TX confirms
+      let attempts = 0;
+      while (!escrowReceipt && attempts < 60) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        attempts++;
+      }
+
+      if (!escrowReceipt) {
+        toast.dismiss(confirmToast);
+        throw new Error('Transaction confirmation timeout');
+      }
+
+      toast.dismiss(confirmToast);
+
+      // Step 6: Index the result
+      setTxStatus('indexing');
+      const indexToast = toast.loading('Indexing escrow data...');
+
+      const indexResult = await indexStep.mutateAsync({
+        step: 'escrow',
+        txHash: hash,
+        chainId,
+        title: data.title,
+        description: data.description,
+        totalFunding: data.totalFunding,
+      });
+
+      toast.dismiss(indexToast);
       toast.success('Escrow Created!', {
-        description: `Escrow ID: ${result.escrowId.toString()}`,
+        description: `Escrow ID: ${indexResult.escrowId}`,
         duration: 5000,
       });
 
@@ -144,7 +299,7 @@ export function EscrowStep({ onComplete, onBack, initialData, isResuming }: Escr
 
       // Proceed to next step
       setTimeout(() => {
-        onComplete(data, result.txHash, result.escrowId);
+        onComplete(data, hash, BigInt(indexResult.escrowId!));
       }, 1500);
 
     } catch (error) {
@@ -192,6 +347,16 @@ export function EscrowStep({ onComplete, onBack, initialData, isResuming }: Escr
               <AlertTitle>Resuming Study Creation</AlertTitle>
               <AlertDescription>
                 Continue from where you left off. Your previous data has been restored.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {!userAddress && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Wallet Not Connected</AlertTitle>
+              <AlertDescription>
+                Please connect your wallet to continue.
               </AlertDescription>
             </Alert>
           )}
@@ -359,7 +524,36 @@ export function EscrowStep({ onComplete, onBack, initialData, isResuming }: Escr
 
               {/* Funding Section */}
               <div className="space-y-4 pt-4 border-t">
-                <h3 className="text-lg font-semibold">Funding Parameters</h3>
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <Coins className="h-5 w-5 text-primary" />
+                  Funding Parameters
+                </h3>
+
+                {/* Token Selector */}
+                <div className="p-4 bg-muted/50 rounded-lg">
+                  <label className="text-sm font-medium mb-2 block">Payment Token *</label>
+                  <Select
+                    value={selectedToken}
+                    onValueChange={setSelectedToken}
+                    disabled={isExecuting}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableTokens.map((token) => (
+                        <SelectItem key={token.symbol} value={token.symbol}>
+                          {token.name} ({token.symbol})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {tokenBalance && tokenConfig && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Balance: {formatTokenAmount(tokenBalance, tokenConfig.decimals)} {selectedToken}
+                    </p>
+                  )}
+                </div>
 
                 <div className="grid grid-cols-3 gap-4">
                   <FormField
@@ -367,7 +561,7 @@ export function EscrowStep({ onComplete, onBack, initialData, isResuming }: Escr
                     name="totalFunding"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Total Funding (USDC) *</FormLabel>
+                        <FormLabel>Total Funding ({selectedToken}) *</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
@@ -377,7 +571,7 @@ export function EscrowStep({ onComplete, onBack, initialData, isResuming }: Escr
                           />
                         </FormControl>
                         <FormDescription>
-                          Total USDC to deposit
+                          Total {selectedToken} to deposit
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -421,7 +615,7 @@ export function EscrowStep({ onComplete, onBack, initialData, isResuming }: Escr
                           />
                         </FormControl>
                         <FormDescription>
-                          USDC per person
+                          {selectedToken} per person
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -434,11 +628,11 @@ export function EscrowStep({ onComplete, onBack, initialData, isResuming }: Escr
                   <AlertTitle>Funding Summary</AlertTitle>
                   <AlertDescription>
                     <div className="space-y-1 mt-2">
-                      <div>Total Cost: <strong>${totalCost.toLocaleString()} USDC</strong></div>
-                      <div>Available Budget: <strong>${totalFunding.toLocaleString()} USDC</strong></div>
+                      <div>Total Cost: <strong>${totalCost.toLocaleString()} {selectedToken}</strong></div>
+                      <div>Available Budget: <strong>${totalFunding.toLocaleString()} {selectedToken}</strong></div>
                       {isOverBudget && (
                         <div className="text-destructive font-semibold">
-                          ⚠️ Over budget by ${(totalCost - totalFunding).toLocaleString()} USDC
+                          ⚠️ Over budget by ${(totalCost - totalFunding).toLocaleString()} {selectedToken}
                         </div>
                       )}
                     </div>
@@ -470,7 +664,7 @@ export function EscrowStep({ onComplete, onBack, initialData, isResuming }: Escr
 
                 <Button
                   type="submit"
-                  disabled={isExecuting || isOverBudget}
+                  disabled={isExecuting || isOverBudget || !userAddress}
                   className="ml-auto"
                 >
                   {txStatus === 'checking_balance' && (
@@ -488,13 +682,31 @@ export function EscrowStep({ onComplete, onBack, initialData, isResuming }: Escr
                   {txStatus === 'approving' && (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Approving USDC...
+                      Approving {selectedToken}...
                     </>
                   )}
-                  {txStatus === 'creating_escrow' && (
+                  {txStatus === 'building_tx' && (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Creating Escrow...
+                      Building Transaction...
+                    </>
+                  )}
+                  {txStatus === 'waiting_signature' && (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Waiting for Signature...
+                    </>
+                  )}
+                  {txStatus === 'confirming' && (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Confirming...
+                    </>
+                  )}
+                  {txStatus === 'indexing' && (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Indexing...
                     </>
                   )}
                   {txStatus === 'success' && (

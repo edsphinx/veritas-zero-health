@@ -9,7 +9,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
@@ -31,7 +31,8 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { MockStudyBlockchainService } from '@/lib/blockchain/mock-study-service';
+import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useBuildRegistryTx, useIndexStep } from '@/hooks/wizard';
 
 // ============================================
 // Types
@@ -64,6 +65,18 @@ export function RegistryStep({
 }: RegistryStepProps) {
   const [txStatus, setTxStatus] = useState<TransactionStatus>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [txHash, setTxHash] = useState<`0x${string}` | undefined>();
+
+  // Wagmi hooks
+  const { address: userAddress, isConnected } = useAccount();
+  const { writeContractAsync } = useWriteContract();
+  const { data: receipt, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+    hash: txHash,
+  });
+
+  // API hooks
+  const buildRegistryTx = useBuildRegistryTx();
+  const indexStep = useIndexStep();
 
   const form = useForm<Omit<RegistryStepFormData, 'escrowId'>>({
     resolver: zodResolver(registryStepSchema.omit({ escrowId: true })),
@@ -73,8 +86,57 @@ export function RegistryStep({
     },
   });
 
-  // Execute blockchain transaction
+  // Handle transaction confirmation
+  useEffect(() => {
+    async function handleConfirmation() {
+      if (isConfirmed && receipt && txHash) {
+        try {
+          // Step 3: Index the result (extract registryId from receipt)
+          const indexResult = await indexStep.mutateAsync({
+            step: 'registry',
+            txHash: txHash,
+            chainId: receipt.chainId,
+            escrowId: escrowId.toString(),
+            title,
+            description,
+          });
+
+          toast.success('Study Published!', {
+            description: `Registry ID: ${indexResult.registryId}`,
+            duration: 5000,
+          });
+
+          setTxStatus('success');
+
+          const formData = form.getValues();
+          setTimeout(() => {
+            onComplete(formData, txHash, BigInt(indexResult.registryId!));
+          }, 1500);
+
+        } catch (error) {
+          setTxStatus('error');
+          const message = error instanceof Error ? error.message : 'Failed to index transaction';
+          setErrorMessage(message);
+          toast.error('Indexing Failed', {
+            description: message,
+            duration: 8000,
+          });
+        }
+      }
+    }
+
+    handleConfirmation();
+  }, [isConfirmed, receipt, txHash, escrowId, title, description, indexStep, form, onComplete]);
+
+  // Execute blockchain transaction with real wallet signing
   async function onSubmit(data: Omit<RegistryStepFormData, 'escrowId'>) {
+    if (!isConnected || !userAddress) {
+      toast.error('Wallet Not Connected', {
+        description: 'Please connect your wallet to continue',
+      });
+      return;
+    }
+
     setErrorMessage(null);
     setTxStatus('publishing');
 
@@ -83,24 +145,30 @@ export function RegistryStep({
     });
 
     try {
-      const result = await MockStudyBlockchainService.publishToRegistry({
-        escrowId,
-        title,
-        description,
-        ...data,
+      // Step 1: Build unsigned transaction via API
+      const buildResult = await buildRegistryTx.mutateAsync({
+        escrowId: escrowId.toString(),
+        region: 'Global', // TODO: Make this configurable
+        compensation: data.compensationDescription,
+        metadataURI: data.criteriaURI,
+      });
+
+      // Step 2: User signs transaction with wallet
+      const hash = await writeContractAsync({
+        address: buildResult.txData.address as `0x${string}`,
+        abi: buildResult.txData.abi,
+        functionName: buildResult.txData.functionName,
+        args: buildResult.txData.args,
+        chainId: buildResult.chainId,
       });
 
       toast.dismiss(publishToast);
-      toast.success('Study Published!', {
-        description: `Registry ID: ${result.registryId.toString()}`,
-        duration: 5000,
+      toast.loading('Waiting for confirmation...', {
+        description: `Transaction: ${hash.slice(0, 20)}...`,
       });
 
-      setTxStatus('success');
-
-      setTimeout(() => {
-        onComplete(data, result.txHash, result.registryId);
-      }, 1500);
+      // Set hash to trigger useWaitForTransactionReceipt
+      setTxHash(hash);
 
     } catch (error) {
       setTxStatus('error');

@@ -10,7 +10,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
@@ -33,7 +33,8 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { MockStudyBlockchainService } from '@/lib/blockchain/mock-study-service';
+import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useBuildCriteriaTx, useIndexStep } from '@/hooks/wizard';
 
 interface CriteriaStepProps {
   escrowId: bigint;
@@ -54,6 +55,18 @@ export function CriteriaStep({
 }: CriteriaStepProps) {
   const [txStatus, setTxStatus] = useState<TransactionStatus>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [txHash, setTxHash] = useState<`0x${string}` | undefined>();
+
+  // Wagmi hooks
+  const { address: userAddress, isConnected } = useAccount();
+  const { writeContractAsync } = useWriteContract();
+  const { data: receipt, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+    hash: txHash,
+  });
+
+  // API hooks
+  const buildCriteriaTx = useBuildCriteriaTx();
+  const indexStep = useIndexStep();
 
   const form = useForm<Omit<CriteriaStepFormData, 'escrowId' | 'registryId'>>({
     resolver: zodResolver(criteriaStepSchema.omit({ escrowId: true, registryId: true })),
@@ -67,7 +80,55 @@ export function CriteriaStep({
 
   const requiresEligibilityProof = form.watch('requiresEligibilityProof');
 
+  // Handle transaction confirmation
+  useEffect(() => {
+    async function handleConfirmation() {
+      if (isConfirmed && receipt && txHash) {
+        try {
+          // Step 3: Index the result
+          await indexStep.mutateAsync({
+            step: 'criteria',
+            txHash: txHash,
+            chainId: receipt.chainId,
+            escrowId: escrowId.toString(),
+            registryId: registryId.toString(),
+          });
+
+          toast.success('Criteria Set Successfully!', {
+            description: 'Proceeding to milestone setup...',
+            duration: 5000,
+          });
+
+          setTxStatus('success');
+
+          const formData = form.getValues();
+          setTimeout(() => {
+            onComplete(formData, txHash);
+          }, 1500);
+
+        } catch (error) {
+          setTxStatus('error');
+          const message = error instanceof Error ? error.message : 'Failed to index transaction';
+          setErrorMessage(message);
+          toast.error('Indexing Failed', {
+            description: message,
+            duration: 8000,
+          });
+        }
+      }
+    }
+
+    handleConfirmation();
+  }, [isConfirmed, receipt, txHash, escrowId, registryId, indexStep, form, onComplete]);
+
   async function onSubmit(data: Omit<CriteriaStepFormData, 'escrowId' | 'registryId'>) {
+    if (!isConnected || !userAddress) {
+      toast.error('Wallet Not Connected', {
+        description: 'Please connect your wallet to continue',
+      });
+      return;
+    }
+
     setErrorMessage(null);
     setTxStatus('setting_criteria');
 
@@ -76,23 +137,30 @@ export function CriteriaStep({
     });
 
     try {
-      const result = await MockStudyBlockchainService.setCriteria({
-        escrowId,
-        registryId,
-        ...data,
+      // Step 1: Build unsigned transaction via API
+      const buildResult = await buildCriteriaTx.mutateAsync({
+        registryId: registryId.toString(),
+        minAge: data.minAge,
+        maxAge: data.maxAge,
+        eligibilityCodeHash: data.requiresEligibilityProof ? data.eligibilityCodeHash : undefined,
+      });
+
+      // Step 2: User signs transaction with wallet
+      const hash = await writeContractAsync({
+        address: buildResult.txData.address as `0x${string}`,
+        abi: buildResult.txData.abi,
+        functionName: buildResult.txData.functionName,
+        args: buildResult.txData.args,
+        chainId: buildResult.chainId,
       });
 
       toast.dismiss(criteriaToast);
-      toast.success('Criteria Set Successfully!', {
-        description: 'Proceeding to milestone setup...',
-        duration: 5000,
+      toast.loading('Waiting for confirmation...', {
+        description: `Transaction: ${hash.slice(0, 20)}...`,
       });
 
-      setTxStatus('success');
-
-      setTimeout(() => {
-        onComplete(data, result.txHash);
-      }, 1500);
+      // Set hash to trigger useWaitForTransactionReceipt
+      setTxHash(hash);
 
     } catch (error) {
       setTxStatus('error');

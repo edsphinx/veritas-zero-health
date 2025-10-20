@@ -16,3 +16,14 @@ export {
   isChainSupported,
   getChainName,
 } from './blockchain.config';
+
+// Token configuration
+export {
+  PAYMENT_TOKENS,
+  ERC20_ABI,
+  getTokenConfig,
+  getAvailableTokens,
+  formatTokenAmount,
+  parseTokenAmount,
+  type TokenConfig,
+} from './tokens.config';

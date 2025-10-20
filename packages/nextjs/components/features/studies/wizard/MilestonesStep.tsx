@@ -10,7 +10,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
@@ -38,7 +38,8 @@ import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
-import { MockStudyBlockchainService } from '@/lib/blockchain/mock-study-service';
+import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useBuildMilestoneTx, useIndexStep } from '@/hooks/wizard';
 
 interface MilestonesStepProps {
   escrowId: bigint;
@@ -70,6 +71,21 @@ export function MilestonesStep({
   const [txStatus, setTxStatus] = useState<TransactionStatus>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [progress, setProgress] = useState({ completed: 0, total: 0 });
+  const [txHash, setTxHash] = useState<`0x${string}` | undefined>();
+  const [currentMilestoneIndex, setCurrentMilestoneIndex] = useState(0);
+  const [allTxHashes, setAllTxHashes] = useState<string[]>([]);
+  const [isBatchMode, setIsBatchMode] = useState(false);
+
+  // Wagmi hooks
+  const { address: userAddress, isConnected } = useAccount();
+  const { writeContractAsync } = useWriteContract();
+  const { data: receipt, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+    hash: txHash,
+  });
+
+  // API hooks
+  const buildMilestoneTx = useBuildMilestoneTx();
+  const indexStep = useIndexStep();
 
   const form = useForm<Omit<MilestonesStepFormData, 'escrowId' | 'registryId' | 'totalFunding'>>({
     resolver: zodResolver(milestonesStepSchema.omit({ escrowId: true, registryId: true, totalFunding: true })),
@@ -108,8 +124,154 @@ export function MilestonesStep({
     toast.success(`Generated ${newMilestones.length} milestones`);
   };
 
+  // Handle transaction confirmation
+  useEffect(() => {
+    async function handleConfirmation() {
+      if (isConfirmed && receipt && txHash) {
+        const updatedHashes = [...allTxHashes, txHash];
+        setAllTxHashes(updatedHashes);
+
+        if (isBatchMode) {
+          // Batch mode: single transaction for all milestones
+          try {
+            await indexStep.mutateAsync({
+              step: 'milestones',
+              txHash: txHash,
+              chainId: receipt.chainId,
+              escrowId: escrowId.toString(),
+              registryId: registryId.toString(),
+              totalFunding,
+            });
+
+            const milestoneCount = form.getValues('milestones').length;
+            toast.success('All Milestones Created!', {
+              description: `${milestoneCount} milestones added in single transaction`,
+              duration: 5000,
+            });
+
+            setTxStatus('success');
+            setTimeout(() => {
+              onComplete(updatedHashes);
+            }, 1500);
+
+          } catch (error) {
+            setTxStatus('error');
+            const message = error instanceof Error ? error.message : 'Failed to index transaction';
+            setErrorMessage(message);
+            toast.error('Indexing Failed', {
+              description: message,
+              duration: 8000,
+            });
+          }
+        } else {
+          // Sequential mode: process next milestone or finish
+          const milestones = form.getValues('milestones');
+          const nextIndex = currentMilestoneIndex + 1;
+
+          if (nextIndex < milestones.length) {
+            // More milestones to process
+            setCurrentMilestoneIndex(nextIndex);
+            setProgress({ completed: nextIndex, total: milestones.length });
+            setTxHash(undefined); // Reset for next transaction
+
+            // Process next milestone
+            processNextMilestone(milestones, nextIndex, updatedHashes);
+          } else {
+            // All done
+            try {
+              await indexStep.mutateAsync({
+                step: 'milestones',
+                txHash: updatedHashes[updatedHashes.length - 1],
+                chainId: receipt.chainId,
+                escrowId: escrowId.toString(),
+                registryId: registryId.toString(),
+                totalFunding,
+              });
+
+              toast.success('All Milestones Created!', {
+                description: `${milestones.length} milestones added successfully`,
+                duration: 5000,
+              });
+
+              setTxStatus('success');
+              setTimeout(() => {
+                onComplete(updatedHashes);
+              }, 1500);
+
+            } catch (error) {
+              setTxStatus('error');
+              const message = error instanceof Error ? error.message : 'Failed to index transaction';
+              setErrorMessage(message);
+              toast.error('Indexing Failed', {
+                description: message,
+                duration: 8000,
+              });
+            }
+          }
+        }
+      }
+    }
+
+    handleConfirmation();
+  }, [isConfirmed, receipt, txHash, currentMilestoneIndex, allTxHashes, isBatchMode, escrowId, registryId, totalFunding, indexStep, form, onComplete]);
+
+  // Helper to process next milestone in sequential mode
+  async function processNextMilestone(
+    milestones: Array<{ type: MilestoneType; description: string; rewardAmount: number }>,
+    index: number,
+    previousHashes: string[]
+  ) {
+    try {
+      const milestone = milestones[index];
+
+      // Build unsigned transaction via API
+      const buildResult = await buildMilestoneTx.mutateAsync({
+        escrowId: escrowId.toString(),
+        milestones: [milestone],
+        mode: 'sequential',
+      });
+
+      if (!buildResult.txData) {
+        throw new Error('Transaction data not available');
+      }
+
+      // User signs transaction with wallet
+      const hash = await writeContractAsync({
+        address: buildResult.txData.address as `0x${string}`,
+        abi: buildResult.txData.abi,
+        functionName: buildResult.txData.functionName,
+        args: buildResult.txData.args,
+        chainId: buildResult.chainId,
+      });
+
+      toast.loading(`Adding milestones (${index + 1}/${milestones.length})...`, {
+        description: `Transaction: ${hash.slice(0, 20)}...`,
+      });
+
+      setTxHash(hash);
+
+    } catch (error) {
+      setTxStatus('error');
+      const message = error instanceof Error ? error.message : 'Transaction failed';
+      setErrorMessage(message);
+      toast.error('Transaction Failed', {
+        description: message,
+        duration: 8000,
+      });
+    }
+  }
+
   async function onSubmit(data: Omit<MilestonesStepFormData, 'escrowId' | 'registryId' | 'totalFunding'>) {
+    if (!isConnected || !userAddress) {
+      toast.error('Wallet Not Connected', {
+        description: 'Please connect your wallet to continue',
+      });
+      return;
+    }
+
     setErrorMessage(null);
+    setAllTxHashes([]);
+    setCurrentMilestoneIndex(0);
 
     const milestoneCount = data.milestones.length;
 
@@ -117,40 +279,21 @@ export function MilestonesStep({
       // Decide strategy: sequential (≤6) or batch (>6)
       if (milestoneCount <= 6) {
         // Sequential mode
+        setIsBatchMode(false);
         setTxStatus('executing_sequential');
         setProgress({ completed: 0, total: milestoneCount });
 
-        const sequentialToast = toast.loading(
+        toast.loading(
           `Adding milestones sequentially (1/${milestoneCount})...`,
-          { description: 'Confirm each transaction in your wallet' }
+          { description: 'Confirm the first transaction in your wallet' }
         );
 
-        const result = await MockStudyBlockchainService.addMilestonesSequential(
-          escrowId,
-          data.milestones,
-          (completed, total) => {
-            setProgress({ completed, total });
-            toast.loading(`Adding milestones (${completed}/${total})...`, {
-              id: sequentialToast,
-            });
-          }
-        );
-
-        toast.dismiss(sequentialToast);
-        toast.success('All Milestones Created!', {
-          description: `${milestoneCount} milestones added successfully`,
-          duration: 5000,
-        });
-
-        setTxStatus('success');
-
-        setTimeout(() => {
-          // TODO: Pass milestoneIds when implementing database indexing
-          onComplete(result.txHashes);
-        }, 1500);
+        // Start with first milestone
+        processNextMilestone(data.milestones, 0, []);
 
       } else {
         // Batch mode
+        setIsBatchMode(true);
         setTxStatus('executing_batch');
 
         const batchToast = toast.loading(
@@ -158,23 +301,32 @@ export function MilestonesStep({
           { description: 'Confirm the transaction in your wallet' }
         );
 
-        const result = await MockStudyBlockchainService.addMilestonesBatch(
-          escrowId,
-          data.milestones
-        );
-
-        toast.dismiss(batchToast);
-        toast.success('All Milestones Created!', {
-          description: `${milestoneCount} milestones added in single transaction`,
-          duration: 5000,
+        // Build unsigned transaction via API
+        const buildResult = await buildMilestoneTx.mutateAsync({
+          escrowId: escrowId.toString(),
+          milestones: data.milestones,
+          mode: 'batch',
         });
 
-        setTxStatus('success');
+        if (!buildResult.txData) {
+          throw new Error('Transaction data not available');
+        }
 
-        setTimeout(() => {
-          // TODO: Pass milestoneIds when implementing database indexing
-          onComplete(result.txHashes);
-        }, 1500);
+        // User signs transaction with wallet
+        const hash = await writeContractAsync({
+          address: buildResult.txData.address as `0x${string}`,
+          abi: buildResult.txData.abi,
+          functionName: buildResult.txData.functionName,
+          args: buildResult.txData.args,
+          chainId: buildResult.chainId,
+        });
+
+        toast.dismiss(batchToast);
+        toast.loading('Waiting for confirmation...', {
+          description: `Transaction: ${hash.slice(0, 20)}...`,
+        });
+
+        setTxHash(hash);
       }
 
     } catch (error) {
