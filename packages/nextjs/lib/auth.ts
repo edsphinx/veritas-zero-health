@@ -10,6 +10,7 @@
 
 import type { UserRole } from "@veritas/types";
 import type { NextAuthConfig } from "next-auth";
+import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { SiweMessage } from "siwe";
 import { prisma } from "./prisma";
@@ -146,3 +147,6 @@ export const authConfig = {
   },
   secret: process.env.NEXTAUTH_SECRET,
 } satisfies NextAuthConfig;
+
+// Export NextAuth instance with configuration
+export const { handlers, auth, signIn, signOut } = NextAuth(authConfig);
