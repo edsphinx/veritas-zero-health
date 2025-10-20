@@ -10,7 +10,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
@@ -124,6 +124,51 @@ export function MilestonesStep({
     toast.success(`Generated ${newMilestones.length} milestones`);
   };
 
+  // Helper to process next milestone in sequential mode
+  const processNextMilestone = useCallback(async (
+    milestones: Array<{ type: MilestoneType; description: string; rewardAmount: number }>,
+    index: number
+  ) => {
+    try {
+      const milestone = milestones[index];
+
+      // Build unsigned transaction via API
+      const buildResult = await buildMilestoneTx.mutateAsync({
+        escrowId: escrowId.toString(),
+        milestones: [milestone],
+        mode: 'sequential',
+      });
+
+      if (!buildResult.txData) {
+        throw new Error('Transaction data not available');
+      }
+
+      // User signs transaction with wallet
+      const hash = await writeContractAsync({
+        address: buildResult.txData.address as `0x${string}`,
+        abi: buildResult.txData.abi,
+        functionName: buildResult.txData.functionName,
+        args: buildResult.txData.args,
+        chainId: buildResult.chainId,
+      });
+
+      toast.loading(`Adding milestones (${index + 1}/${milestones.length})...`, {
+        description: `Transaction: ${hash.slice(0, 20)}...`,
+      });
+
+      setTxHash(hash);
+
+    } catch (error) {
+      setTxStatus('error');
+      const message = error instanceof Error ? error.message : 'Transaction failed';
+      setErrorMessage(message);
+      toast.error('Transaction Failed', {
+        description: message,
+        duration: 8000,
+      });
+    }
+  }, [buildMilestoneTx, escrowId, writeContractAsync]);
+
   // Handle transaction confirmation
   useEffect(() => {
     async function handleConfirmation() {
@@ -175,7 +220,7 @@ export function MilestonesStep({
             setTxHash(undefined); // Reset for next transaction
 
             // Process next milestone
-            processNextMilestone(milestones, nextIndex, updatedHashes);
+            processNextMilestone(milestones, nextIndex);
           } else {
             // All done
             try {
@@ -213,53 +258,7 @@ export function MilestonesStep({
     }
 
     handleConfirmation();
-  }, [isConfirmed, receipt, txHash, currentMilestoneIndex, allTxHashes, isBatchMode, escrowId, registryId, totalFunding, indexStep, form, onComplete]);
-
-  // Helper to process next milestone in sequential mode
-  async function processNextMilestone(
-    milestones: Array<{ type: MilestoneType; description: string; rewardAmount: number }>,
-    index: number,
-    previousHashes: string[]
-  ) {
-    try {
-      const milestone = milestones[index];
-
-      // Build unsigned transaction via API
-      const buildResult = await buildMilestoneTx.mutateAsync({
-        escrowId: escrowId.toString(),
-        milestones: [milestone],
-        mode: 'sequential',
-      });
-
-      if (!buildResult.txData) {
-        throw new Error('Transaction data not available');
-      }
-
-      // User signs transaction with wallet
-      const hash = await writeContractAsync({
-        address: buildResult.txData.address as `0x${string}`,
-        abi: buildResult.txData.abi,
-        functionName: buildResult.txData.functionName,
-        args: buildResult.txData.args,
-        chainId: buildResult.chainId,
-      });
-
-      toast.loading(`Adding milestones (${index + 1}/${milestones.length})...`, {
-        description: `Transaction: ${hash.slice(0, 20)}...`,
-      });
-
-      setTxHash(hash);
-
-    } catch (error) {
-      setTxStatus('error');
-      const message = error instanceof Error ? error.message : 'Transaction failed';
-      setErrorMessage(message);
-      toast.error('Transaction Failed', {
-        description: message,
-        duration: 8000,
-      });
-    }
-  }
+  }, [isConfirmed, receipt, txHash, currentMilestoneIndex, allTxHashes, isBatchMode, escrowId, registryId, totalFunding, indexStep, form, onComplete, processNextMilestone]);
 
   async function onSubmit(data: Omit<MilestonesStepFormData, 'escrowId' | 'registryId' | 'totalFunding'>) {
     if (!isConnected || !userAddress) {
@@ -289,7 +288,7 @@ export function MilestonesStep({
         );
 
         // Start with first milestone
-        processNextMilestone(data.milestones, 0, []);
+        processNextMilestone(data.milestones, 0);
 
       } else {
         // Batch mode

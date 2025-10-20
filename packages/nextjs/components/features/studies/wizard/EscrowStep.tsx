@@ -90,7 +90,7 @@ export function EscrowStep({ onComplete, onBack, initialData, isResuming }: Escr
   });
 
   // Wait for escrow TX confirmation
-  const { data: escrowReceipt, isLoading: isEscrowConfirming } = useWaitForTransactionReceipt({
+  const { data: escrowReceipt } = useWaitForTransactionReceipt({
     hash: escrowTxHash || undefined,
   });
 
