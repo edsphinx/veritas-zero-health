@@ -5,3 +5,4 @@
  */
 
 export * from './study-form.schema';
+export * from './wizard-steps.schema';

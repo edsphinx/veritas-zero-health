@@ -1,0 +1,342 @@
+/**
+ * Study Creation Wizard - TX Between Steps
+ *
+ * Multi-step wizard with blockchain transaction execution between each step.
+ * Features resumability, checkpointing, and incremental data indexing.
+ *
+ * Flow:
+ * 1. EscrowStep → TX1 → Checkpoint
+ * 2. RegistryStep → TX2 → Checkpoint
+ * 3. CriteriaStep → TX3 → Checkpoint
+ * 4. MilestonesStep → TX4 → Complete
+ */
+
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { FlaskConical, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
+
+import { fadeUpVariants, transitions } from '@/lib/animations';
+import { Button } from '@/components/ui/button';
+import { ProgressIndicator } from '../ProgressIndicator';
+
+import { EscrowStep } from './EscrowStep';
+import { RegistryStep } from './RegistryStep';
+import { CriteriaStep } from './CriteriaStep';
+import { MilestonesStep } from './MilestonesStep';
+import { ResumeBanner } from './ResumeBanner';
+
+import {
+  useStudyCreationStore,
+  type EscrowStepFormData,
+  type RegistryStepFormData,
+  type CriteriaStepFormData,
+} from '@/stores/studyCreationStore';
+
+// ============================================
+// Constants
+// ============================================
+
+const STEP_LABELS = [
+  'Escrow Setup',
+  'Registry Publication',
+  'Eligibility Criteria',
+  'Milestones',
+];
+
+// ============================================
+// Component
+// ============================================
+
+export function StudyCreationWizard() {
+  const router = useRouter();
+
+  const {
+    status,
+    ids,
+    txHashes,
+    formData,
+    canResume,
+    getCurrentStep,
+    startCreation,
+    completeEscrowTx,
+    completeRegistryTx,
+    completeCriteriaTx,
+    completeMilestonesTx,
+    completeCreation,
+    setError,
+    reset,
+  } = useStudyCreationStore();
+
+  const currentStep = getCurrentStep();
+  const isResuming = canResume();
+
+  // Initialize creation if starting fresh
+  useEffect(() => {
+    if (status === 'idle') {
+      // Generate database ID (in real app, this would come from API)
+      const databaseId = `study-${Date.now()}`;
+      startCreation(databaseId, {});
+    }
+  }, [status, startCreation]);
+
+  // ============================================
+  // Step 1: Escrow Configuration
+  // ============================================
+
+  const handleEscrowComplete = async (
+    data: EscrowStepFormData,
+    txHash: string,
+    escrowId: bigint
+  ) => {
+    try {
+      // Save to Zustand (persists to localStorage)
+      completeEscrowTx(txHash, escrowId);
+
+      // TODO: Index to database via API
+      // await fetch('/api/studies/index-escrow', {
+      //   method: 'POST',
+      //   body: JSON.stringify({ databaseId: ids.databaseId, escrowId, txHash, ...data }),
+      // });
+
+      console.log('[Wizard] Escrow complete, proceeding to Step 2');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to index escrow data';
+      setError(message);
+      throw error;
+    }
+  };
+
+  // ============================================
+  // Step 2: Registry Publication
+  // ============================================
+
+  const handleRegistryComplete = async (
+    data: Omit<RegistryStepFormData, 'escrowId'>,
+    txHash: string,
+    registryId: bigint
+  ) => {
+    try {
+      completeRegistryTx(txHash, registryId);
+
+      // TODO: Index to database
+      // await fetch('/api/studies/index-registry', {
+      //   method: 'POST',
+      //   body: JSON.stringify({ databaseId: ids.databaseId, registryId, txHash, ...data }),
+      // });
+
+      console.log('[Wizard] Registry complete, proceeding to Step 3');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to index registry data';
+      setError(message);
+      throw error;
+    }
+  };
+
+  // ============================================
+  // Step 3: Criteria Setup
+  // ============================================
+
+  const handleCriteriaComplete = async (
+    data: Omit<CriteriaStepFormData, 'escrowId' | 'registryId'>,
+    txHash: string
+  ) => {
+    try {
+      completeCriteriaTx(txHash);
+
+      // TODO: Index to database
+      // await fetch('/api/studies/index-criteria', {
+      //   method: 'POST',
+      //   body: JSON.stringify({ databaseId: ids.databaseId, txHash, ...data }),
+      // });
+
+      console.log('[Wizard] Criteria complete, proceeding to Step 4');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to index criteria data';
+      setError(message);
+      throw error;
+    }
+  };
+
+  // ============================================
+  // Step 4: Milestones Setup
+  // ============================================
+
+  const handleMilestonesComplete = async (
+    txHashes: string[]
+    // milestoneIds will be used when implementing database indexing
+  ) => {
+    try {
+      completeMilestonesTx(txHashes);
+      completeCreation();
+
+      // TODO: Index to database
+      // await fetch('/api/studies/index-milestones', {
+      //   method: 'POST',
+      //   body: JSON.stringify({
+      //     databaseId: ids.databaseId,
+      //     txHashes,
+      //     milestoneIds: milestoneIds.map(id => id.toString()),
+      //   }),
+      // });
+
+      console.log('[Wizard] Study creation complete!');
+
+      // Redirect to study detail page (using database ID)
+      setTimeout(() => {
+        reset(); // Clear store
+        router.push(`/researcher/studies/${ids.databaseId}`);
+      }, 2000);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to complete study creation';
+      setError(message);
+      throw error;
+    }
+  };
+
+  // ============================================
+  // Back Navigation
+  // ============================================
+
+  const handleBack = () => {
+    // Cannot go back during TX execution
+    if (status.includes('escrow') || status.includes('registry') || status.includes('criteria') || status.includes('milestones')) {
+      return;
+    }
+
+    // Custom back logic per step
+    // For now, just warn user
+    const confirmBack = confirm('Going back will lose current step progress. Continue?');
+    if (confirmBack) {
+      // TODO: Implement proper back navigation
+      // For MVP, we don't support going back after TX
+    }
+  };
+
+  // ============================================
+  // Render
+  // ============================================
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* Header */}
+      <motion.div
+        variants={fadeUpVariants}
+        initial="hidden"
+        animate="visible"
+        transition={transitions.standard}
+      >
+        <Button asChild variant="ghost" size="sm" className="mb-4">
+          <Link href="/researcher/studies">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Studies
+          </Link>
+        </Button>
+
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-3 rounded-lg bg-primary/10">
+            <FlaskConical className="h-8 w-8 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold">Create New Clinical Trial</h1>
+            <p className="text-muted-foreground">
+              Multi-step wizard with blockchain checkpointing
+            </p>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Resume Banner */}
+      {isResuming && status !== 'draft' && (
+        <ResumeBanner
+          status={status}
+          currentStep={currentStep}
+          totalSteps={4}
+          onCancel={() => {
+            const confirmCancel = confirm(
+              'This will cancel study creation and lose all progress. Continue?'
+            );
+            if (confirmCancel) {
+              reset();
+              router.push('/researcher/studies');
+            }
+          }}
+        />
+      )}
+
+      {/* Progress Indicator */}
+      <ProgressIndicator
+        currentStep={currentStep}
+        totalSteps={4}
+        stepLabels={STEP_LABELS}
+      />
+
+      {/* Step Content */}
+      <div className="min-h-[600px]">
+        {/* Step 1: Escrow */}
+        {(status === 'draft' || status === 'escrow') && (
+          <EscrowStep
+            onComplete={handleEscrowComplete}
+            isResuming={status === 'escrow'}
+            initialData={formData?.step1}
+          />
+        )}
+
+        {/* Step 2: Registry */}
+        {(status === 'escrow_done' || status === 'registry') && ids.escrowId && txHashes.escrow && formData?.step1 && (
+          <RegistryStep
+            escrowId={ids.escrowId}
+            escrowTxHash={txHashes.escrow}
+            title={formData.step1.title || ''}
+            description={formData.step1.description || ''}
+            onComplete={handleRegistryComplete}
+            onBack={handleBack}
+            initialData={formData?.step2}
+          />
+        )}
+
+        {/* Step 3: Criteria */}
+        {(status === 'registry_done' || status === 'criteria') && ids.escrowId && ids.registryId && (
+          <CriteriaStep
+            escrowId={ids.escrowId}
+            registryId={ids.registryId}
+            onComplete={handleCriteriaComplete}
+            onBack={handleBack}
+            initialData={formData?.step3}
+          />
+        )}
+
+        {/* Step 4: Milestones */}
+        {(status === 'criteria_done' || status === 'milestones') && ids.escrowId && ids.registryId && formData?.step1 && (
+          <MilestonesStep
+            escrowId={ids.escrowId}
+            registryId={ids.registryId}
+            totalFunding={formData.step1.totalFunding || 0}
+            onComplete={handleMilestonesComplete}
+            onBack={handleBack}
+            initialData={formData?.step4}
+          />
+        )}
+
+        {/* Complete State */}
+        {status === 'complete' && (
+          <motion.div
+            variants={fadeUpVariants}
+            initial="hidden"
+            animate="visible"
+            className="text-center py-12"
+          >
+            <div className="text-6xl mb-4">🎉</div>
+            <h2 className="text-2xl font-bold mb-2">Study Created Successfully!</h2>
+            <p className="text-muted-foreground mb-4">
+              Redirecting to study details...
+            </p>
+          </motion.div>
+        )}
+      </div>
+    </div>
+  );
+}

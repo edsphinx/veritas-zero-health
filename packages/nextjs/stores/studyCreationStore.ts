@@ -7,7 +7,10 @@
 
 import { create } from 'zustand';
 import { persist, devtools } from 'zustand/middleware';
-import type { CreateStudyFormData } from '@/lib/validations';
+import type { StudyCreationData } from '@/lib/validations';
+
+// Re-export types for convenience
+export type { EscrowStepFormData, RegistryStepFormData, CriteriaStepFormData, MilestoneInputFormData, MilestonesStepFormData } from '@/lib/validations';
 
 // ============================================
 // Types
@@ -56,7 +59,7 @@ interface StudyCreationStore {
   status: StudyCreationStatus;
   ids: StudyCreationIds;
   txHashes: StudyCreationTxHashes;
-  formData: Partial<CreateStudyFormData> | null;
+  formData: Partial<StudyCreationData> | null;
   error: string | null;
   createdAt: number | null;      // Timestamp when creation started
 
@@ -66,7 +69,7 @@ interface StudyCreationStore {
   getCurrentStep: () => number;  // Returns 1-5 based on status
 
   // Actions - Initialization
-  startCreation: (databaseId: string, formData: CreateStudyFormData) => void;
+  startCreation: (databaseId: string, formData: Partial<StudyCreationData>) => void;
   resumeCreation: (state: Partial<StudyCreationStore>) => void;
   cancelCreation: () => void;
 
