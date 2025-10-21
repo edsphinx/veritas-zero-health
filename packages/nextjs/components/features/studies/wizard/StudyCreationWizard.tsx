@@ -96,13 +96,24 @@ export function StudyCreationWizard() {
       // Save to Zustand (persists to localStorage)
       completeEscrowTx(txHash, escrowId);
 
-      // TODO: Index to database via API
-      // await fetch('/api/studies/index-escrow', {
-      //   method: 'POST',
-      //   body: JSON.stringify({ databaseId: ids.databaseId, escrowId, txHash, ...data }),
-      // });
+      // Index to database via API
+      const response = await fetch('/api/studies/wizard/index-step', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          step: 'escrow',
+          txHash,
+          totalFunding: data.totalFunding,
+        }),
+      });
 
-      console.log('[Wizard] Escrow complete, proceeding to Step 2');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to index escrow step');
+      }
+
+      const result = await response.json();
+      console.log('[Wizard] Escrow indexed:', result.data);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to index escrow data';
       setError(message);
@@ -122,13 +133,26 @@ export function StudyCreationWizard() {
     try {
       completeRegistryTx(txHash, registryId);
 
-      // TODO: Index to database
-      // await fetch('/api/studies/index-registry', {
-      //   method: 'POST',
-      //   body: JSON.stringify({ databaseId: ids.databaseId, registryId, txHash, ...data }),
-      // });
+      // Index to database via API
+      const response = await fetch('/api/studies/wizard/index-step', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          step: 'registry',
+          txHash,
+          escrowId: ids.escrowId?.toString(),
+          // Registry step doesn't have title/description in current schema
+          // They should come from escrow step or be added to registry schema
+        }),
+      });
 
-      console.log('[Wizard] Registry complete, proceeding to Step 3');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to index registry step');
+      }
+
+      const result = await response.json();
+      console.log('[Wizard] Registry indexed:', result.data);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to index registry data';
       setError(message);
@@ -147,13 +171,24 @@ export function StudyCreationWizard() {
     try {
       completeCriteriaTx(txHash);
 
-      // TODO: Index to database
-      // await fetch('/api/studies/index-criteria', {
-      //   method: 'POST',
-      //   body: JSON.stringify({ databaseId: ids.databaseId, txHash, ...data }),
-      // });
+      // Index to database via API
+      const response = await fetch('/api/studies/wizard/index-step', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          step: 'criteria',
+          txHash,
+          registryId: ids.registryId?.toString(),
+        }),
+      });
 
-      console.log('[Wizard] Criteria complete, proceeding to Step 4');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to index criteria step');
+      }
+
+      const result = await response.json();
+      console.log('[Wizard] Criteria indexed:', result.data);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to index criteria data';
       setError(message);
@@ -171,17 +206,28 @@ export function StudyCreationWizard() {
   ) => {
     try {
       completeMilestonesTx(txHashes);
-      completeCreation();
 
-      // TODO: Index to database
-      // await fetch('/api/studies/index-milestones', {
-      //   method: 'POST',
-      //   body: JSON.stringify({
-      //     databaseId: ids.databaseId,
-      //     txHashes,
-      //     milestoneIds: milestoneIds.map(id => id.toString()),
-      //   }),
-      // });
+      // Index milestones to database via API (use first tx hash)
+      const response = await fetch('/api/studies/wizard/index-step', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          step: 'milestones',
+          txHash: txHashes[0], // Use first milestone tx
+          registryId: ids.registryId?.toString(),
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to index milestones step');
+      }
+
+      const result = await response.json();
+      console.log('[Wizard] Milestones indexed:', result.data);
+
+      // Mark creation as complete
+      completeCreation();
 
       console.log('[Wizard] Study creation complete!');
 
