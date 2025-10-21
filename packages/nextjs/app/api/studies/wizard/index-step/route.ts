@@ -8,6 +8,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { getPublicClient } from '@/infrastructure/blockchain/blockchain-client.service';
+import { createIndexStudyStepUseCase } from '@/core/use-cases/studies';
+import { createStudyRepository } from '@/infrastructure/repositories/study.repository';
 
 interface IndexStepRequest {
   step: 'escrow' | 'registry' | 'criteria' | 'milestones';
@@ -128,12 +130,74 @@ export async function POST(request: NextRequest) {
       extractedData,
     });
 
-    // TODO: Save to database via use case
-    // For now, just return the extracted data for client-side state management
+    // Save to database via use case
+    const studyRepository = createStudyRepository();
+    const indexStepUseCase = createIndexStudyStepUseCase(studyRepository);
 
+    // Prepare step data based on extracted data and body
+    const stepData: {
+      escrowId?: number;
+      totalFunding?: string;
+      sponsor?: string;
+      registryId?: number;
+      title?: string;
+      description?: string;
+      maxParticipants?: number;
+    } = {};
+
+    switch (body.step) {
+      case 'escrow':
+        stepData.escrowId = extractedData.escrowId ? parseInt(extractedData.escrowId as string, 10) : undefined;
+        stepData.totalFunding = body.totalFunding?.toString();
+        stepData.sponsor = session.address; // User is the sponsor
+        break;
+
+      case 'registry':
+        stepData.registryId = extractedData.registryId ? parseInt(extractedData.registryId as string, 10) : undefined;
+        stepData.title = body.title;
+        stepData.description = body.description;
+        stepData.maxParticipants = body.totalFunding; // This might need adjustment based on actual body structure
+        break;
+
+      case 'criteria':
+        // Criteria data is typically stored in a separate table
+        // For now, just track the transaction
+        break;
+
+      case 'milestones':
+        // Milestones will be indexed separately
+        // For now, just track the transaction
+        break;
+    }
+
+    // Index the step
+    const result = await indexStepUseCase.execute({
+      registryId: body.registryId ? parseInt(body.registryId, 10) : undefined,
+      escrowId: body.escrowId ? parseInt(body.escrowId, 10) : undefined,
+      step: body.step,
+      transactionHash: body.txHash,
+      blockNumber: BigInt(extractedData.blockNumber as string),
+      chainId,
+      stepData,
+    });
+
+    if (!result.success) {
+      return NextResponse.json(
+        { success: false, error: result.error },
+        { status: 500 }
+      );
+    }
+
+    // Return both extracted data and use case result
     return NextResponse.json({
       success: true,
-      data: extractedData,
+      data: {
+        ...extractedData,
+        studyId: result.data?.studyId,
+        stepsCompleted: result.data?.stepsCompleted,
+        wizardComplete: result.data?.wizardComplete,
+        message: result.data?.message,
+      },
     });
   } catch (error) {
     console.error('[Index Step] Error:', error);

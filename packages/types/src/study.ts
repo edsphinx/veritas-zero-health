@@ -245,6 +245,16 @@ export interface StudyDB {
   escrowBlockNumber: bigint; // Native BigInt from DB
   registryBlockNumber: bigint; // Native BigInt from DB
 
+  // Wizard completion tracking
+  wizardCompleted: boolean; // All wizard steps completed
+  wizardStepsCompleted: string[]; // Array of completed step names: ["escrow", "registry", "criteria", "milestones"]
+  wizardCompletedAt: Date | null; // When all wizard steps finished
+
+  // Milestones transaction tracking
+  milestonesTxHash: string | null; // Transaction hash for batch milestone creation
+  milestonesBlockNumber: bigint | null; // Block number for milestones transaction
+  milestonesIndexedAt: Date | null; // When milestones were indexed to DB
+
   // Timestamps (native Date from DB)
   createdAt: Date;
   updatedAt: Date;
@@ -309,6 +319,16 @@ export interface Study {
   escrowBlockNumber: string; // BigInt as string
   registryBlockNumber: string; // BigInt as string
 
+  // Wizard completion tracking
+  wizardCompleted: boolean; // All wizard steps completed
+  wizardStepsCompleted: string[]; // Array of completed step names: ["escrow", "registry", "criteria", "milestones"]
+  wizardCompletedAt?: Date | string | null; // When all wizard steps finished
+
+  // Milestones transaction tracking
+  milestonesTxHash?: string | null; // Transaction hash for batch milestone creation
+  milestonesBlockNumber?: string | null; // Block number for milestones transaction (BigInt as string)
+  milestonesIndexedAt?: Date | string | null; // When milestones were indexed to DB
+
   // Timestamps (allow both Date and string for serialization)
   createdAt: Date | string;
   updatedAt: Date | string;
@@ -360,6 +380,12 @@ export function toAPIStudy(dbStudy: StudyDB): Study {
     criteriaTxHash: dbStudy.criteriaTxHash,
     escrowBlockNumber: dbStudy.escrowBlockNumber.toString(),
     registryBlockNumber: dbStudy.registryBlockNumber.toString(),
+    wizardCompleted: dbStudy.wizardCompleted,
+    wizardStepsCompleted: dbStudy.wizardStepsCompleted,
+    wizardCompletedAt: dbStudy.wizardCompletedAt || undefined,
+    milestonesTxHash: dbStudy.milestonesTxHash || undefined,
+    milestonesBlockNumber: dbStudy.milestonesBlockNumber?.toString() || undefined,
+    milestonesIndexedAt: dbStudy.milestonesIndexedAt || undefined,
     createdAt: dbStudy.createdAt,
     updatedAt: dbStudy.updatedAt,
     startedAt: dbStudy.startedAt || undefined,

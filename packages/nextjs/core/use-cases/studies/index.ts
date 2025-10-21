@@ -17,3 +17,11 @@ export {
   type GetStudyByIdRequest,
   type GetStudyByIdResponse,
 } from './GetStudyById';
+
+export {
+  IndexStudyStepUseCase,
+  createIndexStudyStepUseCase,
+  type IndexStepRequest,
+  type IndexStepResponse,
+  type WizardStepName,
+} from './IndexStudyStep';

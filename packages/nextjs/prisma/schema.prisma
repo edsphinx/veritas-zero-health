@@ -254,6 +254,16 @@ model Study {
   registryTxHash String
   criteriaTxHash String
 
+  // Wizard completion tracking
+  wizardCompleted      Boolean   @default(false) // All wizard steps completed
+  wizardStepsCompleted String[]  @default([]) // Array of completed step names: ["escrow", "registry", "criteria", "milestones"]
+  wizardCompletedAt    DateTime? // When all wizard steps finished
+
+  // Milestones transaction tracking
+  milestonesTxHash      String? // Transaction hash for batch milestone creation
+  milestonesBlockNumber BigInt? // Block number for milestones transaction
+  milestonesIndexedAt   DateTime? // When milestones were indexed to DB
+
   // Timestamps
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt

@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="300" viewBox="0 0 1200 300" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <defs>
+    <!-- Gradient Background -->
+    <linearGradient id="bannerBg" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#0a2540"/>
+      <stop offset="50%" style="stop-color:#004d40"/>
+      <stop offset="100%" style="stop-color:#0a2540"/>
+    </linearGradient>
+
+    <!-- Privacy Shield Gradient -->
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f29f05;stop-opacity:0.8"/>
+      <stop offset="100%" style="stop-color:#008060;stop-opacity:0.9"/>
+    </linearGradient>
+
+    <!-- Glow effect -->
+    <filter id="textGlow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Circuit pattern -->
+    <pattern id="circuit" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
+      <path d="M 10 10 L 30 10 L 30 30 M 30 10 L 50 10"
+            stroke="#008060"
+            stroke-width="0.5"
+            fill="none"
+            opacity="0.2"/>
+      <circle cx="10" cy="10" r="2" fill="#008060" opacity="0.3"/>
+      <circle cx="30" cy="30" r="2" fill="#008060" opacity="0.3"/>
+    </pattern>
+  </defs>
+
+  <!-- Background with gradient -->
+  <rect width="1200" height="300" fill="url(#bannerBg)"/>
+
+  <!-- Circuit pattern overlay -->
+  <rect width="1200" height="300" fill="url(#circuit)" opacity="0.3"/>
+
+  <!-- Left Privacy Shield Icon -->
+  <g transform="translate(150, 150)">
+    <path d="M 0 -60
+             L 50 -40
+             Q 50 20 0 80
+             Q -50 20 -50 -40
+             L 0 -60 Z"
+          fill="url(#shieldGrad)"
+          opacity="0.8"/>
+
+    <!-- Lock inside shield -->
+    <g transform="translate(0, 0)">
+      <rect x="-15" y="-5" width="30" height="25" rx="3" fill="#ffffff" opacity="0.9"/>
+      <path d="M -10 -5 Q -10 -20, 0 -20 Q 10 -20, 10 -5"
+            fill="none"
+            stroke="#ffffff"
+            stroke-width="4"
+            opacity="0.9"/>
+      <circle cx="0" cy="5" r="4" fill="#0a2540"/>
+    </g>
+  </g>
+
+  <!-- Main Title -->
+  <g filter="url(#textGlow)">
+    <text x="350" y="120"
+          font-family="Arial, sans-serif"
+          font-size="56"
+          font-weight="bold"
+          fill="#ffffff">DASHI</text>
+  </g>
+
+  <!-- Subtitle -->
+  <text x="350" y="160"
+        font-family="Arial, sans-serif"
+        font-size="24"
+        fill="#f29f05"
+        font-weight="300">Anonymous Health Identity</text>
+
+  <!-- Privacy statement -->
+  <text x="350" y="195"
+        font-family="Arial, sans-serif"
+        font-size="18"
+        fill="#ffffff"
+        opacity="0.9">Zero-knowledge proofs for clinical trial privacy</text>
+
+  <!-- Key features -->
+  <g transform="translate(350, 220)">
+    <!-- Feature 1: ZK Proofs -->
+    <g>
+      <circle cx="0" cy="0" r="4" fill="#008060"/>
+      <text x="12" y="5"
+            font-family="Arial, sans-serif"
+            font-size="14"
+            fill="#ffffff"
+            opacity="0.8">ZK Proofs</text>
+    </g>
+
+    <!-- Feature 2: Encrypted -->
+    <g transform="translate(120, 0)">
+      <circle cx="0" cy="0" r="4" fill="#008060"/>
+      <text x="12" y="5"
+            font-family="Arial, sans-serif"
+            font-size="14"
+            fill="#ffffff"
+            opacity="0.8">Encrypted Storage</text>
+    </g>
+
+    <!-- Feature 3: On-chain -->
+    <g transform="translate(280, 0)">
+      <circle cx="0" cy="0" r="4" fill="#008060"/>
+      <text x="12" y="5"
+            font-family="Arial, sans-serif"
+            font-size="14"
+            fill="#ffffff"
+            opacity="0.8">On-Chain Verification</text>
+    </g>
+
+    <!-- Feature 4: Open Source -->
+    <g transform="translate(470, 0)">
+      <circle cx="0" cy="0" r="4" fill="#008060"/>
+      <text x="12" y="5"
+            font-family="Arial, sans-serif"
+            font-size="14"
+            fill="#ffffff"
+            opacity="0.8">Open Source</text>
+    </g>
+  </g>
+
+  <!-- Right decorative elements -->
+  <g transform="translate(1000, 150)">
+    <!-- Medical cross with privacy -->
+    <path d="M 0 -40 L 0 40 M -40 0 L 40 0"
+          stroke="#008060"
+          stroke-width="8"
+          opacity="0.3"/>
+
+    <!-- ZK circuit nodes -->
+    <circle cx="-30" cy="-30" r="5" fill="#f29f05" opacity="0.5"/>
+    <circle cx="30" cy="-30" r="5" fill="#f29f05" opacity="0.5"/>
+    <circle cx="-30" cy="30" r="5" fill="#f29f05" opacity="0.5"/>
+    <circle cx="30" cy="30" r="5" fill="#f29f05" opacity="0.5"/>
+
+    <!-- Connecting lines -->
+    <line x1="-30" y1="-30" x2="30" y2="30" stroke="#008060" stroke-width="2" opacity="0.3"/>
+    <line x1="30" y1="-30" x2="-30" y2="30" stroke="#008060" stroke-width="2" opacity="0.3"/>
+  </g>
+
+  <!-- Bottom tagline -->
+  <text x="600" y="280"
+        font-family="Arial, sans-serif"
+        font-size="14"
+        fill="#f29f05"
+        text-anchor="middle"
+        opacity="0.7"
+        font-style="italic">Your health, your data, your sovereignty</text>
+</svg>
