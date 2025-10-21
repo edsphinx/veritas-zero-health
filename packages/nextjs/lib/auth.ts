@@ -15,6 +15,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { SiweMessage } from "siwe";
 import { prisma } from "./prisma";
 import { DEFAULT_CHAIN_ID } from "@/config/blockchain.config";
+import { getRoleForAddress, getTestUserDisplayName, isDevMode } from "./test-users";
 
 // Map Prisma UserRole enum to @veritas/types UserRole
 function mapPrismaRoleToUserRole(
@@ -65,13 +66,20 @@ export const authConfig = {
           });
 
           if (!user) {
-            // Create new user with default patient role
+            // Determine role: test user in dev, or default guest
+            const userRole = getRoleForAddress(siwe.address);
+            const displayName = isDevMode() ? getTestUserDisplayName(siwe.address) : null;
+
+            // Create new user
             user = await prisma.user.create({
               data: {
                 address,
-                role: "patient", // Default role for new users
+                role: userRole,
+                displayName,
               },
             });
+
+            console.log(`[Auth] Created new user: ${address} with role: ${userRole}`);
           }
 
           // Update last active
