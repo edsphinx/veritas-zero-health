@@ -4,6 +4,7 @@ import { headers } from 'next/headers';
 import { Toaster } from 'sonner';
 import './globals.css';
 import { Providers } from './providers';
+import { auth } from '@/lib/auth';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -59,10 +60,14 @@ export default async function RootLayout({
   const headersData = await headers();
   const cookies = headersData.get('cookie');
 
+  // Get session from server for NextAuth SessionProvider
+  // This ensures session is available immediately on client
+  const session = await auth();
+
   return (
     <html lang="en">
       <body className={inter.className}>
-        <Providers cookies={cookies}>
+        <Providers cookies={cookies} session={session}>
           {children}
           <Toaster richColors position="top-right" />
         </Providers>

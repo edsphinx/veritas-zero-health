@@ -1,0 +1,19 @@
+{
+  "MockUSDC": "0xeBB25B01faEe3CAa2E6E3f9d71Dc65CC667aba7f",
+  "accountFactory": "0x68cd4591a0309474056E8c27F61071E610392917",
+  "chainId": 11142220,
+  "complianceScore": "0x54b2Dc133cC10dCe7628eEe2101F31Ed6AD82b06",
+  "deployer": "0xeA5A20D8d9Eeed3D8275993bdF3Bdb4749e7C485",
+  "eligibilityVerifier": "0xe1D4C921f5eFFaDB2A97452e805302ADb8e315C4",
+  "enrollmentData": "0xDD01F974dA09458b7cCFc4B9B976d90A38Ba8a83",
+  "healthIdentity": "0xf968E708a00f78729Dcf1c46325FB215bF3927f6",
+  "humanPassport": "0x0540017f66790FdaaDFE2c84b50935012bCA3B5e",
+  "network": "Unknown Chain 11142220",
+  "participationSBT": "0x2DE8f450ed6745bBf73210B3fcB05982CD9b7A1e",
+  "providerRegistry": "0x4b522F9B0a5A16A26b909a4F62220a5e71c91adB",
+  "researchEscrow": "0x2E5B3b417087f1c19Ff6B804baEaA6CB8C7561fB",
+  "studyAccessNFT": "0xAD68036898fc4209b061361426171aD13eFfAcf3",
+  "studyRegistry": "0x129289611b05e79eCdAE2a89aFC8d0586c081Ca6",
+  "timestamp": 1761057213,
+  "vaultFactory": "0xF9c01EB82F2f60d59eD0Ad8C3613d79d642Ea1D2"
+}

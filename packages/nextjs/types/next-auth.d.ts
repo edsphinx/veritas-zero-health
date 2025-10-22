@@ -17,6 +17,9 @@ declare module "next-auth" {
     humanityScore?: number | null;
     displayName?: string | null;
     avatar?: string | null;
+    // Required by NextAuth AdapterUser but not used in Web3 auth
+    email: string;
+    emailVerified: Date | null;
   }
 
   interface Session {
@@ -29,6 +32,8 @@ declare module "next-auth" {
 declare module "next-auth/jwt" {
   interface JWT {
     sub: string;
+    userId?: string; // Custom field to store user ID (SIWX overwrites sub)
+    address?: string; // Custom field to store extracted address from CAIP-10
     user?: User;
   }
 }

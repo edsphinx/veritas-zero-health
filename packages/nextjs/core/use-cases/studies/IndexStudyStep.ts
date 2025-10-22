@@ -23,7 +23,8 @@ export type WizardStepName = 'escrow' | 'registry' | 'criteria' | 'milestones';
  * Request to index a wizard step
  */
 export interface IndexStepRequest {
-  // Study identification (use either registryId OR escrowId)
+  // Study identification (use databaseId, registryId, OR escrowId)
+  databaseId?: string; // Database UUID (primary key)
   registryId?: number;
   escrowId?: number;
 
@@ -188,18 +189,25 @@ export class IndexStudyStepUseCase {
   }
 
   /**
-   * Find study by registryId or escrowId
+   * Find study by databaseId, registryId, or escrowId
    */
   private async findStudy(request: IndexStepRequest) {
+    // Priority 1: Database ID (most reliable during wizard)
+    if (request.databaseId) {
+      return await this.studyRepository.findById(request.databaseId);
+    }
+
+    // Priority 2: Registry ID
     if (request.registryId) {
       return await this.studyRepository.findByRegistryId(BigInt(request.registryId));
     }
 
+    // Priority 3: Escrow ID
     if (request.escrowId) {
       return await this.studyRepository.findByEscrowId(BigInt(request.escrowId));
     }
 
-    // If neither provided, try to extract from stepData
+    // Fallback: Try to extract from stepData
     if (request.stepData?.registryId) {
       return await this.studyRepository.findByRegistryId(BigInt(request.stepData.registryId));
     }
@@ -294,14 +302,15 @@ export class IndexStudyStepUseCase {
    * Validate request
    */
   private validateRequest(request: IndexStepRequest): string | null {
-    // Must have either registryId or escrowId or stepData with IDs
+    // Must have either databaseId, registryId, escrowId, or stepData with IDs
     if (
+      !request.databaseId &&
       !request.registryId &&
       !request.escrowId &&
       !request.stepData?.registryId &&
       !request.stepData?.escrowId
     ) {
-      return 'Either registryId or escrowId is required';
+      return 'Either databaseId, registryId, or escrowId is required';
     }
 
     // Validate step name

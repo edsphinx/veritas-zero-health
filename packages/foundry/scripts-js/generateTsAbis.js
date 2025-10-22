@@ -90,14 +90,19 @@ function getDeploymentHistory(broadcastPath) {
 }
 
 function getArtifactOfContract(contractName) {
+  // Special case: Groth16Verifier is in EligibilityCodeVerifier.sol
+  const solFileName = contractName === 'Groth16Verifier'
+    ? 'EligibilityCodeVerifier'
+    : contractName;
+
   const current_path_to_artifacts = join(
     __dirname,
     "..",
-    `out/${contractName}.sol`
+    `out/${solFileName}.sol`
   );
 
   if (!existsSync(current_path_to_artifacts)) {
-    console.warn(`⚠️  Artifact directory not found for ${contractName}`);
+    console.warn(`⚠️  Artifact directory not found for ${contractName} (looking in ${solFileName}.sol)`);
     return null;
   }
 
@@ -163,6 +168,23 @@ function getInheritedFunctions(mainArtifact) {
 }
 
 function processAllDeployments(broadcastPath) {
+  // Reverse mapping: Solidity contract name → deployment JSON key
+  const reverseMapping = {
+    'MockUSDC': 'MockUSDC',
+    'MockHumanPassport': 'humanPassport',
+    'MedicalProviderRegistry': 'providerRegistry',
+    'HealthIdentitySBT': 'healthIdentity',
+    'PatientAccountFactory': 'accountFactory',
+    'StudyParticipationSBT': 'participationSBT',
+    'StudyEnrollmentData': 'enrollmentData',
+    'Groth16Verifier': 'eligibilityVerifier',
+    'StudyRegistry': 'studyRegistry',
+    'ResearchFundingEscrow': 'researchEscrow',
+    'CommitmentVaultFactory': 'vaultFactory',
+    'StudyAccessNFT': 'studyAccessNFT',
+    'ComplianceScore': 'complianceScore',
+  };
+
   const scriptFolders = getDirectories(broadcastPath);
   const allDeployments = new Map();
 
@@ -208,7 +230,10 @@ function processAllDeployments(broadcastPath) {
         allContracts[chainId] = {};
       }
 
-      allContracts[chainId][contractName] = {
+      // Use the mapped name from deployments JSON for consistency
+      const mappedName = reverseMapping[contractName] || contractName;
+
+      allContracts[chainId][mappedName] = {
         address: deployment.address,
         abi: artifact.abi,
         inheritedFunctions: getInheritedFunctions(artifact),
@@ -243,65 +268,82 @@ async function main() {
 
   let allGeneratedContracts = {};
 
-  // If broadcast folder doesn't exist, generate from deployments folder
-  if (!existsSync(current_path_to_broadcast)) {
-    console.log("⚠️  No broadcast folder found, generating from deployments folder");
+  // First, process deployments from broadcast folder (if exists)
+  if (existsSync(current_path_to_broadcast)) {
+    allGeneratedContracts = processAllDeployments(current_path_to_broadcast);
+  }
 
-    // Process deployments directly
-    Object.entries(deployments).forEach(([fileName, deploymentData]) => {
-      const chainId = deploymentData.chainId || fileName.split('_')[0];
+  // Then, process and merge deployments from deployments folder
+  // This allows us to add deployments that are only in deployments/ folder (like Celo networks)
+  Object.entries(deployments).forEach(([fileName, deploymentData]) => {
+    const chainId = deploymentData.chainId || fileName.split('_')[0];
 
-      if (!allGeneratedContracts[chainId]) {
-        allGeneratedContracts[chainId] = {};
+    if (!allGeneratedContracts[chainId]) {
+      allGeneratedContracts[chainId] = {};
+    }
+
+    // Map deployment key names to actual contract names
+    const contractNameMapping = {
+      'MockUSDC': 'MockUSDC',
+      'humanPassport': 'MockHumanPassport',
+      'providerRegistry': 'MedicalProviderRegistry',
+      'healthIdentity': 'HealthIdentitySBT',
+      'accountFactory': 'PatientAccountFactory',
+      'participationSBT': 'StudyParticipationSBT',
+      'enrollmentData': 'StudyEnrollmentData',
+      'eligibilityVerifier': 'Groth16Verifier',
+      'studyRegistry': 'StudyRegistry',
+      'researchEscrow': 'ResearchFundingEscrow',
+      'vaultFactory': 'CommitmentVaultFactory',
+      'studyAccessNFT': 'StudyAccessNFT',
+      'complianceScore': 'ComplianceScore',
+    };
+
+    // Map contract addresses to their names
+    Object.entries(deploymentData).forEach(([key, value]) => {
+      if (key === 'chainId' || key === 'network' || key === 'timestamp' || key === 'deployer') return;
+
+      // Key is the contract name (e.g., "studyRegistry", "ageVerifier")
+      // Value is the address
+      const contractName = key;
+      const address = value;
+
+      // Skip if this contract is already in allGeneratedContracts for this chain
+      if (allGeneratedContracts[chainId][contractName]) {
+        return; // Already processed from broadcast folder
       }
 
-      // Map contract addresses to their names
-      Object.entries(deploymentData).forEach(([key, value]) => {
-        if (key === 'chainId' || key === 'network' || key === 'timestamp') return;
+      // Try to find the artifact - try mapping first, then common patterns
+      const possibleNames = [
+        contractNameMapping[contractName],
+        contractName,
+        contractName.charAt(0).toUpperCase() + contractName.slice(1),
+        contractName.replace(/([A-Z])/g, '_$1').replace(/^_/, ''),
+      ].filter(Boolean);
 
-        // Key is the contract name (e.g., "studyRegistry", "ageVerifier")
-        // Value is the address
-        const contractName = key;
-        const address = value;
-
-        // Try to find the artifact - try common contract name patterns
-        const possibleNames = [
-          contractName,
-          contractName.charAt(0).toUpperCase() + contractName.slice(1),
-          contractName.replace(/([A-Z])/g, '_$1').replace(/^_/, ''),
-        ];
-
-        let artifact = null;
-        for (const name of possibleNames) {
-          artifact = getArtifactOfContract(name);
-          if (artifact) break;
-        }
-
+      let artifact = null;
+      let foundName = null;
+      for (const name of possibleNames) {
+        artifact = getArtifactOfContract(name);
         if (artifact) {
-          allGeneratedContracts[chainId][contractName] = {
-            address: address,
-            abi: artifact.abi,
-            inheritedFunctions: getInheritedFunctions(artifact),
-          };
+          foundName = name;
+          break;
         }
-      });
-    });
-  } else {
-    // Process all deployments from all script folders (original logic)
-    allGeneratedContracts = processAllDeployments(current_path_to_broadcast);
+      }
 
-    // Update contract keys based on deployments if they exist
-    Object.entries(allGeneratedContracts).forEach(([chainId, contracts]) => {
-      Object.entries(contracts).forEach(([contractName, contractData]) => {
-        const deployedName = deployments[chainId]?.[contractData.address];
-        if (deployedName) {
-          // If we have a deployment name, use it instead of the contract name
-          allGeneratedContracts[chainId][deployedName] = contractData;
-          delete allGeneratedContracts[chainId][contractName];
-        }
-      });
+      if (artifact && foundName) {
+        console.log(`✅ Mapped ${contractName} → ${foundName} for chain ${chainId}`);
+      }
+
+      if (artifact) {
+        allGeneratedContracts[chainId][contractName] = {
+          address: address,
+          abi: artifact.abi,
+          inheritedFunctions: getInheritedFunctions(artifact),
+        };
+      }
     });
-  }
+  });
 
   const NEXTJS_TARGET_DIR = "../nextjs/contracts/";
 

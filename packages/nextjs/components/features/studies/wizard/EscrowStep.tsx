@@ -100,7 +100,7 @@ export function EscrowStep({ onComplete, onBack, initialData, isResuming }: Escr
       title: '',
       description: '',
       region: '',
-      clinicAddress: '',
+      // NOTE: No clinicAddress - decentralized model where clinics apply based on criteria
       patientPercentage: 3000, // 30%
       clinicPercentage: 7000, // 70%
       totalFunding: 10000,
@@ -236,7 +236,8 @@ export function EscrowStep({ onComplete, onBack, initialData, isResuming }: Escr
         description: data.description,
         totalFunding: data.totalFunding,
         maxParticipants: data.maxParticipants,
-        certifiedProviders: data.clinicAddress ? [data.clinicAddress as Address] : undefined,
+        // NOTE: certifiedProviders removed - clinics apply to studies (decentralized model)
+        certifiedProviders: undefined,
       });
 
       toast.dismiss(buildToast);
@@ -437,35 +438,14 @@ export function EscrowStep({ onComplete, onBack, initialData, isResuming }: Escr
 
               {/* Provider & Compensation Section */}
               <div className="space-y-4 pt-4 border-t">
-                <h3 className="text-lg font-semibold">Provider & Compensation Splits</h3>
+                <h3 className="text-lg font-semibold">Compensation Splits</h3>
                 <Alert className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
                   <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                  <AlertTitle className="text-blue-900 dark:text-blue-100">MVP: Single Clinic Model</AlertTitle>
+                  <AlertTitle className="text-blue-900 dark:text-blue-100">Decentralized Provider Model</AlertTitle>
                   <AlertDescription className="text-blue-800 dark:text-blue-200">
-                    Currently supporting one clinic per study. Multi-clinic support coming in future updates.
+                    Clinics can apply to verify milestones based on study eligibility criteria. No pre-assignment required.
                   </AlertDescription>
                 </Alert>
-
-                <FormField
-                  control={form.control}
-                  name="clinicAddress"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Clinic Wallet Address *</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="0x..."
-                          {...field}
-                          disabled={isExecuting}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Ethereum address of the certified clinic/provider
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
 
                 <div className="grid grid-cols-2 gap-4">
                   <FormField

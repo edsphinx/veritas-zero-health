@@ -77,11 +77,37 @@ export function StudyCreationWizard() {
   // Initialize creation if starting fresh
   useEffect(() => {
     if (status === 'idle') {
-      // Generate database ID (in real app, this would come from API)
-      const databaseId = `study-${Date.now()}`;
-      startCreation(databaseId, {});
+      // Create initial study in database
+      const initializeStudy = async () => {
+        try {
+          const response = await fetch('/api/studies/create-initial', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              title: '', // Will be set in wizard
+              description: '', // Will be set in wizard
+            }),
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to create initial study');
+          }
+
+          const result = await response.json();
+          console.log('[Wizard] Initial study created:', result.data.studyId);
+
+          // Start wizard with database ID
+          startCreation(result.data.studyId, {});
+        } catch (error) {
+          console.error('[Wizard] Failed to initialize study:', error);
+          setError(error instanceof Error ? error.message : 'Failed to initialize study');
+        }
+      };
+
+      initializeStudy();
     }
-  }, [status, startCreation]);
+  }, [status, startCreation, setError]);
 
   // ============================================
   // Step 1: Escrow Configuration
@@ -104,6 +130,8 @@ export function StudyCreationWizard() {
           step: 'escrow',
           txHash,
           totalFunding: data.totalFunding,
+          // Pass database ID so API can find the study
+          databaseId: ids.databaseId,
         }),
       });
 
@@ -140,9 +168,9 @@ export function StudyCreationWizard() {
         body: JSON.stringify({
           step: 'registry',
           txHash,
+          databaseId: ids.databaseId,
+          registryId: registryId.toString(),
           escrowId: ids.escrowId?.toString(),
-          // Registry step doesn't have title/description in current schema
-          // They should come from escrow step or be added to registry schema
         }),
       });
 
@@ -178,6 +206,7 @@ export function StudyCreationWizard() {
         body: JSON.stringify({
           step: 'criteria',
           txHash,
+          databaseId: ids.databaseId,
           registryId: ids.registryId?.toString(),
         }),
       });
@@ -214,6 +243,7 @@ export function StudyCreationWizard() {
         body: JSON.stringify({
           step: 'milestones',
           txHash: txHashes[0], // Use first milestone tx
+          databaseId: ids.databaseId,
           registryId: ids.registryId?.toString(),
         }),
       });

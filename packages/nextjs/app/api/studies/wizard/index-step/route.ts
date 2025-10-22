@@ -172,6 +172,7 @@ export async function POST(request: NextRequest) {
 
     // Index the step
     const result = await indexStepUseCase.execute({
+      databaseId: body.databaseId, // Pass database ID for finding study
       registryId: body.registryId ? parseInt(body.registryId, 10) : undefined,
       escrowId: body.escrowId ? parseInt(body.escrowId, 10) : undefined,
       step: body.step,

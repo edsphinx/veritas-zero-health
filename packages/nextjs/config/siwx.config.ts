@@ -1,28 +1,94 @@
 /**
- * SIWX Configuration for Reown AppKit
+ * SIWE Configuration for Reown AppKit
  *
- * SIWX (Sign-In With X) is the new chain-agnostic standard for blockchain authentication
- * that replaces SIWE and supports multiple chains (Ethereum, Solana, Bitcoin, etc.)
- *
- * We use ReownAuthentication which manages sessions via Reown Dashboard.
- * This is the recommended approach for production applications.
- *
- * Documentation: https://docs.reown.com/appkit/authentication/siwx/default
+ * This configures Sign-In With Ethereum using Reown's official @reown/appkit-siwe package.
+ * Based on bk_nextjs working implementation.
  */
 
-import { ReownAuthentication } from '@reown/appkit-siwx';
+import {
+  type SIWESession,
+  type SIWEVerifyMessageArgs,
+  type SIWECreateMessageArgs,
+  createSIWEConfig,
+  formatMessage,
+} from '@reown/appkit-siwe';
+import { getCsrfToken, getSession, signIn, signOut } from 'next-auth/react';
+import { getAddress } from 'viem';
 
-/**
- * Create SIWX configuration using Reown Authentication
- *
- * This handles:
- * - Multichain message creation (CAIP-122 standard)
- * - Signature verification across different chains
- * - Session management via Reown Dashboard
- * - Automatic integration with wallet connections
- *
- * Custom message configuration for cleaner sign-in experience
- */
-// ReownAuthentication doesn't accept options, it uses default configuration
-// The message format is controlled by the CAIP-122 standard
-export const siwxConfig = new ReownAuthentication();
+// Normalize address to checksum format
+const normalizeAddress = (address: string): string => {
+  try {
+    const splitAddress = address.split(':');
+    const extractedAddress = splitAddress[splitAddress.length - 1];
+    const checksumAddress = getAddress(extractedAddress);
+    splitAddress[splitAddress.length - 1] = checksumAddress;
+    return splitAddress.join(':');
+  } catch {
+    return address;
+  }
+};
+
+export const siweConfig = createSIWEConfig({
+  // Get message parameters
+  getMessageParams: async () => ({
+    domain: typeof window !== 'undefined' ? window.location.host : '',
+    uri: typeof window !== 'undefined' ? window.location.origin : '',
+    chains: [11155420], // Optimism Sepolia
+    statement: 'Sign in to DASHI - Decentralized Anonymous Sovereign Health Identity',
+  }),
+
+  // Create SIWE message
+  createMessage: ({ address, ...args }: SIWECreateMessageArgs) =>
+    formatMessage(args, normalizeAddress(address)),
+
+  // Get CSRF nonce
+  getNonce: async () => {
+    const nonce = await getCsrfToken();
+    if (!nonce) {
+      throw new Error('Failed to get nonce!');
+    }
+    return nonce;
+  },
+
+  // Get current session
+  getSession: async () => {
+    const session = await getSession();
+    if (!session) {
+      return null;
+    }
+
+    // Validate address and chainId
+    if (typeof session.address !== 'string' || typeof session.chainId !== 'number') {
+      return null;
+    }
+
+    return { address: session.address, chainId: session.chainId } satisfies SIWESession;
+  },
+
+  // Verify message and sign in
+  verifyMessage: async ({ message, signature }: SIWEVerifyMessageArgs) => {
+    try {
+      const success = await signIn('credentials', {
+        message,
+        signature,
+        redirect: false,
+      });
+
+      return Boolean(success?.ok);
+    } catch (error) {
+      console.error('[SIWE] Verify message error:', error);
+      return false;
+    }
+  },
+
+  // Sign out
+  signOut: async () => {
+    try {
+      await signOut({ redirect: false });
+      return true;
+    } catch (error) {
+      console.error('[SIWE] Sign out error:', error);
+      return false;
+    }
+  },
+});

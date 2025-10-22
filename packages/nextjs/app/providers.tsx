@@ -1,12 +1,13 @@
 'use client'
 
 import { wagmiAdapter, projectId, networks, metadata } from '@/config/wagmi.config'
-import { siwxConfig } from '@/config/siwx.config'
+// import { siweConfig } from '@/config/siwx.config'  // Not using siweConfig - manual SIWE flow
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createAppKit } from '@reown/appkit/react'
 import React, { type ReactNode } from 'react'
 import { cookieToInitialState, WagmiProvider, type Config } from 'wagmi'
 import { SessionProvider } from '@/components/providers/SessionProvider'
+import { AutoSIWESignIn } from '@/components/auth/AutoSIWESignIn'
 
 // Set up queryClient with optimized defaults
 const queryClient = new QueryClient({
@@ -42,7 +43,8 @@ export const modal = createAppKit({
   projectId,
   networks,
   metadata,
-  siwx: siwxConfig, // Enable SIWX multichain authentication
+  // NOTE: siweConfig commented out for now - using manual SIWE flow like bk_nextjs
+  // siweConfig: siweConfig, // Enable SIWE authentication with NextAuth
   features: {
     analytics: false,
   },
@@ -65,12 +67,16 @@ export const modal = createAppKit({
   allWallets: 'SHOW', // Show all available wallets
 })
 
+import type { Session } from 'next-auth'
+
 export function Providers({
   children,
-  cookies
+  cookies,
+  session
 }: {
   children: ReactNode
   cookies: string | null
+  session: Session | null
 }) {
   // Hydrate wagmi with cookies from server (CRITICAL for SSR!)
   const initialState = cookieToInitialState(wagmiAdapter.wagmiConfig as Config, cookies)
@@ -78,7 +84,8 @@ export function Providers({
   return (
     <WagmiProvider config={wagmiAdapter.wagmiConfig as Config} initialState={initialState}>
       <QueryClientProvider client={queryClient}>
-        <SessionProvider>
+        <SessionProvider session={session}>
+          <AutoSIWESignIn />
           {children}
         </SessionProvider>
       </QueryClientProvider>
