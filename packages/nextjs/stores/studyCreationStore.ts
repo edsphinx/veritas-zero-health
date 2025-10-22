@@ -6,8 +6,9 @@
  */
 
 import { create } from 'zustand';
-import { persist, devtools } from 'zustand/middleware';
+import { persist, devtools, createJSONStorage } from 'zustand/middleware';
 import type { StudyCreationData } from '@/lib/validations';
+import { stringifyWithBigInt, parseWithBigInt } from '@/lib/json-bigint';
 
 // Re-export types for convenience
 export type { EscrowStepFormData, RegistryStepFormData, CriteriaStepFormData, MilestoneInputFormData, MilestonesStepFormData } from '@/lib/validations';
@@ -257,6 +258,19 @@ export const useStudyCreationStore = create<StudyCreationStore>()(
       }),
       {
         name: 'study-creation-storage', // localStorage key
+        storage: createJSONStorage(() => ({
+          getItem: (name) => {
+            const str = localStorage.getItem(name);
+            if (!str) return null;
+            return parseWithBigInt(str) as string;
+          },
+          setItem: (name, value) => {
+            localStorage.setItem(name, stringifyWithBigInt(value));
+          },
+          removeItem: (name) => {
+            localStorage.removeItem(name);
+          },
+        })),
         partialize: (state) => ({
           // Only persist necessary fields (exclude functions)
           status: state.status,
