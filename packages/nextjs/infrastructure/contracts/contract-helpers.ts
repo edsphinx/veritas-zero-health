@@ -26,6 +26,24 @@ export type ContractName =
   | 'StudyAccessNFT';
 
 /**
+ * Map from canonical contract names to deployedContracts keys
+ */
+const CONTRACT_NAME_MAP: Record<string, string> = {
+  'StudyRegistry': 'studyRegistry',
+  'StudyParticipationSBT': 'participationSBT',
+  'StudyEnrollmentData': 'enrollmentData',
+  'ResearchFundingEscrow': 'researchEscrow',
+  'HealthIdentitySBT': 'healthIdentity',
+  'PatientAccountFactory': 'accountFactory',
+  'MedicalProviderRegistry': 'providerRegistry',
+  'CommitmentVaultFactory': 'vaultFactory',
+  'EligibilityCodeVerifier': 'eligibilityVerifier',
+  'MockHumanPassport': 'humanPassport',
+  'MockUSDC': 'mockUSDC',
+  'StudyAccessNFT': 'studyAccessNFT',
+};
+
+/**
  * Get contract address for a specific chain
  */
 export function getContractAddress(
@@ -35,7 +53,10 @@ export function getContractAddress(
   const chainContracts = deployedContracts[chainId as keyof typeof deployedContracts];
   if (!chainContracts) return undefined;
 
-  const contract = chainContracts[contractName as keyof typeof chainContracts] as {
+  // Map canonical name to deployedContracts key
+  const deployedName = CONTRACT_NAME_MAP[contractName] || contractName;
+
+  const contract = chainContracts[deployedName as keyof typeof chainContracts] as {
     address: Address;
   };
   return contract?.address;
@@ -51,7 +72,10 @@ export function getContractABI(contractName: ContractName): readonly unknown[] {
 
   if (!chainContracts) return [];
 
-  const contract = chainContracts[contractName as keyof typeof chainContracts] as {
+  // Map canonical name to deployedContracts key
+  const deployedName = CONTRACT_NAME_MAP[contractName] || contractName;
+
+  const contract = chainContracts[deployedName as keyof typeof chainContracts] as {
     abi: readonly unknown[];
   };
   return contract?.abi || [];

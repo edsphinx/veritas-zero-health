@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi';
-import { type Address, type Hex } from 'viem';
+import { type Hex } from 'viem';
 
 import { escrowStepSchema, type EscrowStepFormData } from '@/lib/validations';
 import { fadeUpVariants, transitions } from '@/lib/animations';

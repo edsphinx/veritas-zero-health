@@ -18,8 +18,8 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function ResearcherStudiesPage() {
-  const { walletAddress } = useAuth();
-  const { data, error } = useStudiesByResearcher(walletAddress);
+  const { user } = useAuth();
+  const { data, error } = useStudiesByResearcher(user?.address);
 
   return (
     <div className="space-y-6">
@@ -97,7 +97,7 @@ export default function ResearcherStudiesPage() {
         transition={{ ...transitions.standard, delay: 0.2 }}
       >
         <StudyList
-          filters={{ researcherId: walletAddress }}
+          filters={{ researcherId: user?.address }}
           limit={50}
           showApplyButton={false}
           emptyMessage="You haven't created any studies yet. Click 'Create Study' to get started."
