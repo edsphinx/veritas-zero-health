@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
+import { jsonResponse } from '@/lib/json-bigint';
 import { getDefaultChainId } from '@/infrastructure/blockchain/blockchain-client.service';
 import { getResearchFundingEscrowContract } from '@/infrastructure/contracts/study-contracts';
 import { type Address } from 'viem';
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
         body.title,
         body.description,
         certifiedProviders,
-        BigInt(body.maxParticipants),
+        BigInt(body.maxParticipants), // Will be auto-converted to string by jsonResponse
       ],
       chainId,
     };
@@ -81,7 +82,8 @@ export async function POST(request: NextRequest) {
       maxParticipants: body.maxParticipants,
     });
 
-    return NextResponse.json({
+    // Return with BigInt-safe serialization
+    return jsonResponse({
       success: true,
       data: {
         txData,

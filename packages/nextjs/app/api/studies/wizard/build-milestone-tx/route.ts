@@ -8,6 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
+import { jsonResponse } from '@/lib/json-bigint';
 import { getDefaultChainId } from '@/infrastructure/blockchain/blockchain-client.service';
 import { getResearchFundingEscrowContract } from '@/infrastructure/contracts/study-contracts';
 
@@ -93,7 +94,7 @@ export async function POST(request: NextRequest) {
         mode: 'batch',
       });
 
-      return NextResponse.json({
+      return jsonResponse({
         success: true,
         data: {
           mode: 'batch',
@@ -124,7 +125,7 @@ export async function POST(request: NextRequest) {
         mode: 'sequential',
       });
 
-      return NextResponse.json({
+      return jsonResponse({
         success: true,
         data: {
           mode: 'sequential',

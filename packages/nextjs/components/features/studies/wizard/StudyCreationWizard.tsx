@@ -13,7 +13,7 @@
 
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { FlaskConical, ArrowLeft } from 'lucide-react';
@@ -22,6 +22,8 @@ import Link from 'next/link';
 import { fadeUpVariants, transitions } from '@/lib/animations';
 import { Button } from '@/components/ui/button';
 import { ProgressIndicator } from '../ProgressIndicator';
+
+import { useAuth } from '@/hooks/useAuth';
 
 import { EscrowStep } from './EscrowStep';
 import { RegistryStep } from './RegistryStep';
@@ -53,15 +55,21 @@ const STEP_LABELS = [
 
 export function StudyCreationWizard() {
   const router = useRouter();
+  const { user } = useAuth(); // Get user from useAuth hook
+
+  // Guard against React Strict Mode double execution
+  const isInitializingRef = useRef(false);
 
   const {
     status,
     ids,
     txHashes,
     formData,
+    userAddress,
     canResume,
     getCurrentStep,
     startCreation,
+    cancelCreation,
     completeEscrowTx,
     completeRegistryTx,
     completeCriteriaTx,
@@ -76,38 +84,75 @@ export function StudyCreationWizard() {
 
   // Initialize creation if starting fresh
   useEffect(() => {
-    if (status === 'idle') {
-      // Create initial study in database
-      const initializeStudy = async () => {
-        try {
-          const response = await fetch('/api/studies/create-initial', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              title: '', // Will be set in wizard
-              description: '', // Will be set in wizard
-            }),
-          });
-
-          if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Failed to create initial study');
-          }
-
-          const result = await response.json();
-          console.log('[Wizard] Initial study created:', result.data.studyId);
-
-          // Start wizard with database ID
-          startCreation(result.data.studyId, {});
-        } catch (error) {
-          console.error('[Wizard] Failed to initialize study:', error);
-          setError(error instanceof Error ? error.message : 'Failed to initialize study');
-        }
-      };
-
-      initializeStudy();
+    // Wait for user to load
+    if (!user?.address) {
+      return;
     }
-  }, [status, startCreation, setError]);
+
+    const currentUserAddress = user.address.toLowerCase();
+
+    // Check if store has data from a different user
+    if (userAddress && userAddress !== currentUserAddress) {
+      console.log('[Wizard] Store belongs to different user, resetting...', {
+        storeUser: userAddress,
+        currentUser: currentUserAddress,
+      });
+      cancelCreation(); // Clear store data from previous user
+      isInitializingRef.current = false; // Reset flag for new user
+      return;
+    }
+
+    // Check if already creating or resuming
+    if (status !== 'idle') {
+      console.log('[Wizard] Resuming existing creation, status:', status, 'databaseId:', ids.databaseId);
+      return; // Don't create new study, resume existing
+    }
+
+    // Check if we have a databaseId in store (persisted from previous session)
+    if (ids.databaseId) {
+      console.log('[Wizard] Found existing databaseId in store:', ids.databaseId);
+      return; // Already initialized, don't create duplicate
+    }
+
+    // Guard against React Strict Mode double execution
+    if (isInitializingRef.current) {
+      console.log('[Wizard] Initialization already in progress, skipping duplicate call');
+      return;
+    }
+
+    // Only create new study if truly idle and no databaseId
+    const initializeStudy = async () => {
+      // Mark as initializing BEFORE the async call
+      isInitializingRef.current = true;
+      try {
+        console.log('[Wizard] Creating new initial study for user:', currentUserAddress);
+        const response = await fetch('/api/studies/create-initial', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: '', // Will be set in wizard
+            description: '', // Will be set in wizard
+          }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to create initial study');
+        }
+
+        const result = await response.json();
+        console.log('[Wizard] Initial study created:', result.data.studyId);
+
+        // Start wizard with database ID and user address
+        startCreation(result.data.studyId, currentUserAddress, {});
+      } catch (error) {
+        console.error('[Wizard] Failed to initialize study:', error);
+        setError(error instanceof Error ? error.message : 'Failed to initialize study');
+      }
+    };
+
+    initializeStudy();
+  }, [user, status, ids.databaseId, userAddress, startCreation, setError, cancelCreation]);
 
   // ============================================
   // Step 1: Escrow Configuration

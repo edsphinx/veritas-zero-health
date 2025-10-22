@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
+import { jsonResponse } from '@/lib/json-bigint';
 import { getPublicClient } from '@/infrastructure/blockchain/blockchain-client.service';
 import { createIndexStudyStepUseCase } from '@/core/use-cases/studies';
 import { createStudyRepository } from '@/infrastructure/repositories/study.repository';
@@ -190,7 +191,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Return both extracted data and use case result
-    return NextResponse.json({
+    return jsonResponse({
       success: true,
       data: {
         ...extractedData,

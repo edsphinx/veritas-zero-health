@@ -12,6 +12,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
+import { jsonResponse } from '@/lib/json-bigint';
 import { createIndexStudyUseCase } from '@/core/use-cases/studies/IndexStudy';
 import { createStudyRepository } from '@/infrastructure/repositories/PrismaStudyRepository';
 import { prisma } from '@/lib/prisma';
@@ -132,7 +133,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Return success with indexed study
-    return NextResponse.json({
+    return jsonResponse({
       success: true,
       data: {
         id: result.data!.study.id, // Use 'id' for consistency

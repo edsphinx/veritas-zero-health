@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
+import { jsonResponse } from '@/lib/json-bigint';
 import { getDefaultChainId } from '@/infrastructure/blockchain/blockchain-client.service';
 import { getStudyRegistryContract } from '@/infrastructure/contracts/study-contracts';
 
@@ -84,7 +85,7 @@ export async function POST(request: NextRequest) {
       ageRange: `${body.minAge}-${body.maxAge}`,
     });
 
-    return NextResponse.json({
+    return jsonResponse({
       success: true,
       data: {
         txData,

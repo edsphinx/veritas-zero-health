@@ -7,6 +7,7 @@
 
 'use client';
 
+import { useState, useEffect } from 'react';
 import { AlertCircle, XCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -39,7 +40,17 @@ export function ResumeBanner({
   totalSteps,
   onCancel,
 }: ResumeBannerProps) {
+  const [isMounted, setIsMounted] = useState(false);
   const progressPercentage = ((currentStep - 1) / totalSteps) * 100;
+
+  // Only render on client to avoid hydration mismatch
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return null;
+  }
 
   return (
     <Alert className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">

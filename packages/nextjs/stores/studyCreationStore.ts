@@ -62,6 +62,7 @@ interface StudyCreationStore {
   formData: Partial<StudyCreationData> | null;
   error: string | null;
   createdAt: number | null;      // Timestamp when creation started
+  userAddress: string | null;    // Wallet address of the user creating the study
 
   // Getters
   isCreating: () => boolean;
@@ -69,7 +70,7 @@ interface StudyCreationStore {
   getCurrentStep: () => number;  // Returns 1-5 based on status
 
   // Actions - Initialization
-  startCreation: (databaseId: string, formData: Partial<StudyCreationData>) => void;
+  startCreation: (databaseId: string, userAddress: string, formData: Partial<StudyCreationData>) => void;
   resumeCreation: (state: Partial<StudyCreationStore>) => void;
   cancelCreation: () => void;
 
@@ -115,6 +116,7 @@ const initialState = {
   formData: null,
   error: null,
   createdAt: null,
+  userAddress: null,
 };
 
 // ============================================
@@ -162,13 +164,14 @@ export const useStudyCreationStore = create<StudyCreationStore>()(
         },
 
         // Initialization
-        startCreation: (databaseId, formData) => {
+        startCreation: (databaseId, userAddress, formData) => {
           set({
             status: 'draft',
             ids: { databaseId, escrowId: null, registryId: null },
             formData,
             error: null,
             createdAt: Date.now(),
+            userAddress: userAddress.toLowerCase(), // Normalize to lowercase
           });
         },
 
@@ -262,6 +265,7 @@ export const useStudyCreationStore = create<StudyCreationStore>()(
           formData: state.formData,
           error: state.error,
           createdAt: state.createdAt,
+          userAddress: state.userAddress,
         }),
       }
     ),
@@ -281,3 +285,4 @@ export const selectEscrowId = (state: StudyCreationStore) => state.ids.escrowId;
 export const selectRegistryId = (state: StudyCreationStore) => state.ids.registryId;
 export const selectFormData = (state: StudyCreationStore) => state.formData;
 export const selectError = (state: StudyCreationStore) => state.error;
+export const selectUserAddress = (state: StudyCreationStore) => state.userAddress;

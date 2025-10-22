@@ -10,6 +10,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
+import { jsonResponse } from '@/lib/json-bigint';
 import { createStudyRepository } from '@/infrastructure/repositories';
 import { StudyStatus } from '@veritas/types';
 
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
       researcher: session.address,
     });
 
-    return NextResponse.json({
+    return jsonResponse({
       success: true,
       data: {
         studyId: study.id,

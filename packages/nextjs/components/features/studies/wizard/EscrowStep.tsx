@@ -97,9 +97,9 @@ export function EscrowStep({ onComplete, onBack, initialData, isResuming }: Escr
   const form = useForm<EscrowStepFormData>({
     resolver: zodResolver(escrowStepSchema),
     defaultValues: initialData || {
-      title: '',
-      description: '',
-      region: '',
+      title: 'Test Study - AI-Powered Health Monitoring',
+      description: 'A clinical trial to evaluate the effectiveness of AI-powered wearable devices in monitoring cardiovascular health markers. Participants will wear devices for 90 days.',
+      region: 'North America',
       // NOTE: No clinicAddress - decentralized model where clinics apply based on criteria
       patientPercentage: 3000, // 30%
       clinicPercentage: 7000, // 70%
