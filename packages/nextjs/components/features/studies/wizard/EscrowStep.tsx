@@ -25,7 +25,6 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAccount, useWriteContract, useReadContract } from 'wagmi';
-import { type Hex } from 'viem';
 import { waitForTransactionReceipt } from 'wagmi/actions';
 import { wagmiConfig } from '@/config/wagmi.config';
 
