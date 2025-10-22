@@ -222,6 +222,69 @@ To run the project locally, please ensure you have Node.js (v18+) and pnpm insta
     ```
     Load the `dist` folder in Chrome as an unpacked extension.
 
+## Deployed Contracts
+
+DASHI smart contracts are deployed and verified on multiple testnets:
+
+### Optimism Sepolia (Chain ID: 11155420)
+Explorer: https://sepolia-optimism.etherscan.io
+
+| Contract | Address | Explorer |
+|----------|---------|----------|
+| MockUSDC | `0x663b53A91f737996D6593cbDDeA772aa9f6D3203` | [View](https://sepolia-optimism.etherscan.io/address/0x663b53A91f737996D6593cbDDeA772aa9f6D3203) |
+| MockHumanPassport | `0x20719fbCe235e8C2521c37Dd64D8e9cbBD173F4b` | [View](https://sepolia-optimism.etherscan.io/address/0x20719fbCe235e8C2521c37Dd64D8e9cbBD173F4b) |
+| MedicalProviderRegistry | `0x1DdFC7907F20cB2219Bcc7D041B6fCE7b91509a9` | [View](https://sepolia-optimism.etherscan.io/address/0x1DdFC7907F20cB2219Bcc7D041B6fCE7b91509a9) |
+| HealthIdentitySBT | `0xfE51AEAe648A089d4c400A406d024BAa5FB02d47` | [View](https://sepolia-optimism.etherscan.io/address/0xfE51AEAe648A089d4c400A406d024BAa5FB02d47) |
+| PatientAccountFactory | `0xede89B4095cba12624c5918Ecc8DF35CF8079d79` | [View](https://sepolia-optimism.etherscan.io/address/0xede89B4095cba12624c5918Ecc8DF35CF8079d79) |
+| StudyParticipationSBT | `0x5993DfE463Dee2D1aCA06fDBAb3FC1b9EE57423F` | [View](https://sepolia-optimism.etherscan.io/address/0x5993DfE463Dee2D1aCA06fDBAb3FC1b9EE57423F) |
+| StudyEnrollmentData | `0x809a3D8F59934350f62cc69915a0c3be93c06687` | [View](https://sepolia-optimism.etherscan.io/address/0x809a3D8F59934350f62cc69915a0c3be93c06687) |
+| EligibilityCodeVerifier | `0xfc7E63bC47dde35a849dD10A942DCb10C8318845` | [View](https://sepolia-optimism.etherscan.io/address/0xfc7E63bC47dde35a849dD10A942DCb10C8318845) |
+| StudyRegistry | `0xFf61e748c483b60D2be192F3C0502122458C7529` | [View](https://sepolia-optimism.etherscan.io/address/0xFf61e748c483b60D2be192F3C0502122458C7529) |
+| ResearchFundingEscrow | `0xEDf1D1Ee5D0D4E7f022E7db0746fF7b942b91FBD` | [View](https://sepolia-optimism.etherscan.io/address/0xEDf1D1Ee5D0D4E7f022E7db0746fF7b942b91FBD) |
+| CommitmentVaultFactory | `0x574b30123c2dD4aC47c74a529B3a089b41F91fbe` | [View](https://sepolia-optimism.etherscan.io/address/0x574b30123c2dD4aC47c74a529B3a089b41F91fbe) |
+| StudyAccessNFT | `0x3154d0aD15CA81a72e1E4c8945b0532c4193a9BF` | [View](https://sepolia-optimism.etherscan.io/address/0x3154d0aD15CA81a72e1E4c8945b0532c4193a9BF) |
+| ComplianceScore | `0xCfc4B6199D8a683238d1D63be884bB6FB87f7cD7` | [View](https://sepolia-optimism.etherscan.io/address/0xCfc4B6199D8a683238d1D63be884bB6FB87f7cD7) |
+
+### Celo Sepolia (Chain ID: 11142220)
+Explorer: https://celo-sepolia.blockscout.com
+
+| Contract | Address | Explorer |
+|----------|---------|----------|
+| MockUSDC | `0xeBB25B01faEe3CAa2E6E3f9d71Dc65CC667aba7f` | [View](https://celo-sepolia.blockscout.com/address/0xeBB25B01faEe3CAa2E6E3f9d71Dc65CC667aba7f) |
+| MockHumanPassport | `0x0540017f66790FdaaDFE2c84b50935012bCA3B5e` | [View](https://celo-sepolia.blockscout.com/address/0x0540017f66790FdaaDFE2c84b50935012bCA3B5e) |
+| MedicalProviderRegistry | `0x4b522F9B0a5A16A26b909a4F62220a5e71c91adB` | [View](https://celo-sepolia.blockscout.com/address/0x4b522F9B0a5A16A26b909a4F62220a5e71c91adB) |
+| HealthIdentitySBT | `0xf968E708a00f78729Dcf1c46325FB215bF3927f6` | [View](https://celo-sepolia.blockscout.com/address/0xf968E708a00f78729Dcf1c46325FB215bF3927f6) |
+| PatientAccountFactory | `0x68cd4591a0309474056E8c27F61071E610392917` | [View](https://celo-sepolia.blockscout.com/address/0x68cd4591a0309474056E8c27F61071E610392917) |
+| StudyParticipationSBT | `0x2DE8f450ed6745bBf73210B3fcB05982CD9b7A1e` | [View](https://celo-sepolia.blockscout.com/address/0x2DE8f450ed6745bBf73210B3fcB05982CD9b7A1e) |
+| StudyEnrollmentData | `0xDD01F974dA09458b7cCFc4B9B976d90A38Ba8a83` | [View](https://celo-sepolia.blockscout.com/address/0xDD01F974dA09458b7cCFc4B9B976d90A38Ba8a83) |
+| EligibilityCodeVerifier | `0xe1D4C921f5eFFaDB2A97452e805302ADb8e315C4` | [View](https://celo-sepolia.blockscout.com/address/0xe1D4C921f5eFFaDB2A97452e805302ADb8e315C4) |
+| StudyRegistry | `0x129289611b05e79eCdAE2a89aFC8d0586c081Ca6` | [View](https://celo-sepolia.blockscout.com/address/0x129289611b05e79eCdAE2a89aFC8d0586c081Ca6) |
+| ResearchFundingEscrow | `0x2E5B3b417087f1c19Ff6B804baEaA6CB8C7561fB` | [View](https://celo-sepolia.blockscout.com/address/0x2E5B3b417087f1c19Ff6B804baEaA6CB8C7561fB) |
+| CommitmentVaultFactory | `0xF9c01EB82F2f60d59eD0Ad8C3613d79d642Ea1D2` | [View](https://celo-sepolia.blockscout.com/address/0xF9c01EB82F2f60d59eD0Ad8C3613d79d642Ea1D2) |
+| StudyAccessNFT | `0xAD68036898fc4209b061361426171aD13eFfAcf3` | [View](https://celo-sepolia.blockscout.com/address/0xAD68036898fc4209b061361426171aD13eFfAcf3) |
+| ComplianceScore | `0x54b2Dc133cC10dCe7628eEe2101F31Ed6AD82b06` | [View](https://celo-sepolia.blockscout.com/address/0x54b2Dc133cC10dCe7628eEe2101F31Ed6AD82b06) |
+
+### Celo Alfajores (Chain ID: 44787)
+Explorer: https://celo-alfajores.blockscout.com
+
+| Contract | Address | Explorer |
+|----------|---------|----------|
+| MockUSDC | `0xf968E708a00f78729Dcf1c46325FB215bF3927f6` | [View](https://celo-alfajores.blockscout.com/address/0xf968E708a00f78729Dcf1c46325FB215bF3927f6) |
+| MockHumanPassport | `0x4b522F9B0a5A16A26b909a4F62220a5e71c91adB` | [View](https://celo-alfajores.blockscout.com/address/0x4b522F9B0a5A16A26b909a4F62220a5e71c91adB) |
+| MedicalProviderRegistry | `0x68cd4591a0309474056E8c27F61071E610392917` | [View](https://celo-alfajores.blockscout.com/address/0x68cd4591a0309474056E8c27F61071E610392917) |
+| HealthIdentitySBT | `0x2DE8f450ed6745bBf73210B3fcB05982CD9b7A1e` | [View](https://celo-alfajores.blockscout.com/address/0x2DE8f450ed6745bBf73210B3fcB05982CD9b7A1e) |
+| PatientAccountFactory | `0xDD01F974dA09458b7cCFc4B9B976d90A38Ba8a83` | [View](https://celo-alfajores.blockscout.com/address/0xDD01F974dA09458b7cCFc4B9B976d90A38Ba8a83) |
+| StudyParticipationSBT | `0xe1D4C921f5eFFaDB2A97452e805302ADb8e315C4` | [View](https://celo-alfajores.blockscout.com/address/0xe1D4C921f5eFFaDB2A97452e805302ADb8e315C4) |
+| StudyEnrollmentData | `0x129289611b05e79eCdAE2a89aFC8d0586c081Ca6` | [View](https://celo-alfajores.blockscout.com/address/0x129289611b05e79eCdAE2a89aFC8d0586c081Ca6) |
+| EligibilityCodeVerifier | `0x2E5B3b417087f1c19Ff6B804baEaA6CB8C7561fB` | [View](https://celo-alfajores.blockscout.com/address/0x2E5B3b417087f1c19Ff6B804baEaA6CB8C7561fB) |
+| StudyRegistry | `0xF9c01EB82F2f60d59eD0Ad8C3613d79d642Ea1D2` | [View](https://celo-alfajores.blockscout.com/address/0xF9c01EB82F2f60d59eD0Ad8C3613d79d642Ea1D2) |
+| ResearchFundingEscrow | `0xAD68036898fc4209b061361426171aD13eFfAcf3` | [View](https://celo-alfajores.blockscout.com/address/0xAD68036898fc4209b061361426171aD13eFfAcf3) |
+| CommitmentVaultFactory | `0x54b2Dc133cC10dCe7628eEe2101F31Ed6AD82b06` | [View](https://celo-alfajores.blockscout.com/address/0x54b2Dc133cC10dCe7628eEe2101F31Ed6AD82b06) |
+| StudyAccessNFT | `0x546992ed4BeF8Db89B5343feaDBCEf24b9E2B2b8` | [View](https://celo-alfajores.blockscout.com/address/0x546992ed4BeF8Db89B5343feaDBCEf24b9E2B2b8) |
+| ComplianceScore | `0x326335137a685D55410537aaACF4dBF249B053C7` | [View](https://celo-alfajores.blockscout.com/address/0x326335137a685D55410537aaACF4dBF249B053C7) |
+
+> **Note**: All contracts are verified on their respective block explorers. Click the "View" links to see the verified source code and interact with the contracts.
+
 ## Future Roadmap
 
 ### Phase 1: MVP (Current)
