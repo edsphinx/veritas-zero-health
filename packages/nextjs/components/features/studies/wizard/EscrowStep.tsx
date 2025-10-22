@@ -13,7 +13,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   DollarSign,
   Building2,
@@ -297,13 +297,89 @@ export function EscrowStep({ onComplete, onBack, initialData, isResuming }: Escr
 
   const isExecuting = txStatus !== 'idle' && txStatus !== 'error';
 
+  // Helper to get status message based on current transaction status
+  const getStatusMessage = () => {
+    switch (txStatus) {
+      case 'checking_balance':
+        return 'Checking token balance...';
+      case 'checking_approval':
+        return 'Checking token approval...';
+      case 'approving':
+        return 'Approving token transfer...';
+      case 'building_tx':
+        return 'Building escrow transaction...';
+      case 'waiting_signature':
+        return 'Waiting for wallet signature...';
+      case 'confirming':
+        return 'Confirming transaction on blockchain...';
+      case 'indexing':
+        return 'Indexing data to database...';
+      case 'success':
+        return 'Escrow created successfully!';
+      default:
+        return 'Processing...';
+    }
+  };
+
   return (
-    <motion.div
-      variants={fadeUpVariants}
-      initial="hidden"
-      animate="visible"
-      transition={transitions.standard}
-    >
+    <>
+      {/* Transaction Progress Overlay */}
+      <AnimatePresence>
+        {isExecuting && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-md"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-card border border-border rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4"
+            >
+              <div className="text-center space-y-6">
+                {/* Progress Icon */}
+                <div className="flex justify-center">
+                  <div className="relative">
+                    <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
+                      {txStatus === 'success' ? (
+                        <CheckCircle2 className="h-10 w-10 text-success animate-bounce" />
+                      ) : (
+                        <Loader2 className="h-10 w-10 text-primary animate-spin" />
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Status Message */}
+                <div>
+                  <h3 className="text-xl font-bold mb-2">
+                    {txStatus === 'success' ? 'Transaction Complete!' : 'Creating Escrow...'}
+                  </h3>
+                  <p className="text-muted-foreground">{getStatusMessage()}</p>
+                </div>
+
+                {/* Info Message */}
+                <div className="pt-4 border-t border-border">
+                  <p className="text-sm text-muted-foreground">
+                    {txStatus === 'waiting_signature'
+                      ? 'Please confirm the transaction in your wallet'
+                      : 'Please wait, do not close this window...'}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <motion.div
+        variants={fadeUpVariants}
+        initial="hidden"
+        animate="visible"
+        transition={transitions.standard}
+      >
       <Card className="border-primary/20">
         <CardHeader>
           <div className="flex items-center gap-3">
@@ -686,5 +762,6 @@ export function EscrowStep({ onComplete, onBack, initialData, isResuming }: Escr
         </CardContent>
       </Card>
     </motion.div>
+    </>
   );
 }
