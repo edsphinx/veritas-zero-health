@@ -72,6 +72,7 @@ export function RegistryStep({
   const [txStatus, setTxStatus] = useState<TransactionStatus>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<`0x${string}` | undefined>();
+  const [hasProcessedReceipt, setHasProcessedReceipt] = useState(false); // Guard against re-execution
 
   // Wagmi hooks
   const { address: userAddress, isConnected } = useAccount();
@@ -96,9 +97,19 @@ export function RegistryStep({
   // Handle transaction confirmation
   useEffect(() => {
     async function handleConfirmation() {
-      if (isConfirmed && receipt && txHash) {
+      // Guard: Only process once per transaction
+      if (isConfirmed && receipt && txHash && !hasProcessedReceipt) {
+        setHasProcessedReceipt(true); // Set immediately to prevent re-execution
+
         try {
           const formData = form.getValues();
+
+          console.log('[RegistryStep] Processing receipt:', {
+            txHash,
+            databaseId,
+            escrowId: escrowId.toString(),
+            description: formData.description,
+          });
 
           // Step 3: Index the result (extract registryId from receipt)
           const indexResult = await indexStep.mutateAsync({
@@ -110,6 +121,8 @@ export function RegistryStep({
             // Save study metadata to DB (description will be saved)
             description: formData.description,
           });
+
+          console.log('[RegistryStep] Index result:', indexResult);
 
           toast.success('Study Published!', {
             description: `Registry ID: ${indexResult.registryId}`,
@@ -123,6 +136,7 @@ export function RegistryStep({
           }, 1500);
 
         } catch (error) {
+          console.error('[RegistryStep] Indexing error:', error);
           setTxStatus('error');
           const message = error instanceof Error ? error.message : 'Failed to index transaction';
           setErrorMessage(message);
@@ -135,7 +149,7 @@ export function RegistryStep({
     }
 
     handleConfirmation();
-  }, [isConfirmed, receipt, txHash, escrowId, databaseId, title, indexStep, form, onComplete]);
+  }, [isConfirmed, receipt, txHash, escrowId, databaseId, hasProcessedReceipt, indexStep, form, onComplete]);
 
   // Execute blockchain transaction with real wallet signing
   async function onSubmit(data: Omit<RegistryStepFormData, 'escrowId'>) {
