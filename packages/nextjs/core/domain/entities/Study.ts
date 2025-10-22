@@ -14,8 +14,8 @@ export type { Study, StudyStatus };
 // Helper type for creating new studies
 // Uses Prisma-compatible types for BigInt and Decimal fields
 export type CreateStudyData = {
-  registryId: number;
-  escrowId: number;
+  registryId: number | null; // Null until registry TX completes
+  escrowId: number | null; // Null until escrow TX completes
   title: string;
   description: string;
   researcherAddress: string;

@@ -220,8 +220,8 @@ export interface SponsorDeposit {
 export interface StudyDB {
   // Database identifiers
   id: string; // UUID from Prisma
-  registryId: number; // Study ID from StudyRegistry contract
-  escrowId: number; // Study ID from ResearchFundingEscrow contract (canonical)
+  registryId: number | null; // Study ID from StudyRegistry contract (null until registry TX completes)
+  escrowId: number | null; // Study ID from ResearchFundingEscrow contract (null until escrow TX completes)
 
   // Basic information
   title: string;
@@ -294,8 +294,8 @@ export interface StudyDB {
 export interface Study {
   // Database identifiers
   id: string; // UUID from Prisma
-  registryId: number; // Study ID from StudyRegistry contract
-  escrowId: number; // Study ID from ResearchFundingEscrow contract (canonical)
+  registryId: number | null; // Study ID from StudyRegistry contract (null until registry TX completes)
+  escrowId: number | null; // Study ID from ResearchFundingEscrow contract (null until escrow TX completes)
 
   // Basic information
   title: string;

@@ -225,8 +225,8 @@ model Study {
   id String @id @default(cuid())
 
   // Blockchain IDs (source of truth)
-  registryId Int @unique // ID from StudyRegistry contract
-  escrowId   Int @unique // ID from ResearchFundingEscrow contract
+  registryId Int? @unique // ID from StudyRegistry contract (null until registry TX completes)
+  escrowId   Int? @unique // ID from ResearchFundingEscrow contract (null until escrow TX completes)
 
   // Basic info (indexed from blockchain)
   title             String

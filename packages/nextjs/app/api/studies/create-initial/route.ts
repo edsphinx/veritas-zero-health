@@ -41,9 +41,9 @@ export async function POST(request: NextRequest) {
     const studyRepository = createStudyRepository();
 
     const study = await studyRepository.create({
-      // Temporary IDs (will be updated when transactions complete)
-      registryId: 0, // Placeholder
-      escrowId: 0, // Placeholder
+      // IDs will be set when blockchain transactions complete
+      registryId: null,
+      escrowId: null,
 
       // Basic info
       title: title || 'Untitled Study (Draft)',

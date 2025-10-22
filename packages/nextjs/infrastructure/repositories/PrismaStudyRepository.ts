@@ -126,8 +126,8 @@ export class PrismaStudyRepository implements IStudyRepository {
   async create(data: CreateStudyData): Promise<Study> {
     const prismaStudy = await this.prisma.study.create({
       data: {
-        registryId: Number(data.registryId),
-        escrowId: Number(data.escrowId),
+        registryId: data.registryId !== null ? Number(data.registryId) : null,
+        escrowId: data.escrowId !== null ? Number(data.escrowId) : null,
         title: data.title,
         description: data.description,
         researcherAddress: data.researcherAddress,
