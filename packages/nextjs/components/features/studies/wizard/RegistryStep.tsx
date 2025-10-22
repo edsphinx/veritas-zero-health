@@ -41,6 +41,7 @@ import { useBuildRegistryTx, useIndexStep } from '@/hooks/wizard';
 interface RegistryStepProps {
   escrowId: bigint;
   escrowTxHash: string;
+  databaseId: string; // Database UUID (for finding study in DB)
   title: string; // From Step 1 (global identifier)
   totalFunding: number; // From Step 1 (for auto-generating compensation description)
   maxParticipants: number; // From Step 1
@@ -59,6 +60,7 @@ type TransactionStatus = 'idle' | 'publishing' | 'success' | 'error';
 export function RegistryStep({
   escrowId,
   escrowTxHash,
+  databaseId,
   title,
   totalFunding,
   maxParticipants,
@@ -103,6 +105,7 @@ export function RegistryStep({
             step: 'registry',
             txHash: txHash,
             chainId: receipt.chainId,
+            databaseId, // Pass database ID to find the study
             escrowId: escrowId.toString(),
             // Save study metadata to DB (description will be saved)
             description: formData.description,
@@ -132,7 +135,7 @@ export function RegistryStep({
     }
 
     handleConfirmation();
-  }, [isConfirmed, receipt, txHash, escrowId, title, indexStep, form, onComplete]);
+  }, [isConfirmed, receipt, txHash, escrowId, databaseId, title, indexStep, form, onComplete]);
 
   // Execute blockchain transaction with real wallet signing
   async function onSubmit(data: Omit<RegistryStepFormData, 'escrowId'>) {

@@ -411,10 +411,11 @@ export function StudyCreationWizard() {
         )}
 
         {/* Step 2: Registry */}
-        {(status === 'escrow_done' || status === 'registry') && ids.escrowId && txHashes.escrow && formData?.step1 && (
+        {(status === 'escrow_done' || status === 'registry') && ids.escrowId && ids.databaseId && txHashes.escrow && formData?.step1 && (
           <RegistryStep
             escrowId={ids.escrowId}
             escrowTxHash={txHashes.escrow}
+            databaseId={ids.databaseId}
             title={formData.step1.title}
             totalFunding={formData.step1.totalFunding}
             maxParticipants={formData.step1.maxParticipants}

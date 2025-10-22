@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
           blockNumber: receipt.blockNumber.toString(),
           // Include form data from request
           title: body.title,
-          description: body.description,
+          // NOTE: description removed - now saved in Registry step
           totalFunding: body.totalFunding,
           maxParticipants: body.maxParticipants,
         };
