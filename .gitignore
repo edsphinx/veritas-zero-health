@@ -34,6 +34,13 @@ package-lock.json
 
 target/
 
+# Markdown files (except COMMITS.md which tracks git history)
 *.md
+COMMITS.md
+TODO.md
+
+# Log files from verification scripts
+*.log
 
 bk_nextjs/
+packages/nextjs/TODO.md

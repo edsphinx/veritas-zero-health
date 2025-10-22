@@ -21,12 +21,12 @@ export interface TokenConfig {
 export const PAYMENT_TOKENS: Record<string, TokenConfig> = {
   USDC: {
     symbol: 'USDC',
-    name: 'USD Coin',
+    name: 'Mock USDC (Testnet)',
     decimals: 6,
     addresses: {
-      11155420: '0x5fd84259d66Cd46123540766Be93DFE6D43130D7', // Optimism Sepolia (example)
-      10: '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85', // Optimism Mainnet
-      8453: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // Base Mainnet
+      11155420: '0x29c97a7d15a6eb2c0c6efffc27577991b57b6e67', // MockUSDC deployed on Optimism Sepolia
+      10: '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85', // Optimism Mainnet (Real USDC)
+      8453: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // Base Mainnet (Real USDC)
     },
   },
   USDT: {

@@ -29,10 +29,10 @@ export const escrowStepSchema = z.object({
     .max(2000, 'Description must be less than 2000 characters'),
   region: z.string().min(2, 'Region must be specified'),
 
-  // Provider & Compensation (MVP: single clinic)
-  clinicAddress: z
-    .string()
-    .regex(/^0x[a-fA-F0-9]{40}$/, 'Invalid Ethereum address'),
+  // Provider & Compensation
+  // NOTE: Clinic addresses are NOT pre-assigned in decentralized model
+  // Clinics will apply to studies based on eligibility criteria
+  // Future: Add maxClinics field to limit how many can verify (requires smart contract update)
   patientPercentage: z
     .number()
     .int()

@@ -237,8 +237,8 @@ model Study {
   status StudyStatus
 
   // Funding (using Decimal for precise calculations)
-  totalFunding     Decimal @default(0) @db.Decimal(20, 2) // Total funding in USDC
-  remainingFunding Decimal @default(0) @db.Decimal(20, 2) // Remaining funds not yet paid
+  totalFunding     Decimal @default(0) @db.Decimal(20, 2) // Total funding deposited (from blockchain)
+  remainingFunding Decimal @default(0) @db.Decimal(20, 2) // Remaining funds not yet paid (from blockchain)
 
   // Participants & Providers
   sponsor              String   // Primary sponsor address
