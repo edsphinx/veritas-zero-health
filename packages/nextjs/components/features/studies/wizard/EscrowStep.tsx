@@ -24,8 +24,10 @@ import {
   Coins,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi';
+import { useAccount, useWriteContract, useReadContract } from 'wagmi';
 import { type Hex } from 'viem';
+import { waitForTransactionReceipt } from 'wagmi/actions';
+import { wagmiConfig } from '@/config/wagmi.config';
 
 import { escrowStepSchema, type EscrowStepFormData } from '@/lib/validations';
 import { fadeUpVariants, transitions } from '@/lib/animations';
@@ -83,16 +85,6 @@ export function EscrowStep({ onComplete, onBack, initialData, isResuming }: Escr
   const buildEscrowTx = useBuildEscrowTx();
   const indexStep = useIndexStep();
   const { writeContractAsync } = useWriteContract();
-
-  // Wait for approval confirmation
-  const { isLoading: isApprovingConfirming } = useWaitForTransactionReceipt({
-    hash: approvalTxHash || undefined,
-  });
-
-  // Wait for escrow TX confirmation
-  const { data: escrowReceipt } = useWaitForTransactionReceipt({
-    hash: escrowTxHash || undefined,
-  });
 
   const form = useForm<EscrowStepFormData>({
     resolver: zodResolver(escrowStepSchema),
@@ -208,12 +200,10 @@ export function EscrowStep({ onComplete, onBack, initialData, isResuming }: Escr
         toast.dismiss(approvalActionToast);
         const confirmToast = toast.loading('Waiting for approval confirmation...');
 
-        // Poll until approval confirms
-        let attempts = 0;
-        while (isApprovingConfirming && attempts < 60) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          attempts++;
-        }
+        await waitForTransactionReceipt(wagmiConfig, {
+          hash: approvalHash,
+          chainId,
+        });
 
         toast.dismiss(confirmToast);
         toast.success(`${selectedToken} Approved`, {
@@ -263,19 +253,13 @@ export function EscrowStep({ onComplete, onBack, initialData, isResuming }: Escr
       setTxStatus('confirming');
       const confirmToast = toast.loading('Waiting for confirmation...');
 
-      // Poll until TX confirms
-      let attempts = 0;
-      while (!escrowReceipt && attempts < 60) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        attempts++;
-      }
-
-      if (!escrowReceipt) {
-        toast.dismiss(confirmToast);
-        throw new Error('Transaction confirmation timeout');
-      }
+      const receipt = await waitForTransactionReceipt(wagmiConfig, {
+        hash,
+        chainId,
+      });
 
       toast.dismiss(confirmToast);
+      console.log('[EscrowStep] Transaction confirmed:', receipt);
 
       // Step 6: Index the result
       setTxStatus('indexing');
