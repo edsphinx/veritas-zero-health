@@ -78,8 +78,6 @@ export function EscrowStep({ onComplete, onBack, initialData, isResuming }: Escr
   const [txStatus, setTxStatus] = useState<TransactionStatus>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selectedToken, setSelectedToken] = useState<string>('USDC');
-  const [approvalTxHash, setApprovalTxHash] = useState<Hex | null>(null);
-  const [escrowTxHash, setEscrowTxHash] = useState<Hex | null>(null);
 
   // Hooks
   const buildEscrowTx = useBuildEscrowTx();
@@ -194,8 +192,6 @@ export function EscrowStep({ onComplete, onBack, initialData, isResuming }: Escr
           chainId,
         });
 
-        setApprovalTxHash(approvalHash);
-
         // Wait for approval confirmation
         toast.dismiss(approvalActionToast);
         const confirmToast = toast.loading('Waiting for approval confirmation...');
@@ -246,7 +242,6 @@ export function EscrowStep({ onComplete, onBack, initialData, isResuming }: Escr
         chainId: buildResult.chainId,
       });
 
-      setEscrowTxHash(hash);
       toast.dismiss(signToast);
 
       // Step 5: Wait for confirmation
