@@ -273,8 +273,13 @@ export const useStudyCreationStore = create<StudyCreationStore>()(
         })),
         partialize: (state) => ({
           // Only persist necessary fields (exclude functions)
+          // Convert BigInts to strings to avoid serialization errors
           status: state.status,
-          ids: state.ids,
+          ids: {
+            databaseId: state.ids.databaseId,
+            escrowId: state.ids.escrowId ? state.ids.escrowId.toString() : null,
+            registryId: state.ids.registryId ? state.ids.registryId.toString() : null,
+          },
           txHashes: state.txHashes,
           formData: state.formData,
           error: state.error,
