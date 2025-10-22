@@ -48,6 +48,7 @@ import { getDefaultChainId } from '@/infrastructure/blockchain/blockchain-client
 // ============================================
 
 interface EscrowStepProps {
+  databaseId: string;
   onComplete: (data: EscrowStepFormData, txHash: string, escrowId: bigint) => void;
   onBack?: () => void;
   initialData?: Partial<EscrowStepFormData>;
@@ -70,7 +71,7 @@ type TransactionStatus =
 // Component
 // ============================================
 
-export function EscrowStep({ onComplete, onBack, initialData, isResuming }: EscrowStepProps) {
+export function EscrowStep({ databaseId, onComplete, onBack, initialData, isResuming }: EscrowStepProps) {
   const { address: userAddress, chainId: userChainId } = useAccount();
   const chainId = userChainId || getDefaultChainId();
 
@@ -263,6 +264,7 @@ export function EscrowStep({ onComplete, onBack, initialData, isResuming }: Escr
         step: 'escrow',
         txHash: hash,
         chainId,
+        databaseId,
         title: data.title,
         description: data.description,
         totalFunding: data.totalFunding,

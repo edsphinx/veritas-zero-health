@@ -398,8 +398,9 @@ export function StudyCreationWizard() {
       {/* Step Content */}
       <div className="min-h-[600px]">
         {/* Step 1: Escrow */}
-        {(status === 'draft' || status === 'escrow') && (
+        {(status === 'draft' || status === 'escrow') && ids.databaseId && (
           <EscrowStep
+            databaseId={ids.databaseId}
             onComplete={handleEscrowComplete}
             isResuming={status === 'escrow'}
             initialData={formData?.step1}
