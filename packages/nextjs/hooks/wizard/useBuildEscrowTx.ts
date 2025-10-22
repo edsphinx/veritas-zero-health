@@ -12,7 +12,7 @@ import type { Address } from 'viem';
 
 interface BuildEscrowTxParams {
   title: string;
-  description: string;
+  // NOTE: description removed - moved to Registry step (Step 2)
   totalFunding: number;
   maxParticipants: number;
   certifiedProviders?: Address[];

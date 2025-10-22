@@ -165,7 +165,7 @@ export function StudyCreationWizard() {
   ) => {
     try {
       // Save to Zustand (persists to localStorage)
-      completeEscrowTx(txHash, escrowId);
+      completeEscrowTx(txHash, escrowId, data);
 
       // Index to database via API
       const response = await fetch('/api/studies/wizard/index-step', {
@@ -175,6 +175,9 @@ export function StudyCreationWizard() {
           step: 'escrow',
           txHash,
           totalFunding: data.totalFunding,
+          title: data.title,
+          // NOTE: description removed - moved to Registry step
+          maxParticipants: data.maxParticipants,
           // Pass database ID so API can find the study
           databaseId: ids.databaseId,
         }),
@@ -362,7 +365,7 @@ export function StudyCreationWizard() {
             <FlaskConical className="h-8 w-8 text-primary" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold">Create New Clinical Trial</h1>
+            <h1 className="text-3xl font-bold">Create New Study</h1>
             <p className="text-muted-foreground">
               Multi-step wizard with blockchain checkpointing
             </p>
@@ -412,8 +415,10 @@ export function StudyCreationWizard() {
           <RegistryStep
             escrowId={ids.escrowId}
             escrowTxHash={txHashes.escrow}
-            title={formData.step1.title || ''}
-            description={formData.step1.description || ''}
+            title={formData.step1.title}
+            totalFunding={formData.step1.totalFunding}
+            maxParticipants={formData.step1.maxParticipants}
+            paymentPerParticipant={formData.step1.paymentPerParticipant}
             onComplete={handleRegistryComplete}
             onBack={handleBack}
             initialData={formData?.step2}

@@ -41,8 +41,10 @@ import { useBuildRegistryTx, useIndexStep } from '@/hooks/wizard';
 interface RegistryStepProps {
   escrowId: bigint;
   escrowTxHash: string;
-  title: string;
-  description: string;
+  title: string; // From Step 1 (global identifier)
+  totalFunding: number; // From Step 1 (for auto-generating compensation description)
+  maxParticipants: number; // From Step 1
+  paymentPerParticipant: number; // From Step 1
   onComplete: (data: Omit<RegistryStepFormData, 'escrowId'>, txHash: string, registryId: bigint) => void;
   onBack: () => void;
   initialData?: Partial<Omit<RegistryStepFormData, 'escrowId'>>;
@@ -58,7 +60,9 @@ export function RegistryStep({
   escrowId,
   escrowTxHash,
   title,
-  description,
+  totalFunding,
+  maxParticipants,
+  paymentPerParticipant,
   onComplete,
   onBack,
   initialData,
@@ -81,7 +85,8 @@ export function RegistryStep({
   const form = useForm<Omit<RegistryStepFormData, 'escrowId'>>({
     resolver: zodResolver(registryStepSchema.omit({ escrowId: true })),
     defaultValues: initialData || {
-      compensationDescription: '',
+      description: 'A clinical trial to evaluate the effectiveness of AI-powered wearable devices in monitoring cardiovascular health markers.',
+      region: 'North America',
       criteriaURI: undefined,
     },
   });
@@ -91,14 +96,16 @@ export function RegistryStep({
     async function handleConfirmation() {
       if (isConfirmed && receipt && txHash) {
         try {
+          const formData = form.getValues();
+
           // Step 3: Index the result (extract registryId from receipt)
           const indexResult = await indexStep.mutateAsync({
             step: 'registry',
             txHash: txHash,
             chainId: receipt.chainId,
             escrowId: escrowId.toString(),
-            title,
-            description,
+            // Save study metadata to DB (description will be saved)
+            description: formData.description,
           });
 
           toast.success('Study Published!', {
@@ -108,7 +115,6 @@ export function RegistryStep({
 
           setTxStatus('success');
 
-          const formData = form.getValues();
           setTimeout(() => {
             onComplete(formData, txHash, BigInt(indexResult.registryId!));
           }, 1500);
@@ -126,7 +132,7 @@ export function RegistryStep({
     }
 
     handleConfirmation();
-  }, [isConfirmed, receipt, txHash, escrowId, title, description, indexStep, form, onComplete]);
+  }, [isConfirmed, receipt, txHash, escrowId, title, indexStep, form, onComplete]);
 
   // Execute blockchain transaction with real wallet signing
   async function onSubmit(data: Omit<RegistryStepFormData, 'escrowId'>) {
@@ -146,10 +152,15 @@ export function RegistryStep({
 
     try {
       // Step 1: Build unsigned transaction via API
+      // Note: compensation description will be AUTO-GENERATED in the API
       const buildResult = await buildRegistryTx.mutateAsync({
         escrowId: escrowId.toString(),
-        region: 'Global', // TODO: Make this configurable
-        compensation: data.compensationDescription,
+        region: data.region,
+        description: data.description,
+        // Pass funding params for auto-generating compensation description
+        totalFunding,
+        maxParticipants,
+        paymentPerParticipant,
         metadataURI: data.criteriaURI,
       });
 
@@ -224,32 +235,59 @@ export function RegistryStep({
 
           {/* Study Summary (Read-Only) */}
           <div className="space-y-2 p-4 bg-muted/50 rounded-lg">
-            <h4 className="font-semibold">Study Details</h4>
+            <h4 className="font-semibold">From Step 1</h4>
             <div className="space-y-1 text-sm">
               <div><strong>Title:</strong> {title}</div>
-              <div className="line-clamp-2"><strong>Description:</strong> {description}</div>
+              <div><strong>Total Funding:</strong> ${totalFunding.toLocaleString()} USDC</div>
+              <div><strong>Max Participants:</strong> {maxParticipants}</div>
+              <div><strong>Payment per Participant:</strong> ${paymentPerParticipant} USDC</div>
+            </div>
+            <div className="text-xs text-muted-foreground mt-2 p-2 bg-background rounded border border-border">
+              ℹ️ <strong>Compensation description</strong> will be auto-generated: &quot;Participants will receive ${paymentPerParticipant} USDC total for completing the study appointments&quot;
             </div>
           </div>
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {/* Public Compensation Description */}
+              {/* Study Description */}
               <FormField
                 control={form.control}
-                name="compensationDescription"
+                name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Public Compensation Description *</FormLabel>
+                    <FormLabel>Study Description *</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="e.g., Participants receive $250 USDC distributed across 5 milestones, with clinic receiving compensation for verification services..."
-                        rows={3}
+                        placeholder="Provide a detailed description of the study objectives, methodology, and expected outcomes..."
+                        rows={4}
                         {...field}
                         disabled={isExecuting}
                       />
                     </FormControl>
                     <FormDescription>
-                      This description will be visible to potential participants
+                      General description of what the study is about (will be stored in database)
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Region */}
+              <FormField
+                control={form.control}
+                name="region"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Region *</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g., North America, Europe, Global"
+                        {...field}
+                        disabled={isExecuting}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Geographic region where the study will be conducted
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

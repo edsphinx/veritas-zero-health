@@ -17,7 +17,7 @@ interface IndexStepParams {
   escrowId?: string;
   registryId?: string;
   title?: string;
-  description?: string;
+  description?: string; // Only for registry step
   totalFunding?: number;
 }
 

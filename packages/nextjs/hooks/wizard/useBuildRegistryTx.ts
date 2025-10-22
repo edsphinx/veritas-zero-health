@@ -12,8 +12,12 @@ import type { Address } from 'viem';
 
 interface BuildRegistryTxParams {
   escrowId: string;
+  description: string; // Study description (what the study is about)
   region: string;
-  compensation: string;
+  // Funding params for auto-generating compensation description
+  totalFunding: number;
+  maxParticipants: number;
+  paymentPerParticipant: number;
   metadataURI?: string;
 }
 

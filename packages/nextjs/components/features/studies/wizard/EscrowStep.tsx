@@ -16,7 +16,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   DollarSign,
-  Building2,
   CheckCircle2,
   AlertCircle,
   Loader2,
@@ -34,7 +33,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -88,8 +86,6 @@ export function EscrowStep({ databaseId, onComplete, onBack, initialData, isResu
     resolver: zodResolver(escrowStepSchema),
     defaultValues: initialData || {
       title: 'Test Study - AI-Powered Health Monitoring',
-      description: 'A clinical trial to evaluate the effectiveness of AI-powered wearable devices in monitoring cardiovascular health markers. Participants will wear devices for 90 days.',
-      region: 'North America',
       // NOTE: No clinicAddress - decentralized model where clinics apply based on criteria
       patientPercentage: 3000, // 30%
       clinicPercentage: 7000, // 70%
@@ -219,7 +215,7 @@ export function EscrowStep({ databaseId, onComplete, onBack, initialData, isResu
 
       const buildResult = await buildEscrowTx.mutateAsync({
         title: data.title,
-        description: data.description,
+        // NOTE: description removed - moved to Registry step
         totalFunding: data.totalFunding,
         maxParticipants: data.maxParticipants,
         // NOTE: certifiedProviders removed - clinics apply to studies (decentralized model)
@@ -266,7 +262,7 @@ export function EscrowStep({ databaseId, onComplete, onBack, initialData, isResu
         chainId,
         databaseId,
         title: data.title,
-        description: data.description,
+        // NOTE: description removed - will be saved in Registry step
         totalFunding: data.totalFunding,
       });
 
@@ -420,13 +416,8 @@ export function EscrowStep({ databaseId, onComplete, onBack, initialData, isResu
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {/* Basic Information Section */}
+              {/* Study Title */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <Building2 className="h-5 w-5 text-primary" />
-                  Study Information
-                </h3>
-
                 <FormField
                   control={form.control}
                   name="title"
@@ -441,50 +432,7 @@ export function EscrowStep({ databaseId, onComplete, onBack, initialData, isResu
                         />
                       </FormControl>
                       <FormDescription>
-                        A descriptive title for your clinical trial (10-200 characters)
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description *</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Provide a detailed description of the study objectives, methodology, and expected outcomes..."
-                          rows={4}
-                          {...field}
-                          disabled={isExecuting}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Comprehensive study description (50-2000 characters)
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="region"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Region *</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="e.g., North America, Europe, Global"
-                          {...field}
-                          disabled={isExecuting}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Geographic region where the study will be conducted
+                        Global identifier for your study (used across all steps)
                       </FormDescription>
                       <FormMessage />
                     </FormItem>

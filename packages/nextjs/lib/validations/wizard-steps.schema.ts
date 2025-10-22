@@ -12,24 +12,21 @@ import { z } from 'zod';
 // ============================================
 
 /**
- * Step 1: Data needed to create escrow contract
- * - Study basics (title, description, region)
+ * Step 1: Data needed to create escrow contract (FINANCIAL INFO)
+ * - Study title (global identifier)
  * - Provider & compensation splits
  * - Funding parameters
+ *
+ * NOTE: Description and Region moved to Registry (Step 2) where they belong conceptually
  */
 export const escrowStepSchema = z.object({
-  // Basic Info
+  // Global identifier
   title: z
     .string()
     .min(10, 'Title must be at least 10 characters')
     .max(200, 'Title must be less than 200 characters'),
-  description: z
-    .string()
-    .min(50, 'Description must be at least 50 characters')
-    .max(2000, 'Description must be less than 2000 characters'),
-  region: z.string().min(2, 'Region must be specified'),
 
-  // Provider & Compensation
+  // Provider & Compensation Splits
   // NOTE: Clinic addresses are NOT pre-assigned in decentralized model
   // Clinics will apply to studies based on eligibility criteria
   // Future: Add maxClinics field to limit how many can verify (requires smart contract update)
@@ -44,7 +41,7 @@ export const escrowStepSchema = z.object({
     .min(0, 'Clinic percentage must be at least 0')
     .max(10000, 'Clinic percentage cannot exceed 100%'),
 
-  // Funding
+  // Funding Parameters
   totalFunding: z
     .number()
     .positive('Total funding must be positive')
@@ -79,19 +76,30 @@ export const escrowStepSchema = z.object({
 // ============================================
 
 /**
- * Step 2: Data needed to publish study to registry
- * - Public-facing information
- * - Metadata URI
+ * Step 2: Data needed to publish study to registry (STUDY METADATA)
+ * - Study description (what the study is about)
+ * - Region (where it takes place)
+ * - Compensation description (AUTO-GENERATED from funding params)
+ * - Metadata URI (IPFS/Arweave)
+ *
+ * NOTE: Title comes from Step 1 (global identifier used everywhere)
+ * NOTE: Compensation description is AUTO-GENERATED, not user input
  */
 export const registryStepSchema = z.object({
   // Inherited from Step 1 (read-only)
   escrowId: z.bigint(),
 
-  // Additional registry fields
-  compensationDescription: z
+  // Study metadata fields
+  description: z
     .string()
-    .min(10, 'Compensation description required')
-    .max(500, 'Compensation description too long'),
+    .min(50, 'Description must be at least 50 characters')
+    .max(2000, 'Description must be less than 2000 characters'),
+  region: z
+    .string()
+    .min(2, 'Region must be specified')
+    .max(100, 'Region name too long'),
+
+  // Metadata URI (IPFS/Arweave) - Optional for MVP
   criteriaURI: z.string().url('Must be a valid URI').optional(),
 });
 

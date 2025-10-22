@@ -23,6 +23,7 @@ interface IndexStepRequest {
   title?: string;
   description?: string;
   totalFunding?: number;
+  maxParticipants?: number;
 }
 
 export async function POST(request: NextRequest) {
@@ -82,6 +83,11 @@ export async function POST(request: NextRequest) {
           escrowId,
           txHash: body.txHash,
           blockNumber: receipt.blockNumber.toString(),
+          // Include form data from request
+          title: body.title,
+          description: body.description,
+          totalFunding: body.totalFunding,
+          maxParticipants: body.maxParticipants,
         };
         break;
       }

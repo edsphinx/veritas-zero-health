@@ -77,7 +77,7 @@ interface StudyCreationStore {
 
   // Actions - Transaction Updates
   startEscrowTx: () => void;
-  completeEscrowTx: (txHash: string, escrowId: bigint) => void;
+  completeEscrowTx: (txHash: string, escrowId: bigint, formData?: StudyCreationData['step1']) => void;
 
   startRegistryTx: () => void;
   completeRegistryTx: (txHash: string, registryId: bigint) => void;
@@ -189,11 +189,12 @@ export const useStudyCreationStore = create<StudyCreationStore>()(
           set({ status: 'escrow', error: null });
         },
 
-        completeEscrowTx: (txHash, escrowId) => {
+        completeEscrowTx: (txHash, escrowId, formData) => {
           set((state) => ({
             status: 'escrow_done',
             ids: { ...state.ids, escrowId },
             txHashes: { ...state.txHashes, escrow: txHash },
+            formData: formData ? { ...state.formData, step1: formData } : state.formData,
             error: null,
           }));
         },

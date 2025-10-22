@@ -2,7 +2,9 @@
  * POST /api/studies/wizard/build-registry-tx
  *
  * Step 2: Build registry publication transaction (does NOT execute)
- * Returns unsigned transaction data for user to sign with their wallet
+ * - AUTO-GENERATES compensation description from funding parameters
+ * - Accepts study description and region (for DB storage)
+ * - Returns unsigned transaction data for user to sign with their wallet
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -14,7 +16,11 @@ import { getStudyRegistryContract } from '@/infrastructure/contracts/study-contr
 interface BuildRegistryTxRequest {
   escrowId: string; // Sent as string, converted to bigint
   region: string;
-  compensation: string;
+  description: string; // Study description (stored in DB, not blockchain)
+  // Funding params (for auto-generating compensation description)
+  totalFunding: number;
+  maxParticipants: number;
+  paymentPerParticipant: number;
   metadataURI?: string;
 }
 
@@ -46,6 +52,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!body.description || body.description.trim().length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'Study description is required' },
+        { status: 400 }
+      );
+    }
+
     const chainId = getDefaultChainId();
     const registryContract = getStudyRegistryContract(chainId);
 
@@ -56,6 +69,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // AUTO-GENERATE compensation description from funding parameters
+    const compensationDescription = `Participants will receive ${body.paymentPerParticipant} USDC total for completing the study appointments (${body.maxParticipants} participants max, ${body.totalFunding} USDC total funding)`;
+
     const metadataURI = body.metadataURI || `ipfs://metadata/${body.escrowId}`;
 
     // Build transaction data (unsigned)
@@ -65,7 +81,7 @@ export async function POST(request: NextRequest) {
       functionName: 'publishStudy',
       args: [
         body.region,
-        body.compensation,
+        compensationDescription, // AUTO-GENERATED
         metadataURI,
       ],
       chainId,
@@ -75,6 +91,8 @@ export async function POST(request: NextRequest) {
       user: session.address,
       escrowId: body.escrowId,
       region: body.region,
+      compensationDescription,
+      note: 'Compensation description auto-generated from funding params',
     });
 
     return jsonResponse({

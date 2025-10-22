@@ -14,7 +14,8 @@ import { type Address } from 'viem';
 
 interface BuildEscrowTxRequest {
   title: string;
-  description: string;
+  // NOTE: description removed - moved to Registry step
+  // Contract still requires it, so we'll pass empty string
   totalFunding: number;
   maxParticipants: number;
   certifiedProviders?: Address[];
@@ -69,7 +70,7 @@ export async function POST(request: NextRequest) {
       functionName: 'createStudy',
       args: [
         body.title,
-        body.description,
+        '', // Empty string - description moved to Registry step (saved in DB only)
         certifiedProviders,
         BigInt(body.maxParticipants), // Will be auto-converted to string by jsonResponse
       ],
@@ -80,6 +81,7 @@ export async function POST(request: NextRequest) {
       user: session.address,
       title: body.title,
       maxParticipants: body.maxParticipants,
+      note: 'Description passed as empty string (moved to Registry step)',
     });
 
     // Return with BigInt-safe serialization
