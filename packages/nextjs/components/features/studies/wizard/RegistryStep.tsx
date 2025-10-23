@@ -9,7 +9,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
@@ -33,6 +33,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { useBuildRegistryTx, useIndexStep } from '@/hooks/wizard';
+import { TransactionOverlay } from './TransactionOverlay';
 
 // ============================================
 // Types
@@ -72,7 +73,7 @@ export function RegistryStep({
   const [txStatus, setTxStatus] = useState<TransactionStatus>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<`0x${string}` | undefined>();
-  const [hasProcessedReceipt, setHasProcessedReceipt] = useState(false); // Guard against re-execution
+  const hasProcessedReceiptRef = useRef(false); // Guard against re-execution (persists across renders)
 
   // Wagmi hooks
   const { address: userAddress, isConnected } = useAccount();
@@ -97,9 +98,9 @@ export function RegistryStep({
   // Handle transaction confirmation
   useEffect(() => {
     async function handleConfirmation() {
-      // Guard: Only process once per transaction
-      if (isConfirmed && receipt && txHash && !hasProcessedReceipt) {
-        setHasProcessedReceipt(true); // Set immediately to prevent re-execution
+      // Guard: Only process once per transaction using ref (persists across renders)
+      if (isConfirmed && receipt && txHash && !hasProcessedReceiptRef.current) {
+        hasProcessedReceiptRef.current = true; // Set immediately to prevent re-execution
 
         try {
           const formData = form.getValues();
@@ -149,7 +150,7 @@ export function RegistryStep({
     }
 
     handleConfirmation();
-  }, [isConfirmed, receipt, txHash, escrowId, databaseId, hasProcessedReceipt, indexStep, form, onComplete]);
+  }, [isConfirmed, receipt, txHash, escrowId, databaseId, indexStep, form, onComplete]);
 
   // Execute blockchain transaction with real wallet signing
   async function onSubmit(data: Omit<RegistryStepFormData, 'escrowId'>) {
@@ -162,6 +163,7 @@ export function RegistryStep({
 
     setErrorMessage(null);
     setTxStatus('publishing');
+    hasProcessedReceiptRef.current = false; // Reset guard for new transaction
 
     const publishToast = toast.loading('Publishing study to registry...', {
       description: 'Confirm the transaction in your wallet',
@@ -215,14 +217,29 @@ export function RegistryStep({
 
   const isExecuting = txStatus === 'publishing';
 
+  // Overlay messages
+  const getOverlayMessage = () => {
+    if (txStatus === 'success') return 'Proceeding to eligibility criteria...';
+    return 'Confirm the transaction in your wallet';
+  };
+
   return (
-    <motion.div
-      variants={fadeUpVariants}
-      initial="hidden"
-      animate="visible"
-      transition={transitions.standard}
-    >
-      <Card className="border-primary/20">
+    <>
+      {/* Transaction Progress Overlay */}
+      <TransactionOverlay
+        isVisible={isExecuting || txStatus === 'success'}
+        isSuccess={txStatus === 'success'}
+        title={txStatus === 'success' ? 'Published Successfully!' : 'Publishing Study...'}
+        message={getOverlayMessage()}
+      />
+
+      <motion.div
+        variants={fadeUpVariants}
+        initial="hidden"
+        animate="visible"
+        transition={transitions.standard}
+      >
+        <Card className="border-primary/20">
         <CardHeader>
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-primary/10">
@@ -379,6 +396,7 @@ export function RegistryStep({
           </Form>
         </CardContent>
       </Card>
-    </motion.div>
+      </motion.div>
+    </>
   );
 }

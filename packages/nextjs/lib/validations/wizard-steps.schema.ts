@@ -110,7 +110,7 @@ export const registryStepSchema = z.object({
 /**
  * Step 3: Data needed to set study criteria
  * - Age requirements (off-chain ZK verification)
- * - Medical eligibility toggle
+ * - Medical eligibility criteria (on-chain ZK verification)
  */
 export const criteriaStepSchema = z.object({
   // Inherited from Steps 1-2 (read-only)
@@ -129,8 +129,39 @@ export const criteriaStepSchema = z.object({
     .min(0, 'Maximum age must be 0 or greater')
     .max(120, 'Maximum age must be less than 120'),
 
-  // Medical Eligibility (on-chain ZK proof)
+  // Medical Eligibility Toggle
   requiresEligibilityProof: z.boolean(),
+
+  // Biomarker Ranges (optional)
+  hba1cMin: z.number().min(0).max(20).optional(),
+  hba1cMax: z.number().min(0).max(20).optional(),
+  cholesterolMin: z.number().min(0).max(500).optional(),
+  cholesterolMax: z.number().min(0).max(500).optional(),
+  ldlMin: z.number().min(0).max(300).optional(),
+  ldlMax: z.number().min(0).max(300).optional(),
+  hdlMin: z.number().min(0).max(200).optional(),
+  hdlMax: z.number().min(0).max(200).optional(),
+  triglyceridesMin: z.number().min(0).max(1000).optional(),
+  triglyceridesMax: z.number().min(0).max(1000).optional(),
+
+  // Vital Sign Ranges (optional)
+  systolicBPMin: z.number().min(0).max(250).optional(),
+  systolicBPMax: z.number().min(0).max(250).optional(),
+  diastolicBPMin: z.number().min(0).max(150).optional(),
+  diastolicBPMax: z.number().min(0).max(150).optional(),
+  bmiMin: z.number().min(0).max(100).optional(),
+  bmiMax: z.number().min(0).max(100).optional(),
+  heartRateMin: z.number().min(0).max(250).optional(),
+  heartRateMax: z.number().min(0).max(250).optional(),
+
+  // Medications/Allergies/Diagnoses (as comma-separated strings)
+  requiredMedications: z.string().optional(), // e.g., "METFORMIN,LISINOPRIL"
+  excludedMedications: z.string().optional(), // e.g., "WARFARIN"
+  excludedAllergies: z.string().optional(), // e.g., "PENICILLIN,SULFA"
+  requiredDiagnoses: z.string().optional(), // e.g., "E11.9,I10" (ICD-10 codes)
+  excludedDiagnoses: z.string().optional(), // e.g., "C00-C99" (Cancer)
+
+  // Generated eligibility code hash (computed from all criteria)
   eligibilityCodeHash: z.string(), // '0' if disabled, actual hash if enabled
 }).refine(
   (data) => data.minAge <= data.maxAge,

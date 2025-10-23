@@ -39,6 +39,15 @@ export async function POST(request: NextRequest) {
 
     const body: IndexStepRequest = await request.json();
 
+    console.log('[Index Step] Received request:', {
+      step: body.step,
+      txHash: body.txHash,
+      databaseId: body.databaseId,
+      escrowId: body.escrowId,
+      registryId: body.registryId,
+      description: body.description,
+    });
+
     // Validate input
     if (!body.step) {
       return NextResponse.json(

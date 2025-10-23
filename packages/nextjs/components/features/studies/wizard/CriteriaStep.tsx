@@ -10,7 +10,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
@@ -35,10 +35,18 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { useBuildCriteriaTx, useIndexStep } from '@/hooks/wizard';
+import {
+  BiomarkerCriteriaFields,
+  VitalSignCriteriaFields,
+  MedicationAllergyCriteriaFields,
+  DiagnosisCriteriaFields,
+} from './criteria';
+import { TransactionOverlay } from './TransactionOverlay';
 
 interface CriteriaStepProps {
   escrowId: bigint;
   registryId: bigint;
+  databaseId: string; // Database UUID (for finding study in DB)
   onComplete: (data: Omit<CriteriaStepFormData, 'escrowId' | 'registryId'>, txHash: string) => void;
   onBack: () => void;
   initialData?: Partial<Omit<CriteriaStepFormData, 'escrowId' | 'registryId'>>;
@@ -49,6 +57,7 @@ type TransactionStatus = 'idle' | 'setting_criteria' | 'success' | 'error';
 export function CriteriaStep({
   escrowId,
   registryId,
+  databaseId,
   onComplete,
   onBack,
   initialData,
@@ -56,6 +65,7 @@ export function CriteriaStep({
   const [txStatus, setTxStatus] = useState<TransactionStatus>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<`0x${string}` | undefined>();
+  const hasProcessedReceiptRef = useRef(false); // Guard against re-execution (persists across renders)
 
   // Wagmi hooks
   const { address: userAddress, isConnected } = useAccount();
@@ -68,6 +78,19 @@ export function CriteriaStep({
   const buildCriteriaTx = useBuildCriteriaTx();
   const indexStep = useIndexStep();
 
+  // Diabetes Type 2 Study Preset (example from bk_nextjs)
+  const DIABETES_PRESET = {
+    hba1cMin: 7.0,
+    hba1cMax: 10.0,
+    ldlMin: 0,
+    ldlMax: 130,
+    bmiMin: 25,
+    bmiMax: 40,
+    requiredDiagnoses: 'E11.9', // Type 2 diabetes ICD-10
+    excludedMedications: 'WARFARIN',
+    excludedAllergies: 'METFORMIN',
+  };
+
   const form = useForm<Omit<CriteriaStepFormData, 'escrowId' | 'registryId'>>({
     resolver: zodResolver(criteriaStepSchema.omit({ escrowId: true, registryId: true })),
     defaultValues: initialData || {
@@ -75,21 +98,83 @@ export function CriteriaStep({
       maxAge: 65,
       requiresEligibilityProof: false,
       eligibilityCodeHash: '0',
+      // Biomarkers
+      hba1cMin: undefined,
+      hba1cMax: undefined,
+      cholesterolMin: undefined,
+      cholesterolMax: undefined,
+      ldlMin: undefined,
+      ldlMax: undefined,
+      hdlMin: undefined,
+      hdlMax: undefined,
+      triglyceridesMin: undefined,
+      triglyceridesMax: undefined,
+      // Vital signs
+      systolicBPMin: undefined,
+      systolicBPMax: undefined,
+      diastolicBPMin: undefined,
+      diastolicBPMax: undefined,
+      bmiMin: undefined,
+      bmiMax: undefined,
+      heartRateMin: undefined,
+      heartRateMax: undefined,
+      // Medications/Allergies/Diagnoses
+      requiredMedications: '',
+      excludedMedications: '',
+      excludedAllergies: '',
+      requiredDiagnoses: '',
+      excludedDiagnoses: '',
     },
   });
 
   const requiresEligibilityProof = form.watch('requiresEligibilityProof');
 
+  // Apply diabetes preset when enabling medical eligibility for the first time
+  const [hasAppliedPreset, setHasAppliedPreset] = useState(false);
+
+  useEffect(() => {
+    if (requiresEligibilityProof && !hasAppliedPreset) {
+      // Apply preset values
+      form.setValue('hba1cMin', DIABETES_PRESET.hba1cMin);
+      form.setValue('hba1cMax', DIABETES_PRESET.hba1cMax);
+      form.setValue('ldlMin', DIABETES_PRESET.ldlMin);
+      form.setValue('ldlMax', DIABETES_PRESET.ldlMax);
+      form.setValue('bmiMin', DIABETES_PRESET.bmiMin);
+      form.setValue('bmiMax', DIABETES_PRESET.bmiMax);
+      form.setValue('requiredDiagnoses', DIABETES_PRESET.requiredDiagnoses);
+      form.setValue('excludedMedications', DIABETES_PRESET.excludedMedications);
+      form.setValue('excludedAllergies', DIABETES_PRESET.excludedAllergies);
+      setHasAppliedPreset(true);
+
+      toast.info('Diabetes Type 2 Study Preset Applied', {
+        description: 'You can modify these values or clear them as needed',
+        duration: 4000,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requiresEligibilityProof, hasAppliedPreset]);
+
   // Handle transaction confirmation
   useEffect(() => {
     async function handleConfirmation() {
-      if (isConfirmed && receipt && txHash) {
+      // Guard: Only process once per transaction using ref (persists across renders)
+      if (isConfirmed && receipt && txHash && !hasProcessedReceiptRef.current) {
+        hasProcessedReceiptRef.current = true; // Set immediately to prevent re-execution
+
         try {
+          console.log('[CriteriaStep] Processing receipt:', {
+            txHash,
+            databaseId,
+            escrowId: escrowId.toString(),
+            registryId: registryId.toString(),
+          });
+
           // Step 3: Index the result
           await indexStep.mutateAsync({
             step: 'criteria',
             txHash: txHash,
             chainId: receipt.chainId,
+            databaseId, // Pass database ID to find the study
             escrowId: escrowId.toString(),
             registryId: registryId.toString(),
           });
@@ -119,7 +204,7 @@ export function CriteriaStep({
     }
 
     handleConfirmation();
-  }, [isConfirmed, receipt, txHash, escrowId, registryId, indexStep, form, onComplete]);
+  }, [isConfirmed, receipt, txHash, escrowId, registryId, databaseId, indexStep, form, onComplete]);
 
   async function onSubmit(data: Omit<CriteriaStepFormData, 'escrowId' | 'registryId'>) {
     if (!isConnected || !userAddress) {
@@ -131,6 +216,7 @@ export function CriteriaStep({
 
     setErrorMessage(null);
     setTxStatus('setting_criteria');
+    hasProcessedReceiptRef.current = false; // Reset guard for new transaction
 
     const criteriaToast = toast.loading('Setting study criteria...', {
       description: 'Confirm the transaction in your wallet',
@@ -179,14 +265,29 @@ export function CriteriaStep({
 
   const isExecuting = txStatus === 'setting_criteria';
 
+  // Overlay messages
+  const getOverlayMessage = () => {
+    if (txStatus === 'success') return 'Proceeding to milestone setup...';
+    return 'Confirm the transaction in your wallet';
+  };
+
   return (
-    <motion.div
-      variants={fadeUpVariants}
-      initial="hidden"
-      animate="visible"
-      transition={transitions.standard}
-    >
-      <Card className="border-primary/20">
+    <>
+      {/* Transaction Progress Overlay */}
+      <TransactionOverlay
+        isVisible={isExecuting || txStatus === 'success'}
+        isSuccess={txStatus === 'success'}
+        title={txStatus === 'success' ? 'Criteria Set Successfully!' : 'Setting Criteria...'}
+        message={getOverlayMessage()}
+      />
+
+      <motion.div
+        variants={fadeUpVariants}
+        initial="hidden"
+        animate="visible"
+        transition={transitions.standard}
+      >
+        <Card className="border-primary/20">
         <CardHeader>
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-success/10">
@@ -283,7 +384,7 @@ export function CriteriaStep({
                 </div>
               </div>
 
-              {/* Medical Eligibility (Future Feature) */}
+              {/* Medical Eligibility */}
               <div className="space-y-4 pt-4 border-t">
                 <h3 className="text-lg font-semibold">Medical Eligibility Proof</h3>
 
@@ -311,23 +412,23 @@ export function CriteriaStep({
                   )}
                 />
 
-                {requiresEligibilityProof ? (
-                  <Alert>
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>Coming Soon</AlertTitle>
-                    <AlertDescription>
-                      Medical eligibility ZK proofs will be available in the next release.
-                      For now, only age verification is supported.
-                    </AlertDescription>
-                  </Alert>
-                ) : (
-                  <Alert className="bg-muted">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>Disabled</AlertTitle>
-                    <AlertDescription>
-                      Medical eligibility proof is currently disabled. Only age criteria will be verified.
-                    </AlertDescription>
-                  </Alert>
+                {requiresEligibilityProof && (
+                  <div className="space-y-4">
+                    <Alert className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+                      <Shield className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      <AlertTitle className="text-blue-900 dark:text-blue-100">
+                        Medical Criteria Active
+                      </AlertTitle>
+                      <AlertDescription className="text-blue-800 dark:text-blue-200">
+                        Diabetes Type 2 preset has been applied. You can modify these values or clear them as needed.
+                      </AlertDescription>
+                    </Alert>
+
+                    <BiomarkerCriteriaFields form={form} disabled={isExecuting} />
+                    <VitalSignCriteriaFields form={form} disabled={isExecuting} />
+                    <MedicationAllergyCriteriaFields form={form} disabled={isExecuting} />
+                    <DiagnosisCriteriaFields form={form} disabled={isExecuting} />
+                  </div>
                 )}
               </div>
 
@@ -377,6 +478,7 @@ export function CriteriaStep({
           </Form>
         </CardContent>
       </Card>
-    </motion.div>
+      </motion.div>
+    </>
   );
 }

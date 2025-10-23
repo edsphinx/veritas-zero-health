@@ -10,7 +10,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
@@ -40,6 +40,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Progress } from '@/components/ui/progress';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { useBuildMilestoneTx, useIndexStep } from '@/hooks/wizard';
+import { TransactionOverlay } from './TransactionOverlay';
 
 interface MilestonesStepProps {
   escrowId: bigint;
@@ -75,6 +76,7 @@ export function MilestonesStep({
   const [currentMilestoneIndex, setCurrentMilestoneIndex] = useState(0);
   const [allTxHashes, setAllTxHashes] = useState<string[]>([]);
   const [isBatchMode, setIsBatchMode] = useState(false);
+  const hasProcessedReceiptRef = useRef(false); // Guard against re-execution (persists across renders)
 
   // Wagmi hooks
   const { address: userAddress, isConnected } = useAccount();
@@ -172,7 +174,10 @@ export function MilestonesStep({
   // Handle transaction confirmation
   useEffect(() => {
     async function handleConfirmation() {
-      if (isConfirmed && receipt && txHash) {
+      // Guard: Only process once per transaction using ref (persists across renders)
+      if (isConfirmed && receipt && txHash && !hasProcessedReceiptRef.current) {
+        hasProcessedReceiptRef.current = true; // Set immediately to prevent re-execution
+
         const updatedHashes = [...allTxHashes, txHash];
         setAllTxHashes(updatedHashes);
 
@@ -271,6 +276,7 @@ export function MilestonesStep({
     setErrorMessage(null);
     setAllTxHashes([]);
     setCurrentMilestoneIndex(0);
+    hasProcessedReceiptRef.current = false; // Reset guard for new transaction
 
     const milestoneCount = data.milestones.length;
 
@@ -344,14 +350,35 @@ export function MilestonesStep({
 
   const isExecuting = txStatus === 'executing_sequential' || txStatus === 'executing_batch';
 
+  // Overlay messages
+  const getOverlayMessage = () => {
+    if (txStatus === 'success') return 'Study creation completed!';
+    if (isBatchMode) return 'Creating all milestones in single transaction...';
+    return `Creating milestone ${progress.completed + 1} of ${progress.total}`;
+  };
+
+  const getOverlayTitle = () => {
+    if (txStatus === 'success') return 'All Milestones Created!';
+    return 'Creating Milestones...';
+  };
+
   return (
-    <motion.div
-      variants={fadeUpVariants}
-      initial="hidden"
-      animate="visible"
-      transition={transitions.standard}
-      className="space-y-6"
-    >
+    <>
+      {/* Transaction Progress Overlay */}
+      <TransactionOverlay
+        isVisible={isExecuting || txStatus === 'success'}
+        isSuccess={txStatus === 'success'}
+        title={getOverlayTitle()}
+        message={getOverlayMessage()}
+      />
+
+      <motion.div
+        variants={fadeUpVariants}
+        initial="hidden"
+        animate="visible"
+        transition={transitions.standard}
+        className="space-y-6"
+      >
       {/* Previous Steps Confirmation */}
       <Alert className="bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800">
         <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
@@ -611,6 +638,7 @@ export function MilestonesStep({
           </Form>
         </CardContent>
       </Card>
-    </motion.div>
+      </motion.div>
+    </>
   );
 }

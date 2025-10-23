@@ -427,10 +427,11 @@ export function StudyCreationWizard() {
         )}
 
         {/* Step 3: Criteria */}
-        {(status === 'registry_done' || status === 'criteria') && ids.escrowId && ids.registryId && (
+        {(status === 'registry_done' || status === 'criteria') && ids.escrowId && ids.registryId && ids.databaseId && (
           <CriteriaStep
             escrowId={ids.escrowId}
             registryId={ids.registryId}
+            databaseId={ids.databaseId}
             onComplete={handleCriteriaComplete}
             onBack={handleBack}
             initialData={formData?.step3}
