@@ -132,27 +132,54 @@ export const criteriaStepSchema = z.object({
   // Medical Eligibility Toggle
   requiresEligibilityProof: z.boolean(),
 
-  // Biomarker Ranges (optional)
-  hba1cMin: z.number().min(0).max(20).optional(),
-  hba1cMax: z.number().min(0).max(20).optional(),
-  cholesterolMin: z.number().min(0).max(500).optional(),
-  cholesterolMax: z.number().min(0).max(500).optional(),
-  ldlMin: z.number().min(0).max(300).optional(),
-  ldlMax: z.number().min(0).max(300).optional(),
-  hdlMin: z.number().min(0).max(200).optional(),
-  hdlMax: z.number().min(0).max(200).optional(),
-  triglyceridesMin: z.number().min(0).max(1000).optional(),
-  triglyceridesMax: z.number().min(0).max(1000).optional(),
+  // Biomarker Ranges (each field has enabled flag + min/max)
+  hba1c: z.object({
+    enabled: z.boolean(),
+    min: z.string().optional(),
+    max: z.string().optional(),
+  }).optional(),
+  cholesterol: z.object({
+    enabled: z.boolean(),
+    min: z.string().optional(),
+    max: z.string().optional(),
+  }).optional(),
+  ldl: z.object({
+    enabled: z.boolean(),
+    min: z.string().optional(),
+    max: z.string().optional(),
+  }).optional(),
+  hdl: z.object({
+    enabled: z.boolean(),
+    min: z.string().optional(),
+    max: z.string().optional(),
+  }).optional(),
+  triglycerides: z.object({
+    enabled: z.boolean(),
+    min: z.string().optional(),
+    max: z.string().optional(),
+  }).optional(),
 
-  // Vital Sign Ranges (optional)
-  systolicBPMin: z.number().min(0).max(250).optional(),
-  systolicBPMax: z.number().min(0).max(250).optional(),
-  diastolicBPMin: z.number().min(0).max(150).optional(),
-  diastolicBPMax: z.number().min(0).max(150).optional(),
-  bmiMin: z.number().min(0).max(100).optional(),
-  bmiMax: z.number().min(0).max(100).optional(),
-  heartRateMin: z.number().min(0).max(250).optional(),
-  heartRateMax: z.number().min(0).max(250).optional(),
+  // Vital Sign Ranges (each field has enabled flag + min/max)
+  systolicBP: z.object({
+    enabled: z.boolean(),
+    min: z.string().optional(),
+    max: z.string().optional(),
+  }).optional(),
+  diastolicBP: z.object({
+    enabled: z.boolean(),
+    min: z.string().optional(),
+    max: z.string().optional(),
+  }).optional(),
+  bmi: z.object({
+    enabled: z.boolean(),
+    min: z.string().optional(),
+    max: z.string().optional(),
+  }).optional(),
+  heartRate: z.object({
+    enabled: z.boolean(),
+    min: z.string().optional(),
+    max: z.string().optional(),
+  }).optional(),
 
   // Medications/Allergies/Diagnoses (as comma-separated strings)
   requiredMedications: z.string().optional(), // e.g., "METFORMIN,LISINOPRIL"

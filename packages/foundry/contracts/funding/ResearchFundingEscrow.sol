@@ -383,6 +383,64 @@ contract ResearchFundingEscrow is AccessControl, Pausable, ReentrancyGuard, IStu
         return milestoneId;
     }
 
+    /**
+     * @notice Add multiple milestones to a study in a single transaction
+     * @param studyId The study ID
+     * @param milestoneTypes Array of milestone types
+     * @param descriptions Array of milestone descriptions
+     * @param rewardAmounts Array of reward amounts
+     * @return milestoneIds Array of created milestone IDs
+     */
+    function addMilestonesBatch(
+        uint256 studyId,
+        MilestoneType[] memory milestoneTypes,
+        string[] memory descriptions,
+        uint256[] memory rewardAmounts
+    ) external studyExists(studyId) onlySponsor(studyId) returns (uint256[] memory) {
+        require(milestoneTypes.length > 0, "ResearchFundingEscrow: no milestones provided");
+        require(
+            milestoneTypes.length == descriptions.length && milestoneTypes.length == rewardAmounts.length,
+            "ResearchFundingEscrow: array lengths must match"
+        );
+        require(
+            milestoneTypes.length <= 20,
+            "ResearchFundingEscrow: too many milestones (max 20 per batch)"
+        );
+        require(
+            studies[studyId].status == StudyStatus.Created ||
+            studies[studyId].status == StudyStatus.Funding,
+            "ResearchFundingEscrow: cannot add milestones after study started"
+        );
+
+        uint256[] memory milestoneIds = new uint256[](milestoneTypes.length);
+
+        for (uint256 i = 0; i < milestoneTypes.length; i++) {
+            require(bytes(descriptions[i]).length > 0, "ResearchFundingEscrow: description required");
+            require(rewardAmounts[i] > 0, "ResearchFundingEscrow: reward must be > 0");
+
+            milestoneCounter++;
+            uint256 milestoneId = milestoneCounter;
+
+            milestones[milestoneId] = Milestone({
+                id: milestoneId,
+                studyId: studyId,
+                milestoneType: milestoneTypes[i],
+                description: descriptions[i],
+                rewardAmount: rewardAmounts[i],
+                status: MilestoneStatus.Pending,
+                verificationDataHash: bytes32(0),
+                createdAt: block.timestamp,
+                completedAt: 0,
+                verifiedAt: 0
+            });
+
+            studyMilestones[studyId].push(milestoneId);
+            milestoneIds[i] = milestoneId;
+        }
+
+        return milestoneIds;
+    }
+
     // ============ External Functions - Participant Management ============
 
     /**

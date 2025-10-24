@@ -76,6 +76,16 @@ export async function POST(request: NextRequest) {
 
     if (mode === 'batch') {
       // Build single batch transaction
+      // Map milestone type strings to enum values (0-4)
+      const milestoneTypeMap: Record<string, number> = {
+        'Enrollment': 0,
+        'DataSubmission': 1,
+        'FollowUpVisit': 2,
+        'StudyCompletion': 3,
+        'Custom': 4,
+      };
+
+      const milestoneTypes = body.milestones.map(m => milestoneTypeMap[m.type] ?? 4); // Default to Custom
       const descriptions = body.milestones.map(m => m.description);
       const amounts = body.milestones.map(m => BigInt(Math.floor(m.rewardAmount * 1e6))); // USDC decimals
 
@@ -83,7 +93,7 @@ export async function POST(request: NextRequest) {
         address: escrowContract.address,
         abi: escrowContract.abi,
         functionName: 'addMilestonesBatch',
-        args: [escrowIdBigInt, descriptions, amounts],
+        args: [escrowIdBigInt, milestoneTypes, descriptions, amounts],
         chainId,
       };
 
@@ -106,12 +116,22 @@ export async function POST(request: NextRequest) {
       });
     } else {
       // Build multiple sequential transactions
+      // Map milestone type strings to enum values (0-4)
+      const milestoneTypeMap: Record<string, number> = {
+        'Enrollment': 0,
+        'DataSubmission': 1,
+        'FollowUpVisit': 2,
+        'StudyCompletion': 3,
+        'Custom': 4,
+      };
+
       const txDataArray = body.milestones.map((milestone) => ({
         address: escrowContract.address,
         abi: escrowContract.abi,
         functionName: 'addMilestone',
         args: [
           escrowIdBigInt,
+          milestoneTypeMap[milestone.type] ?? 4, // Default to Custom
           milestone.description,
           BigInt(Math.floor(milestone.rewardAmount * 1e6)), // USDC decimals
         ],

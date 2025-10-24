@@ -30,7 +30,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
@@ -80,12 +80,9 @@ export function CriteriaStep({
 
   // Diabetes Type 2 Study Preset (example from bk_nextjs)
   const DIABETES_PRESET = {
-    hba1cMin: 7.0,
-    hba1cMax: 10.0,
-    ldlMin: 0,
-    ldlMax: 130,
-    bmiMin: 25,
-    bmiMax: 40,
+    hba1c: { enabled: true, min: '7.0', max: '10.0' },
+    ldl: { enabled: true, min: '0', max: '130' },
+    bmi: { enabled: true, min: '25', max: '40' },
     requiredDiagnoses: 'E11.9', // Type 2 diabetes ICD-10
     excludedMedications: 'WARFARIN',
     excludedAllergies: 'METFORMIN',
@@ -99,25 +96,16 @@ export function CriteriaStep({
       requiresEligibilityProof: false,
       eligibilityCodeHash: '0',
       // Biomarkers
-      hba1cMin: undefined,
-      hba1cMax: undefined,
-      cholesterolMin: undefined,
-      cholesterolMax: undefined,
-      ldlMin: undefined,
-      ldlMax: undefined,
-      hdlMin: undefined,
-      hdlMax: undefined,
-      triglyceridesMin: undefined,
-      triglyceridesMax: undefined,
+      hba1c: { enabled: false, min: '', max: '' },
+      cholesterol: { enabled: false, min: '', max: '' },
+      ldl: { enabled: false, min: '', max: '' },
+      hdl: { enabled: false, min: '', max: '' },
+      triglycerides: { enabled: false, min: '', max: '' },
       // Vital signs
-      systolicBPMin: undefined,
-      systolicBPMax: undefined,
-      diastolicBPMin: undefined,
-      diastolicBPMax: undefined,
-      bmiMin: undefined,
-      bmiMax: undefined,
-      heartRateMin: undefined,
-      heartRateMax: undefined,
+      systolicBP: { enabled: false, min: '', max: '' },
+      diastolicBP: { enabled: false, min: '', max: '' },
+      bmi: { enabled: false, min: '', max: '' },
+      heartRate: { enabled: false, min: '', max: '' },
       // Medications/Allergies/Diagnoses
       requiredMedications: '',
       excludedMedications: '',
@@ -135,12 +123,9 @@ export function CriteriaStep({
   useEffect(() => {
     if (requiresEligibilityProof && !hasAppliedPreset) {
       // Apply preset values
-      form.setValue('hba1cMin', DIABETES_PRESET.hba1cMin);
-      form.setValue('hba1cMax', DIABETES_PRESET.hba1cMax);
-      form.setValue('ldlMin', DIABETES_PRESET.ldlMin);
-      form.setValue('ldlMax', DIABETES_PRESET.ldlMax);
-      form.setValue('bmiMin', DIABETES_PRESET.bmiMin);
-      form.setValue('bmiMax', DIABETES_PRESET.bmiMax);
+      form.setValue('hba1c', DIABETES_PRESET.hba1c);
+      form.setValue('ldl', DIABETES_PRESET.ldl);
+      form.setValue('bmi', DIABETES_PRESET.bmi);
       form.setValue('requiredDiagnoses', DIABETES_PRESET.requiredDiagnoses);
       form.setValue('excludedMedications', DIABETES_PRESET.excludedMedications);
       form.setValue('excludedAllergies', DIABETES_PRESET.excludedAllergies);
@@ -392,22 +377,22 @@ export function CriteriaStep({
                   control={form.control}
                   name="requiresEligibilityProof"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          disabled={isExecuting}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>
+                    <FormItem className="flex flex-row items-center justify-between rounded-md border p-4">
+                      <div className="space-y-1">
+                        <FormLabel className="text-base">
                           Require on-chain medical eligibility proof
                         </FormLabel>
                         <FormDescription>
                           Enable ZK proof verification for biomarkers, vitals, diagnoses, medications
                         </FormDescription>
                       </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          disabled={isExecuting}
+                        />
+                      </FormControl>
                     </FormItem>
                   )}
                 />

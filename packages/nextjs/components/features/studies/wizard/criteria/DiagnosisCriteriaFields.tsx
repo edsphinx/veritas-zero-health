@@ -15,9 +15,10 @@ import { FileText } from 'lucide-react';
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { TagSelect } from '@/components/ui/tag-select';
+import { type CriteriaStepFormData } from '@/lib/validations';
 
 interface DiagnosisCriteriaFieldsProps {
-  form: UseFormReturn<Record<string, any>>;
+  form: UseFormReturn<Omit<CriteriaStepFormData, 'escrowId' | 'registryId'>>;
   disabled?: boolean;
 }
 

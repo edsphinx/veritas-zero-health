@@ -3169,6 +3169,40 @@ const deployedContracts = {
         },
         {
           type: "function",
+          name: "addMilestonesBatch",
+          inputs: [
+            {
+              name: "studyId",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "milestoneTypes",
+              type: "uint8[]",
+              internalType: "enum IStudyTypes.MilestoneType[]",
+            },
+            {
+              name: "descriptions",
+              type: "string[]",
+              internalType: "string[]",
+            },
+            {
+              name: "rewardAmounts",
+              type: "uint256[]",
+              internalType: "uint256[]",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "uint256[]",
+              internalType: "uint256[]",
+            },
+          ],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
           name: "addVerifier",
           inputs: [
             {
@@ -11345,6 +11379,40 @@ const deployedContracts = {
         },
         {
           type: "function",
+          name: "addMilestonesBatch",
+          inputs: [
+            {
+              name: "studyId",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "milestoneTypes",
+              type: "uint8[]",
+              internalType: "enum IStudyTypes.MilestoneType[]",
+            },
+            {
+              name: "descriptions",
+              type: "string[]",
+              internalType: "string[]",
+            },
+            {
+              name: "rewardAmounts",
+              type: "uint256[]",
+              internalType: "uint256[]",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "uint256[]",
+              internalType: "uint256[]",
+            },
+          ],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
           name: "addVerifier",
           inputs: [
             {
@@ -13614,7 +13682,7 @@ const deployedContracts = {
   },
   11142220: {
     humanPassport: {
-      address: "0x0540017f66790fdaadfe2c84b50935012bca3b5e",
+      address: "0x93623910b0e16716965c6cd0f3e5d3710ef98603",
       abi: [
         {
           type: "constructor",
@@ -14323,10 +14391,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 7773235,
+      deployedOnBlock: 8004220,
     },
     MockUSDC: {
-      address: "0xebb25b01faee3caa2e6e3f9d71dc65cc667aba7f",
+      address: "0xbea49a5fb5ab638b95098a835f45484285da16c5",
       abi: [
         {
           type: "constructor",
@@ -14855,10 +14923,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 7773235,
+      deployedOnBlock: 8004220,
     },
     providerRegistry: {
-      address: "0x4b522f9b0a5a16a26b909a4f62220a5e71c91adb",
+      address: "0xdc87ae7ea15ed190fee7e83ad0f54b53201680a0",
       abi: [
         {
           type: "constructor",
@@ -15829,10 +15897,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 7773235,
+      deployedOnBlock: 8004220,
     },
     healthIdentity: {
-      address: "0xf968e708a00f78729dcf1c46325fb215bf3927f6",
+      address: "0xe81dda64c3901bed6c9ffd224d703d8d50e5f1ab",
       abi: [
         {
           type: "constructor",
@@ -16945,10 +17013,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 7773235,
+      deployedOnBlock: 8004220,
     },
     accountFactory: {
-      address: "0x68cd4591a0309474056e8c27f61071e610392917",
+      address: "0xa84cf56a6f767417609ea657345971a7c5880c9d",
       abi: [
         {
           type: "function",
@@ -17213,10 +17281,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 7773235,
+      deployedOnBlock: 8004220,
     },
     participationSBT: {
-      address: "0x2de8f450ed6745bbf73210b3fcb05982cd9b7a1e",
+      address: "0x949df8feb5d2f41f8aa4d61d6f3c5b4c42149449",
       abi: [
         {
           type: "constructor",
@@ -17880,10 +17948,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 7773235,
+      deployedOnBlock: 8004220,
     },
     enrollmentData: {
-      address: "0xdd01f974da09458b7ccfc4b9b976d90a38ba8a83",
+      address: "0x2e31598db3dea303b585b1f85305d239c83a8533",
       abi: [
         {
           type: "constructor",
@@ -18084,10 +18152,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 7773235,
+      deployedOnBlock: 8004220,
     },
     eligibilityVerifier: {
-      address: "0xe1d4c921f5effadb2a97452e805302adb8e315c4",
+      address: "0x989cf665078eded2435b6489f2a9195ae1157671",
       abi: [
         {
           type: "function",
@@ -18125,10 +18193,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 7773235,
+      deployedOnBlock: 8004220,
     },
     studyRegistry: {
-      address: "0x129289611b05e79ecdae2a89afc8d0586c081ca6",
+      address: "0x1a4216bd4cd94096aac25cb0299bf56a38054dd4",
       abi: [
         {
           type: "constructor",
@@ -18633,10 +18701,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 7773235,
+      deployedOnBlock: 8004220,
     },
     researchEscrow: {
-      address: "0x2e5b3b417087f1c19ff6b804baeaa6cb8c7561fb",
+      address: "0xf5bed7fe1e98b858cccf958cd1cdfeba8ae8f983",
       abi: [
         {
           type: "constructor",
@@ -18722,6 +18790,40 @@ const deployedContracts = {
               name: "",
               type: "uint256",
               internalType: "uint256",
+            },
+          ],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "addMilestonesBatch",
+          inputs: [
+            {
+              name: "studyId",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "milestoneTypes",
+              type: "uint8[]",
+              internalType: "enum IStudyTypes.MilestoneType[]",
+            },
+            {
+              name: "descriptions",
+              type: "string[]",
+              internalType: "string[]",
+            },
+            {
+              name: "rewardAmounts",
+              type: "uint256[]",
+              internalType: "uint256[]",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "uint256[]",
+              internalType: "uint256[]",
             },
           ],
           stateMutability: "nonpayable",
@@ -20267,10 +20369,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 7773235,
+      deployedOnBlock: 8004220,
     },
     vaultFactory: {
-      address: "0xf9c01eb82f2f60d59ed0ad8c3613d79d642ea1d2",
+      address: "0xcae686a0ae87ffd1871180262d0909704dff086c",
       abi: [
         {
           type: "constructor",
@@ -20365,10 +20467,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 7773235,
+      deployedOnBlock: 8004220,
     },
     studyAccessNFT: {
-      address: "0xad68036898fc4209b061361426171ad13effacf3",
+      address: "0x71a52f9ca6e30eadff4797302e7627b71aa15d1a",
       abi: [
         {
           type: "constructor",
@@ -20924,10 +21026,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 7773235,
+      deployedOnBlock: 8004220,
     },
     complianceScore: {
-      address: "0x54b2dc133cc10dce7628eee2101f31ed6ad82b06",
+      address: "0xf24c8b513fb9eb8183580b793e8a51c21a614be2",
       abi: [
         {
           type: "constructor",
@@ -20992,12 +21094,12 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 7773235,
+      deployedOnBlock: 8004220,
     },
   },
   11155420: {
     providerRegistry: {
-      address: "0x1ddfc7907f20cb2219bcc7d041b6fce7b91509a9",
+      address: "0x16d29a3779f874e6355d91981f23db2f577665dc",
       abi: [
         {
           type: "constructor",
@@ -21968,10 +22070,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 34627078,
+      deployedOnBlock: 34742622,
     },
     healthIdentity: {
-      address: "0xfe51aeae648a089d4c400a406d024baa5fb02d47",
+      address: "0x6cffdc63855b480f175adc45cabea3208252b198",
       abi: [
         {
           type: "constructor",
@@ -23084,10 +23186,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 34627078,
+      deployedOnBlock: 34742622,
     },
     researchEscrow: {
-      address: "0xedf1d1ee5d0d4e7f022e7db0746ff7b942b91fbd",
+      address: "0x5e8d535bf754af0434ec5913a3679b8d85c4d572",
       abi: [
         {
           type: "constructor",
@@ -23173,6 +23275,40 @@ const deployedContracts = {
               name: "",
               type: "uint256",
               internalType: "uint256",
+            },
+          ],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "addMilestonesBatch",
+          inputs: [
+            {
+              name: "studyId",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "milestoneTypes",
+              type: "uint8[]",
+              internalType: "enum IStudyTypes.MilestoneType[]",
+            },
+            {
+              name: "descriptions",
+              type: "string[]",
+              internalType: "string[]",
+            },
+            {
+              name: "rewardAmounts",
+              type: "uint256[]",
+              internalType: "uint256[]",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "uint256[]",
+              internalType: "uint256[]",
             },
           ],
           stateMutability: "nonpayable",
@@ -24718,7 +24854,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 34627078,
+      deployedOnBlock: 34742622,
     },
     EligibilityCodeVerifier: {
       address: "0xbea49a5fb5ab638b95098a835f45484285da16c5",
@@ -24762,7 +24898,7 @@ const deployedContracts = {
       deployedOnBlock: 34309403,
     },
     participationSBT: {
-      address: "0x5993dfe463dee2d1aca06fdbab3fc1b9ee57423f",
+      address: "0x7a8ad2d1814eaf1adadfdef26fb6f22c418d1962",
       abi: [
         {
           type: "constructor",
@@ -25426,10 +25562,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 34627078,
+      deployedOnBlock: 34742622,
     },
     enrollmentData: {
-      address: "0x809a3d8f59934350f62cc69915a0c3be93c06687",
+      address: "0x7e3a5a7deb90c73be32919bbf679d5e0ed34cb83",
       abi: [
         {
           type: "constructor",
@@ -25630,10 +25766,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 34627078,
+      deployedOnBlock: 34742622,
     },
     vaultFactory: {
-      address: "0x574b30123c2dd4ac47c74a529b3a089b41f91fbe",
+      address: "0xc864aa980c7614b2a014cc03b8fb2c653046c80c",
       abi: [
         {
           type: "constructor",
@@ -25728,10 +25864,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 34627078,
+      deployedOnBlock: 34742622,
     },
     accountFactory: {
-      address: "0xede89b4095cba12624c5918ecc8df35cf8079d79",
+      address: "0x6b27224dd5c33b4dd069547c4981895dbbfe64c9",
       abi: [
         {
           type: "function",
@@ -25996,10 +26132,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 34627078,
+      deployedOnBlock: 34742622,
     },
     eligibilityVerifier: {
-      address: "0xfc7e63bc47dde35a849dd10a942dcb10c8318845",
+      address: "0xd431ad41bb612ce481c893598500b71b01a608f4",
       abi: [
         {
           type: "function",
@@ -26037,10 +26173,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 34627078,
+      deployedOnBlock: 34742622,
     },
     studyRegistry: {
-      address: "0xff61e748c483b60d2be192f3c0502122458c7529",
+      address: "0x990cfa24b8ef7422bf5aaa7e203dae226c1347aa",
       abi: [
         {
           type: "constructor",
@@ -26545,10 +26681,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 34627078,
+      deployedOnBlock: 34742622,
     },
     humanPassport: {
-      address: "0x20719fbce235e8c2521c37dd64d8e9cbbd173f4b",
+      address: "0xf28cf6aa4025713195cf3feb2c238a7f90bc40f5",
       abi: [
         {
           type: "constructor",
@@ -27257,10 +27393,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 34627078,
+      deployedOnBlock: 34742621,
     },
     MockUSDC: {
-      address: "0x663b53a91f737996d6593cbddea772aa9f6d3203",
+      address: "0xcdad735e8d58d37b65389617b4ff41f771ec84c7",
       abi: [
         {
           type: "constructor",
@@ -27789,10 +27925,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 34627078,
+      deployedOnBlock: 34742621,
     },
     studyAccessNFT: {
-      address: "0x3154d0ad15ca81a72e1e4c8945b0532c4193a9bf",
+      address: "0x7ba743d4e8dc9b81268d92c4bca5e83b82cd5304",
       abi: [
         {
           type: "constructor",
@@ -28348,10 +28484,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 34627079,
+      deployedOnBlock: 34742622,
     },
     complianceScore: {
-      address: "0xcfc4b6199d8a683238d1d63be884bb6fb87f7cd7",
+      address: "0x497eba5ae9e521e39ca1b2aebc57e128a604c366",
       abi: [
         {
           type: "constructor",
@@ -28416,7 +28552,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 34627079,
+      deployedOnBlock: 34742622,
     },
   },
   NaN: {
